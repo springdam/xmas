@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-widen-news-headline
+      author: xmas
+      changes:
+        - modifyDataType:
+            tableName: news_event
+            columnName: headline
+            newDataType: VARCHAR(2048)

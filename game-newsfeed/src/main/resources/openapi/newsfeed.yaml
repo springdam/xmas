@@ -1,0 +1,92 @@
+openapi: 3.0.3
+info:
+  title: Newsfeed API
+  description: Player-visible feed of game events.
+  version: 0.0.1
+servers:
+  - url: /
+tags:
+  - name: newsfeed
+    description: Game news feed
+paths:
+  /players/{playerId}/news:
+    get:
+      tags:
+        - newsfeed
+      operationId: getPlayerNews
+      summary: Get the news feed visible to a player
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-Session-Token
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 50
+      responses:
+        '200':
+          description: News events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsEvent'
+components:
+  schemas:
+    NewsType:
+      type: string
+      enum:
+        - GAME_STARTED
+        - ATTACK
+        - ESPIONAGE
+        - DIPLOMACY
+    NewsVisibility:
+      type: string
+      enum:
+        - PUBLIC
+        - INVOLVED_ONLY
+        - ACTOR_ONLY
+        - HIDDEN
+    NewsEvent:
+      type: object
+      required:
+        - id
+        - gameId
+        - type
+        - visibility
+        - headline
+        - gameTime
+      properties:
+        id:
+          type: string
+          format: uuid
+        gameId:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/NewsType'
+        visibility:
+          $ref: '#/components/schemas/NewsVisibility'
+        actorPlayerId:
+          type: string
+          format: uuid
+        targetPlayerId:
+          type: string
+          format: uuid
+        headline:
+          type: string
+        gameTime:
+          type: string
+          format: date-time

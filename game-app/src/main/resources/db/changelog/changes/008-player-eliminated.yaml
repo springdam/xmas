@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-add-player-eliminated
+      author: xmas
+      changes:
+        - addColumn:
+            tableName: player
+            columns:
+              - column:
+                  name: eliminated
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

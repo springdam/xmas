@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-player-espionage
+      author: xmas
+      changes:
+        - createTable:
+            tableName: player_espionage
+            columns:
+              - column: { name: player_id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: spies, type: INT, constraints: { nullable: false } }
+              - column: { name: counter_intel, type: INT, constraints: { nullable: false } }
+  - changeSet:
+      id: 005-create-player-special-weapons
+      author: xmas
+      changes:
+        - createTable:
+            tableName: player_special_weapons
+            columns:
+              - column: { name: player_id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: nukes, type: INT, constraints: { nullable: false } }
+              - column: { name: espionage_satellites, type: INT, constraints: { nullable: false } }

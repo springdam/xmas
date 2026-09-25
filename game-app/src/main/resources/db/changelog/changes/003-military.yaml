@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-player-military
+      author: xmas
+      changes:
+        - createTable:
+            tableName: player_military
+            columns:
+              - column: { name: player_id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: infantry, type: INT, constraints: { nullable: false } }
+              - column: { name: tanks, type: INT, constraints: { nullable: false } }
+              - column: { name: missile_batteries, type: INT, constraints: { nullable: false } }
+              - column: { name: anti_missile_batteries, type: INT, constraints: { nullable: false } }

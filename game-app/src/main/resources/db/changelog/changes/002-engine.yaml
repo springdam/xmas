@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-game
+      author: xmas
+      changes:
+        - createTable:
+            tableName: game
+            columns:
+              - column: { name: id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: status, type: VARCHAR(16), constraints: { nullable: false } }
+              - column: { name: current_tick, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: game_time, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: tick_duration_millis, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+  - changeSet:
+      id: 002-create-player
+      author: xmas
+      changes:
+        - createTable:
+            tableName: player
+            columns:
+              - column: { name: id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: game_id, type: UUID, constraints: { nullable: false } }
+              - column: { name: account_id, type: UUID, constraints: { nullable: false } }
+              - column: { name: nation, type: VARCHAR(32) }
+              - column: { name: cash, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: popularity, type: INT, constraints: { nullable: false } }
+              - column: { name: admin, type: BOOLEAN, constraints: { nullable: false } }
+              - column: { name: joined_at, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+        - createIndex:
+            tableName: player
+            indexName: idx_player_game_id
+            columns:
+              - column: { name: game_id }
+  - changeSet:
+      id: 002-create-player-economy
+      author: xmas
+      changes:
+        - createTable:
+            tableName: player_economy
+            columns:
+              - column: { name: player_id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: farms, type: INT, constraints: { nullable: false } }
+              - column: { name: factories, type: INT, constraints: { nullable: false } }
+              - column: { name: robot_factories, type: INT, constraints: { nullable: false } }
+              - column: { name: banks, type: INT, constraints: { nullable: false } }
+  - changeSet:
+      id: 002-create-pending-action
+      author: xmas
+      changes:
+        - createTable:
+            tableName: pending_action
+            columns:
+              - column: { name: id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: actor_player_id, type: UUID, constraints: { nullable: false } }
+              - column: { name: target_player_id, type: UUID }
+              - column: { name: action_type, type: VARCHAR(48), constraints: { nullable: false } }
+              - column: { name: quantity, type: INT, constraints: { nullable: false } }
+              - column: { name: started_at, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: completes_at, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(16), constraints: { nullable: false } }
+        - createIndex:
+            tableName: pending_action
+            indexName: idx_pending_action_due
+            columns:
+              - column: { name: status }
+              - column: { name: completes_at }

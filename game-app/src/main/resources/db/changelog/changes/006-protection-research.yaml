@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-player-protection
+      author: xmas
+      changes:
+        - createTable:
+            tableName: player_protection
+            columns:
+              - column: { name: player_id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: doublegangers, type: INT, constraints: { nullable: false } }
+              - column: { name: bunkers, type: INT, constraints: { nullable: false } }
+              - column: { name: bodyguards, type: INT, constraints: { nullable: false } }
+              - column: { name: ninja_bodyguards, type: INT, constraints: { nullable: false } }
+  - changeSet:
+      id: 006-create-player-research
+      author: xmas
+      changes:
+        - createTable:
+            tableName: player_research
+            columns:
+              - column: { name: id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: player_id, type: UUID, constraints: { nullable: false } }
+              - column: { name: research_type, type: VARCHAR(48), constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: player_research
+            columnNames: player_id, research_type
+            constraintName: uq_player_research
+        - createIndex:
+            tableName: player_research
+            indexName: idx_player_research_player
+            columns:
+              - column: { name: player_id }

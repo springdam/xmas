@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-news-event
+      author: xmas
+      changes:
+        - createTable:
+            tableName: news_event
+            columns:
+              - column: { name: id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: game_id, type: UUID, constraints: { nullable: false } }
+              - column: { name: type, type: VARCHAR(24), constraints: { nullable: false } }
+              - column: { name: visibility, type: VARCHAR(16), constraints: { nullable: false } }
+              - column: { name: actor_player_id, type: UUID }
+              - column: { name: target_player_id, type: UUID }
+              - column: { name: headline, type: VARCHAR(512), constraints: { nullable: false } }
+              - column: { name: game_time, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+        - createIndex:
+            tableName: news_event
+            indexName: idx_news_event_game_time
+            columns:
+              - column: { name: game_time }

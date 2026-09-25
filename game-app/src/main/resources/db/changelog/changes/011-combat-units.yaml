@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-rename-anti-missile-to-air-defense
+      author: xmas
+      changes:
+        - renameColumn:
+            tableName: player_military
+            oldColumnName: anti_missile_batteries
+            newColumnName: air_defense_batteries
+            columnDataType: INT
+  - changeSet:
+      id: 011-add-stealth-bombers-special-ops
+      author: xmas
+      changes:
+        - addColumn:
+            tableName: player_military
+            columns:
+              - column:
+                  name: stealth_bombers
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: special_ops
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

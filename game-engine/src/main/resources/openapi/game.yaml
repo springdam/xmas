@@ -1,0 +1,429 @@
+openapi: 3.0.3
+info:
+  title: Game API
+  description: Game lifecycle (lobby, start, pause) and player state.
+  version: 0.0.1
+servers:
+  - url: /
+tags:
+  - name: game
+    description: Game lifecycle and player state
+paths:
+  /games:
+    post:
+      tags:
+        - game
+      operationId: createGame
+      summary: Create a new game in lobby state
+      responses:
+        '201':
+          description: Game created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+  /games/{gameId}:
+    get:
+      tags:
+        - game
+      operationId: getGame
+      summary: Read a game's status and clock (lobby polling, current tick)
+      parameters:
+        - $ref: '#/components/parameters/GameId'
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          description: Game
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+        '404':
+          $ref: '#/components/responses/BadRequest'
+  /games/{gameId}/players:
+    get:
+      tags:
+        - game
+      operationId: getGamePlayers
+      summary: List the players in a game (limited public view)
+      parameters:
+        - $ref: '#/components/parameters/GameId'
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          description: Roster
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GamePlayerSummary'
+    post:
+      tags:
+        - game
+      operationId: joinGame
+      summary: Join a game lobby
+      parameters:
+        - $ref: '#/components/parameters/GameId'
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '201':
+          description: Joined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /games/{gameId}/start:
+    post:
+      tags:
+        - game
+      operationId: startGame
+      summary: Start the game (admin only)
+      parameters:
+        - $ref: '#/components/parameters/GameId'
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          description: Started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /games/{gameId}/pause:
+    post:
+      tags:
+        - game
+      operationId: pauseGame
+      summary: Pause the game clock (admin only)
+      parameters:
+        - $ref: '#/components/parameters/GameId'
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          description: Paused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /games/{gameId}/resume:
+    post:
+      tags:
+        - game
+      operationId: resumeGame
+      summary: Resume the game clock (admin only)
+      parameters:
+        - $ref: '#/components/parameters/GameId'
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          description: Resumed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /players/{playerId}:
+    get:
+      tags:
+        - game
+      operationId: getPlayerState
+      summary: Read a player's state (full for your own or with satellite intel; limited otherwise)
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          description: Player state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerStateResponse'
+        '404':
+          $ref: '#/components/responses/BadRequest'
+components:
+  parameters:
+    GameId:
+      name: gameId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SessionToken:
+      name: X-Session-Token
+      in: header
+      required: true
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    GameStatus:
+      type: string
+      enum:
+        - LOBBY
+        - RUNNING
+        - PAUSED
+        - ENDED
+    Nation:
+      type: string
+      enum:
+        - DENMARK
+        - UK
+        - USA
+        - FRANCE
+        - CHINA
+        - RUSSIA
+        - NORTH_KOREA
+        - IRAN
+        - SOUTH_AFRICA
+        - INDIA
+        - PAKISTAN
+        - ISRAEL
+        - SAUDI_ARABIA
+    GameResponse:
+      type: object
+      required:
+        - id
+        - status
+        - currentTick
+        - gameTime
+        - tickDurationMillis
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/GameStatus'
+        currentTick:
+          type: integer
+          format: int64
+        gameTime:
+          type: string
+          format: date-time
+        tickDurationMillis:
+          type: integer
+          format: int64
+    PlayerResponse:
+      type: object
+      required:
+        - id
+        - gameId
+        - accountId
+        - cash
+        - popularity
+        - admin
+        - eliminated
+      properties:
+        id:
+          type: string
+          format: uuid
+        gameId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        nation:
+          $ref: '#/components/schemas/Nation'
+        cash:
+          type: integer
+          format: int64
+        popularity:
+          type: integer
+          format: int32
+        admin:
+          type: boolean
+        eliminated:
+          type: boolean
+        popularityBoostCount:
+          type: integer
+          format: int32
+        frozenUntilTick:
+          type: integer
+          format: int64
+    GamePlayerSummary:
+      type: object
+      required:
+        - id
+        - username
+        - popularity
+        - eliminated
+        - admin
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        nation:
+          $ref: '#/components/schemas/Nation'
+        popularity:
+          type: integer
+          format: int32
+        eliminated:
+          type: boolean
+        admin:
+          type: boolean
+    EconomyResponse:
+      type: object
+      required:
+        - farms
+        - factories
+        - robotFactories
+        - banks
+      properties:
+        farms:
+          type: integer
+          format: int32
+        factories:
+          type: integer
+          format: int32
+        robotFactories:
+          type: integer
+          format: int32
+        banks:
+          type: integer
+          format: int32
+    MilitaryResponse:
+      type: object
+      required:
+        - infantry
+        - tanks
+        - missileBatteries
+        - airDefenseBatteries
+        - stealthBombers
+        - specialOps
+      properties:
+        infantry:
+          type: integer
+          format: int32
+        tanks:
+          type: integer
+          format: int32
+        missileBatteries:
+          type: integer
+          format: int32
+        airDefenseBatteries:
+          type: integer
+          format: int32
+        stealthBombers:
+          type: integer
+          format: int32
+        specialOps:
+          type: integer
+          format: int32
+    EspionageResponse:
+      type: object
+      required:
+        - spies
+        - counterIntel
+      properties:
+        spies:
+          type: integer
+          format: int32
+        counterIntel:
+          type: integer
+          format: int32
+    SpecialWeaponsResponse:
+      type: object
+      required:
+        - nukes
+        - espionageSatellites
+      properties:
+        nukes:
+          type: integer
+          format: int32
+        espionageSatellites:
+          type: integer
+          format: int32
+    ProtectionResponse:
+      type: object
+      required:
+        - doublegangers
+        - bunkers
+        - bodyguards
+        - ninjaBodyguards
+      properties:
+        doublegangers:
+          type: integer
+          format: int32
+        bunkers:
+          type: integer
+          format: int32
+        bodyguards:
+          type: integer
+          format: int32
+        ninjaBodyguards:
+          type: integer
+          format: int32
+    RelationStatus:
+      type: string
+      enum:
+        - WAR
+        - PEACE
+    RelationResponse:
+      type: object
+      required:
+        - otherPlayerId
+        - status
+      properties:
+        otherPlayerId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/RelationStatus'
+    PlayerStateResponse:
+      type: object
+      required:
+        - player
+        - relations
+      properties:
+        player:
+          $ref: '#/components/schemas/PlayerResponse'
+        economy:
+          $ref: '#/components/schemas/EconomyResponse'
+        military:
+          $ref: '#/components/schemas/MilitaryResponse'
+        espionage:
+          $ref: '#/components/schemas/EspionageResponse'
+        specialWeapons:
+          $ref: '#/components/schemas/SpecialWeaponsResponse'
+        protection:
+          $ref: '#/components/schemas/ProtectionResponse'
+        research:
+          type: array
+          items:
+            type: string
+        relations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationResponse'
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          format: int32
+        message:
+          type: string

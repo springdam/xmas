@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFFFFF">
+  <title>XMAS-GAME</title>
+  <script>
+    // Pick the theme before first paint: saved choice, else follow the system (dark → Copper).
+    try {
+      document.documentElement.dataset.theme = localStorage.getItem("xmas.theme")
+        || (matchMedia("(prefers-color-scheme: dark)").matches ? "cu" : "wb");
+    } catch (e) { document.documentElement.dataset.theme = "wb"; }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="screenbar hd">
+    <span id="screenTitle" class="grow">XMAS-GAME WORKBENCH</span>
+    <button id="themeBtn" class="gadget" type="button" aria-label="Change colour theme" title="Change colour theme">
+      <span class="gad" aria-hidden="true"></span><span class="gad" aria-hidden="true"></span>
+    </button>
+  </header>
+
+  <!-- AUTH ------------------------------------------------------------ -->
+  <main id="auth" class="screen" hidden>
+    <div class="logo">
+      <div class="band"></div>
+      <h1 class="hd">XMAS-GAME</h1>
+      <div class="band"></div>
+      <p class="dim">Nations. Spies. Nukes. Popularity.</p>
+    </div>
+
+    <section class="win" aria-labelledby="authTitle">
+      <div class="tbar"><span class="gad"></span><h2 id="authTitle" class="ttl hd">LOGIN</h2><span class="grow"></span><span class="gad"></span></div>
+      <form id="authForm" class="win-body stack">
+        <label class="field">Username
+          <input id="username" name="username" required minlength="3" maxlength="32"
+                 autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="3-32 characters">
+        </label>
+        <label class="field">Password
+          <input id="password" name="password" type="password" required minlength="6"
+                 autocomplete="current-password" placeholder="6+ characters">
+        </label>
+        <div class="row2">
+          <button id="loginBtn" class="btn pri" type="submit">LOGIN</button>
+          <button id="registerBtn" class="btn" type="button">REGISTER</button>
+        </div>
+        <p class="dim small">Register creates your account and logs you straight in.</p>
+      </form>
+    </section>
+
+    <svg class="skyline" viewBox="0 0 130 30" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true">
+      <path d="M0 18h8v12H0zM8 12h6v18H8zM14 20h10v10H14zM24 8h5v22h-5zM25 5h3v3h-3zM26 2h1v3h-1zM29 16h9v14h-9zM38 22h12v8H38zM50 10h7v20h-7zM57 14h5v16h-5zM62 19h11v11H62zM73 6h6v24h-6zM75 3h2v3h-2zM79 15h8v15h-8zM87 21h9v9h-9zM96 11h7v19h-7zM103 17h6v13h-6zM109 9h5v21h-5zM110 6h3v3h-3zM114 20h16v10h-16z"/>
+    </svg>
+  </main>
+
+  <!-- LOBBY ----------------------------------------------------------- -->
+  <main id="lobby" class="screen" hidden>
+
+    <!-- Menu: not in a game yet -->
+    <div id="lobbyMenu" class="stack16">
+      <section class="win" aria-labelledby="newGameTitle">
+        <div class="tbar"><span class="gad"></span><h2 id="newGameTitle" class="ttl hd">NEW GAME</h2><span class="grow"></span><span class="gad"></span></div>
+        <div class="win-body stack">
+          <p>Host a game for your group. You become the admin: you run the clock but don't play a nation.</p>
+          <button id="createBtn" class="btn pri" type="button">CREATE GAME</button>
+        </div>
+      </section>
+
+      <section class="win" aria-labelledby="joinTitle">
+        <div class="tbar"><span class="gad"></span><h2 id="joinTitle" class="ttl hd">JOIN GAME</h2><span class="grow"></span><span class="gad"></span></div>
+        <form id="joinForm" class="win-body stack">
+          <label class="field">Join code
+            <input id="joinCode" name="joinCode" required autocomplete="off" autocapitalize="none" spellcheck="false"
+                   placeholder="paste the admin's code or link">
+          </label>
+          <button id="joinBtn" class="btn pri" type="submit">JOIN</button>
+        </form>
+      </section>
+
+      <div class="grow"></div>
+      <div class="whoami-row">
+        <span class="grow">Logged in as <strong id="whoami"></strong></span>
+        <button id="logoutBtn" class="btn" type="button">LOG OUT</button>
+      </div>
+    </div>
+
+    <!-- Room: joined a game that hasn't started -->
+    <div id="lobbyRoom" class="stack16" hidden>
+      <section class="win" aria-labelledby="roomTitle">
+        <div class="tbar"><span class="gad"></span><h2 id="roomTitle" class="ttl hd">GAME LOBBY</h2><span class="grow"></span><span class="gad"></span></div>
+        <div class="win-body stack">
+          <p class="status-line"><span class="tag warn">LOBBY</span><span>Waiting for players<span class="cursor">_</span></span></p>
+          <span class="hd label">JOIN CODE</span>
+          <output id="joinCodeBox" class="codebox"></output>
+          <div class="row2">
+            <button id="copyBtn" class="btn" type="button">COPY CODE</button>
+            <button id="shareBtn" class="btn" type="button">SHARE LINK</button>
+          </div>
+          <p class="dim small">Everyone else logs in on their own phone and pastes this code under Join game.</p>
+        </div>
+      </section>
+
+      <section class="win" aria-labelledby="rosterTitle">
+        <div class="tbar"><span class="gad"></span><h2 id="rosterTitle" class="ttl hd">PLAYERS</h2><span class="grow"></span><span class="gad"></span></div>
+        <div class="win-body">
+          <ol id="roster" class="roster"></ol>
+          <p class="dim small roster-note">Up to 13 nations + 1 admin. The admin runs the game but has no nation.</p>
+        </div>
+      </section>
+
+      <div class="grow"></div>
+      <div id="adminStart" class="stack" hidden>
+        <button id="startBtn" class="btn pri big" type="button">START GAME</button>
+        <p id="startHint" class="dim small center"></p>
+      </div>
+      <p id="waitHint" class="center" hidden>Waiting for the admin to start the game<span class="cursor">_</span></p>
+      <button id="leaveBtn" class="btn link" type="button">Wrong game? Back to menu</button>
+    </div>
+  </main>
+
+  <!-- GAME ------------------------------------------------------------ -->
+  <main id="game" class="screen game" hidden>
+
+    <!-- Nation header (hidden for the admin) -->
+    <header id="hud" class="hud">
+      <div class="hud-row">
+        <span id="flag" class="flag" aria-hidden="true"></span>
+        <h2 id="nationName" class="hd nation-name grow"></h2>
+        <span id="tickLabel" class="hd label">TICK 0</span>
+      </div>
+      <div class="hud-row baseline">
+        <span class="hd label">TREASURY</span>
+        <span class="grow"></span>
+        <span id="cashDelta" class="delta" aria-hidden="true"></span>
+        <span id="cash" class="cash">–</span>
+      </div>
+      <div class="hud-row baseline">
+        <span class="hd label">POPULARITY</span>
+        <span class="grow"></span>
+        <span id="popValue" class="pop-value">0%</span>
+      </div>
+      <div id="popBar" class="popbar" role="meter" aria-label="Popularity" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="popFill" class="popfill"></div>
+        <div class="popline"></div>
+      </div>
+      <p class="dim small">Below the red line (20%) your leader can be killed.</p>
+    </header>
+
+    <div id="banners" class="banners"></div>
+    <div id="pendingStrip" class="pending" aria-label="Actions under way"></div>
+
+    <div id="tab-nation" class="tabpanel">
+      <div id="nationSections" class="stack10"></div>
+      <section class="win" aria-labelledby="researchTitle">
+        <div class="tbar"><span class="gad"></span><h3 id="researchTitle" class="ttl hd">RESEARCH</h3><span class="grow"></span><span class="gad"></span></div>
+        <div id="researchList" class="win-body chips"></div>
+      </section>
+      <button class="btn link logout-link" type="button" data-logout>Log out</button>
+    </div>
+
+    <div id="tab-act" class="tabpanel" hidden>
+      <div id="actionGroups" class="stack6"><p class="dim">Loading actions…</p></div>
+    </div>
+    <div id="tab-world" class="tabpanel" hidden>
+      <section class="win"><div class="tbar"><span class="gad"></span><h3 class="ttl hd">WORLD</h3><span class="grow"></span><span class="gad"></span></div>
+        <div class="win-body"><p class="dim">Rival nations, wars and alliances arrive in a later step.</p></div></section>
+    </div>
+    <div id="tab-news" class="tabpanel" hidden>
+      <div id="newsFilters" class="filters" role="group" aria-label="Filter news">
+        <button type="button" class="btn" data-filter="all" aria-pressed="true">ALL</button>
+        <button type="button" class="btn" data-filter="me" aria-pressed="false">ME</button>
+        <button type="button" class="btn" data-filter="war" aria-pressed="false">WAR</button>
+        <button type="button" class="btn" data-filter="spy" aria-pressed="false">SPY</button>
+        <button type="button" class="btn" data-filter="diplo" aria-pressed="false">DIPLO</button>
+      </div>
+      <section class="win" aria-labelledby="newsTitle">
+        <div class="tbar"><span class="gad"></span><h3 id="newsTitle" class="ttl hd">NEWS.LOG</h3><span class="grow"></span><span class="gad"></span></div>
+        <div id="newsList" class="news-list"><p class="dim news-empty">Loading news…</p></div>
+      </section>
+    </div>
+
+    <!-- Admin console (admin has no nation) -->
+    <div id="adminPanel" class="tabpanel" hidden>
+      <section class="win" aria-labelledby="controlTitle">
+        <div class="tbar"><span class="gad"></span><h2 id="controlTitle" class="ttl hd">GAME CONTROL</h2><span class="grow"></span><span class="gad"></span></div>
+        <div class="win-body stack">
+          <p class="status-line"><span id="adminStatus" class="tag good">RUNNING</span><span id="adminTick" class="grow">Tick 0</span></p>
+          <button id="pauseBtn" class="btn pri" type="button">PAUSE GAME</button>
+          <button id="resumeBtn" class="btn pri" type="button" hidden>RESUME GAME</button>
+          <p class="dim small">You run the clock. Pausing stops income, timers and elections for everyone.</p>
+        </div>
+      </section>
+      <section class="win" aria-labelledby="adminRosterTitle">
+        <div class="tbar"><span class="gad"></span><h2 id="adminRosterTitle" class="ttl hd">NATIONS</h2><span class="grow"></span><span class="gad"></span></div>
+        <div class="win-body"><ol id="adminRoster" class="roster plain"></ol></div>
+      </section>
+      <button class="btn link logout-link" type="button" data-logout>Log out</button>
+    </div>
+
+    <nav id="tabbar" class="tabbar" aria-label="Game sections">
+      <button type="button" class="btn tab" data-tab="nation">
+        <svg viewBox="0 0 8 8" aria-hidden="true"><path d="M1 0h1v8H1zM2 1h5v1H2zM2 2h4v1H2zM2 3h5v1H2z"/></svg>NATION</button>
+      <button type="button" class="btn tab" data-tab="act">
+        <svg viewBox="0 0 8 8" aria-hidden="true"><path d="M3 0h2v2H3zM3 6h2v2H3zM0 3h2v2H0zM6 3h2v2H6zM3 3h2v2H3z"/></svg>ACT</button>
+      <button type="button" class="btn tab" data-tab="world">
+        <svg viewBox="0 0 8 8" aria-hidden="true"><path d="M3 0h2v1H3zM1 1h2v1H1zM5 1h2v1H5zM0 2h1v4H0zM7 2h1v4H7zM1 6h2v1H1zM5 6h2v1H5zM3 7h2v1H3zM3 1h2v6H3zM1 3h6v2H1z"/></svg>WORLD</button>
+      <button type="button" class="btn tab" data-tab="news">
+        <svg viewBox="0 0 8 8" aria-hidden="true"><path d="M0 1h8v1H0zM0 6h8v1H0zM0 2h1v4H0zM7 2h1v4H7zM2 3h4v1H2zM2 4h3v1H2z"/></svg>NEWS<span id="newsBadge" class="tag bad badge" hidden></span></button>
+    </nav>
+  </main>
+</div>
+
+<!-- Action dialog ------------------------------------------------------ -->
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-shade dither" data-close></div>
+  <section class="win sheet-win" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="tbar">
+      <button type="button" class="gad-btn" data-close aria-label="Close"><span class="gad"></span></button>
+      <h2 id="sheetTitle" class="ttl hd"></h2><span class="grow"></span><span class="gad"></span>
+    </div>
+    <div class="win-body stack sheet-body">
+      <p id="sheetDesc"></p>
+      <div id="sheetFacts" class="facts"></div>
+      <p id="sheetWarn" class="warnline" hidden></p>
+
+      <div id="targetBlock" class="stack6" hidden>
+        <span class="hd label" id="targetLabel">TARGET</span>
+        <div id="targetList" class="targets" role="radiogroup" aria-labelledby="targetLabel"></div>
+      </div>
+
+      <div id="qtyBlock" class="stack6" hidden>
+        <label id="qtyLabel" class="hd label" for="qtyInput">QUANTITY</label>
+        <div class="stepper">
+          <button id="qtyMinus" class="btn" type="button" aria-label="Less">-</button>
+          <input id="qtyInput" type="text" inputmode="numeric" autocomplete="off">
+          <button id="qtyPlus" class="btn" type="button" aria-label="More">+</button>
+        </div>
+        <div id="qtyPresets" class="presets"></div>
+      </div>
+
+      <div class="total-row">
+        <span class="hd label">TOTAL</span>
+        <span id="sheetTotal" class="total"></span>
+      </div>
+      <span id="sheetLeft" class="small dim right"></span>
+      <div class="row2">
+        <button class="btn" type="button" data-close>CANCEL</button>
+        <button id="sheetGo" class="btn pri" type="button">GO</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="toasts"></div>
+<script src="app.js"></script>
+</body>
+</html>

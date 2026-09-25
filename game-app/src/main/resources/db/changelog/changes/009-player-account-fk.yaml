@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-player-account-fk
+      author: xmas
+      changes:
+        - addForeignKeyConstraint:
+            constraintName: fk_player_account
+            baseTableName: player
+            baseColumnNames: account_id
+            referencedTableName: account
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - createIndex:
+            tableName: player
+            indexName: idx_player_account_id
+            columns:
+              - column: { name: account_id }

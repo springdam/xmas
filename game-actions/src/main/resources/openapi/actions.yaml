@@ -1,0 +1,198 @@
+openapi: 3.0.3
+info:
+  title: Actions API
+  description: Catalog of player actions and submission endpoint.
+  version: 0.0.1
+servers:
+  - url: /
+tags:
+  - name: actions
+    description: Action catalog and submission
+paths:
+  /actions:
+    get:
+      tags:
+        - actions
+      operationId: listActions
+      summary: List available action definitions
+      responses:
+        '200':
+          description: Action definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionDefinition'
+    post:
+      tags:
+        - actions
+      operationId: submitAction
+      summary: Submit an action for the acting player
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitActionRequest'
+      responses:
+        '200':
+          description: Action accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Invalid action or insufficient funds
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  parameters:
+    SessionToken:
+      name: X-Session-Token
+      in: header
+      required: true
+      schema:
+        type: string
+  schemas:
+    ActionCategory:
+      type: string
+      enum:
+        - ECONOMY
+        - ARMY
+        - SPECIAL_WEAPONS
+        - ESPIONAGE
+        - RESEARCH
+        - PERSONAL_PROTECTION
+        - DIPLOMACY
+    ActionType:
+      type: string
+      enum:
+        - BUILD_FARM
+        - BUILD_FACTORY
+        - BUILD_ROBOT_FACTORY
+        - BUILD_BANK
+        - RECRUIT_INFANTRY
+        - RECRUIT_TANK
+        - BUILD_MISSILE_BATTERY
+        - BUILD_AIR_DEFENSE_BATTERY
+        - BUILD_STEALTH_BOMBER
+        - RECRUIT_SPECIAL_OPS
+        - BUILD_ESPIONAGE_SATELLITE
+        - BUILD_NUKE
+        - HIRE_SPIES
+        - HIRE_COUNTER_INTEL
+        - PERFORM_CYBER_ATTACK
+        - PERFORM_SABOTAGE
+        - PERFORM_HEIST
+        - STEAL_TECHNOLOGY
+        - GATHER_INTELLIGENCE
+        - ASSASSINATE_LEADER
+        - HIRE_DOUBLEGANGER
+        - BUILD_SECRET_BUNKER
+        - HIRE_BODYGUARDS
+        - HIRE_NINJA_BODYGUARDS
+        - RESEARCH_ADVANCED_FARMING
+        - RESEARCH_ADVANCED_WEAPONRY
+        - RESEARCH_CRYPTOGRAPHY
+        - RESEARCH_NUCLEAR_PROGRAM
+        - RESEARCH_STEALTH_TECHNOLOGY
+        - RESEARCH_SPECIAL_FORCES_TRAINING
+        - RESEARCH_CONTINUITY_OF_GOVERNMENT
+        - RESEARCH_SATELLITE_NETWORK
+        - RESEARCH_INDUSTRIAL_AUTOMATION
+        - RESEARCH_CENTRAL_BANKING
+        - RESEARCH_WAR_ECONOMY
+        - RESEARCH_FORTIFICATIONS
+        - RESEARCH_AIR_SUPERIORITY
+        - RESEARCH_MIRV
+        - RESEARCH_COUNTER_INTELLIGENCE_DOCTRINE
+        - RESEARCH_PRAETORIAN_GUARD
+        - RESEARCH_MASS_MEDIA
+        - RESEARCH_PROPAGANDA_MINISTRY
+        - DECLARE_WAR
+        - DECLARE_PEACE
+        - SEND_MONEY
+        - HOLD_PARADE
+        - PRAISE_LEADER
+        - HOLD_ELECTION
+        - ATTACK
+        - SPECIAL_WEAPON_ATTACK
+        - DECAPITATION_STRIKE
+    ActionDefinition:
+      type: object
+      required:
+        - actionType
+        - category
+        - costCash
+        - durationMillis
+        - targeted
+        - publicVisibility
+      properties:
+        actionType:
+          $ref: '#/components/schemas/ActionType'
+        category:
+          $ref: '#/components/schemas/ActionCategory'
+        costCash:
+          type: integer
+          format: int64
+        durationMillis:
+          type: integer
+          format: int64
+        targeted:
+          type: boolean
+        publicVisibility:
+          type: boolean
+        description:
+          type: string
+        maxTotal:
+          type: integer
+          format: int32
+          description: Most of this a player may own in total (absent = no cap).
+        requiredResearch:
+          $ref: '#/components/schemas/ActionType'
+    SubmitActionRequest:
+      type: object
+      required:
+        - actionType
+      properties:
+        actionType:
+          $ref: '#/components/schemas/ActionType'
+        targetPlayerId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 1
+    ActionResult:
+      type: object
+      required:
+        - actionType
+        - completedImmediately
+      properties:
+        actionType:
+          $ref: '#/components/schemas/ActionType'
+        completedImmediately:
+          type: boolean
+        completesAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          format: int32
+        message:
+          type: string
