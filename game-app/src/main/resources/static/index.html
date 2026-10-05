@@ -54,9 +54,27 @@
       </form>
     </section>
 
-    <svg class="skyline" viewBox="0 0 130 30" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true">
+    <!-- Title-screen nuke: a few seconds in, the city is struck (see .nuked in styles.css). -->
+    <div class="blast" aria-hidden="true">
+      <svg class="cloud" viewBox="0 0 32 40" shape-rendering="crispEdges">
+        <g class="dust"><path class="c-dust" d="M4 37h24v3h-24zM7 35h18v2h-18zM2 39h28v1h-28z"/></g>
+        <g class="stem"><path class="c-stem" d="M14 18h4v22h-4zM13 30h6v10h-6zM12 35h8v5h-8z"/></g>
+        <g class="ring"><path class="c-outer" d="M11 22h10v2h-10zM10 23h1v1h-1zM21 23h1v1h-1z"/></g>
+        <g class="cap">
+          <path class="c-outer" d="M11 3h10v1h-10zM8 4h16v2h-16zM6 6h20v2h-20zM5 8h22v4h-22zM6 12h20v2h-20zM8 14h16v2h-16zM11 16h10v1h-10zM13 17h6v1h-6z"/>
+          <path class="c-mid" d="M10 5h12v2h-12zM8 7h16v5h-16zM9 12h14v2h-14z"/>
+          <path class="c-core" d="M12 7h8v4h-8z"/>
+        </g>
+      </svg>
+    </div>
+    <svg class="skyline intact" viewBox="0 0 130 30" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true">
       <path d="M0 18h8v12H0zM8 12h6v18H8zM14 20h10v10H14zM24 8h5v22h-5zM25 5h3v3h-3zM26 2h1v3h-1zM29 16h9v14h-9zM38 22h12v8H38zM50 10h7v20h-7zM57 14h5v16h-5zM62 19h11v11H62zM73 6h6v24h-6zM75 3h2v3h-2zM79 15h8v15h-8zM87 21h9v9h-9zM96 11h7v19h-7zM103 17h6v13h-6zM109 9h5v21h-5zM110 6h3v3h-3zM114 20h16v10h-16z"/>
     </svg>
+    <svg class="skyline ruined" viewBox="0 0 130 30" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true">
+      <path d="M0 24h6v6h-6zM6 19h2v11h-2zM6 17h1v2h-1zM8 22h5v8h-5zM13 26h8v4h-8zM21 25h3v5h-3zM24 15h2v15h-2zM24 12h1v3h-1zM26 20h3v10h-3zM29 23h6v7h-6zM35 27h10v3h-10zM45 24h4v6h-4zM50 17h3v13h-3zM50 15h1v2h-1zM53 21h4v9h-4zM57 25h6v5h-6zM63 26h7v4h-7zM70 22h3v8h-3zM73 14h2v16h-2zM73 11h1v3h-1zM75 19h4v11h-4zM79 24h6v6h-6zM85 27h9v3h-9zM94 22h5v8h-5zM99 25h6v5h-6zM105 20h4v10h-4zM109 23h6v7h-6zM115 26h15v4h-15zM0 29h130v1h-130z"/>
+      <g class="fires"><rect x="25" y="11" width="1" height="1"/><rect x="51" y="14" width="1" height="1"/><rect x="74" y="10" width="1" height="1"/><rect x="9" y="21" width="1" height="1"/><rect x="96" y="21" width="1" height="1"/><rect x="106" y="19" width="1" height="1"/><rect x="31" y="22" width="1" height="1"/><rect x="58" y="24" width="1" height="1"/></g>
+    </svg>
+    <div class="flash" aria-hidden="true"></div>
   </main>
 
   <!-- LOBBY ----------------------------------------------------------- -->

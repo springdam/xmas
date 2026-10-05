@@ -283,6 +283,19 @@ function showAuth() {
   $("username").value = state.username || "";
   $("password").value = "";
   show("auth");
+  scheduleNuke();
+}
+
+// A bit of fun: a few seconds after the title screen shows, the city gets nuked.
+// Once per page load, and never for players who ask for reduced motion.
+const NUKE_DELAY_MS = 2500;
+let nukeTimer = null;
+
+function scheduleNuke() {
+  if (nukeTimer || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  nukeTimer = setTimeout(() => {
+    if (!$("auth").hidden) $("auth").classList.add("nuked");
+  }, NUKE_DELAY_MS);
 }
 
 function initAuth() {
