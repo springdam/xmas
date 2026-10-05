@@ -251,7 +251,7 @@ There is still **no "list games"** endpoint, so the join flow relies on the admi
 ## 9. Errors, security, and edge cases
 
 - **401** on any call → token missing/expired → clear state and return to the auth screen.
-- **400** → the body's `message` is human-readable ("Insufficient funds…", "…requires researching…", "The admin does not control a nation…"). Show it as a toast; don't crash. Bean-validation failures (e.g. username < 3 chars, password < 6) come back in Spring's default shape *without* `message` — fall back to a generic text.
+- **400** → the body's `message` is human-readable ("Insufficient funds…", "…requires researching…", "The admin does not control a nation…"). Show it as a toast; don't crash. Bean-validation failures (e.g. username < 3 chars, password < 4) come back in Spring's default shape *without* `message` — fall back to a generic text.
 - **Admin has no nation** — if `player.nation` is null and `player.admin` is true, render an *admin console* (game status + Start/Pause/Resume) instead of a nation dashboard; the admin can't take nation actions.
 - **Eliminated** — `player.eliminated === true` → show a defeated state; the server rejects further actions.
 - **Election freeze** — while `frozenUntilTick > currentTick`, only military actions succeed; others return 400. You can pre-dim non-military actions when frozen.
