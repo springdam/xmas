@@ -327,14 +327,20 @@ strong { font-weight: normal; color: var(--accent); }
 
 /* ---------- Act tab ---------- */
 .stack6 { display: flex; flex-direction: column; gap: 6px; }
+/* Category bars look like window title bars, so they stand apart from the action buttons. */
 .group > summary {
   list-style: none; display: flex; align-items: center; gap: 8px; text-align: left;
+  background: var(--title); color: var(--titleInk);
 }
 .group > summary::-webkit-details-marker { display: none; }
 .group > summary svg { width: 14px; height: 14px; fill: currentColor; shape-rendering: crispEdges; transition: transform .1s steps(1); }
 .group[open] > summary svg { transform: rotate(90deg); }
-.group > summary .count { font-size: 11px; }
-.group-rows { display: flex; flex-direction: column; gap: 6px; padding: 6px 0 4px; }
+.group > summary .count {
+  font-size: 11px; padding: 1px 6px;
+  background: var(--titleInk); color: var(--title);
+}
+.group + .group { margin-top: 4px; }
+.group-rows { display: flex; flex-direction: column; gap: 6px; padding: 6px 0 4px 10px; }
 
 .action {
   display: flex; flex-direction: column; gap: 2px;
