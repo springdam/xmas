@@ -12,6 +12,9 @@ public interface SessionIdentity {
     /** The authenticated account for this token, or throws 401 if the token is missing/invalid. */
     UUID requireAccountId(String sessionToken);
 
-    /** The acting player (in the current game) for this token, or throws 401/404. */
-    UUID requirePlayer(String sessionToken);
+    /**
+     * The caller's player in the given game, or throws 401 (bad token) / 403 (not in that game).
+     * Always game-scoped: an account can be in several games (an open lobby and a running game).
+     */
+    UUID requirePlayer(String sessionToken, UUID gameId);
 }

@@ -162,8 +162,13 @@ components:
     SubmitActionRequest:
       type: object
       required:
+        - gameId
         - actionType
       properties:
+        gameId:
+          type: string
+          format: uuid
+          description: The game the caller is acting in (an account can be in several games).
         actionType:
           $ref: '#/components/schemas/ActionType'
         targetPlayerId:

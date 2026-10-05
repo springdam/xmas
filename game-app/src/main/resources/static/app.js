@@ -227,8 +227,6 @@ document.addEventListener("visibilitychange", () => {
 // Small helpers
 // ---------------------------------------------------------------------
 
-const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-
 /** "NORTH_KOREA" → "NORTH KOREA" */
 const formatNation = (nation) => (nation ? nation.replaceAll("_", " ") : "");
 
@@ -237,24 +235,6 @@ function el(tag, className, text) {
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
-}
-
-/** Clipboard API needs a secure origin; phones on the LAN use plain http, so fall back. */
-async function copyText(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch { /* fall through */ }
-  const ta = el("textarea");
-  ta.value = text;
-  ta.setAttribute("readonly", "");
-  ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
-  document.body.append(ta);
-  ta.select();
-  let ok = false;
-  try { ok = document.execCommand("copy"); } catch { /* unsupported */ }
-  ta.remove();
-  return ok;
 }
 
 // ---------------------------------------------------------------------
@@ -330,7 +310,8 @@ function initAuth() {
 
 const MAX_NATIONS = 13;
 const lobbyPoller = makePoller(pollLobby, 2000);
-pollers.push(lobbyPoller);
+const gameListPoller = makePoller(pollGameList, 3000);
+pollers.push(lobbyPoller, gameListPoller);
 
 /** After login: back into the current game if we have one, else the menu. */
 function enterLobby() {
@@ -341,13 +322,15 @@ function enterLobby() {
 
 function openMenu() {
   lobbyPoller.stop();
+  gameListSig = null;
   $("lobbyMenu").hidden = false;
   $("lobbyRoom").hidden = true;
   show("lobby");
+  gameListPoller.start();
 }
 
 function openRoom() {
-  $("joinCodeBox").textContent = state.gameId;
+  gameListPoller.stop();
   $("adminStart").hidden = !state.isAdmin;
   $("waitHint").hidden = state.isAdmin;
   $("roster").replaceChildren();
@@ -432,64 +415,49 @@ function renderRoster(roster) {
   }
 }
 
-function joinLink() {
-  return `${location.origin}${location.pathname}?join=${state.gameId}`;
+/** The open games list: every lobby, plus started games you're in (to get back in). */
+let gameListSig = null;
+
+async function pollGameList() {
+  const games = await api("GET", "/games");
+  // Rebuild only on change, so a tap never lands on a button that's being replaced.
+  const sig = JSON.stringify(games);
+  if (sig === gameListSig) return;
+  gameListSig = sig;
+  $("gameListEmpty").hidden = games.length > 0;
+  $("gameList").replaceChildren(...games.map(gameRow));
 }
 
-async function shareLink() {
-  const link = joinLink();
-  if (navigator.share) {
+function gameRow(g) {
+  const li = el("li");
+  li.append(el("span", "name", g.adminUsername ? `${g.adminUsername}'s game` : "New game"));
+  if (g.status !== "LOBBY") li.append(el("span", `tag ${g.status === "PAUSED" ? "warn" : "good"}`, g.status));
+  li.append(el("span", "count", `${g.nations}/${g.maxNations}`));
+  if (g.joined) li.append(el("span", "tag", "YOU"));
+
+  const full = !g.joined && g.nations >= g.maxNations && g.adminUsername;
+  const btn = el("button", g.joined ? "btn" : "btn pri", g.joined ? "REJOIN" : full ? "FULL" : "JOIN");
+  btn.type = "button";
+  btn.disabled = Boolean(full);
+  btn.addEventListener("click", () => busy([btn, $("createBtn")], async () => {
     try {
-      await navigator.share({ title: "XMAS-GAME", text: "Join my XMAS-GAME", url: link });
-      return;
-    } catch (e) {
-      if (e.name === "AbortError") return;   // user closed the share sheet
-    }
-  }
-  toast((await copyText(link)) ? "Join link copied." : link);
-}
-
-/** A ?join=<code> link pre-fills the join form, then disappears from the address bar. */
-function takeJoinCodeFromUrl() {
-  const params = new URLSearchParams(location.search);
-  const code = params.get("join");
-  if (!code) return;
-  $("joinCode").value = code;
-  params.delete("join");
-  const rest = params.toString();
-  history.replaceState(null, "", location.pathname + (rest ? `?${rest}` : "") + location.hash);
+      await joinGame(g.id);
+      toast(g.joined ? "Back in the game." : "Joined the game.");
+    } catch (e) { toastError(e); }
+  }));
+  li.append(btn);
+  return li;
 }
 
 function initLobby() {
   $("logoutBtn").addEventListener("click", logout);
 
-  $("createBtn").addEventListener("click", () => busy([$("createBtn"), $("joinBtn")], async () => {
+  $("createBtn").addEventListener("click", () => busy([$("createBtn")], async () => {
     try {
       await createGame();
-      toast("Game created. Share the join code.");
+      toast("Game created. The others can join it from Open games.");
     } catch (e) { toastError(e); }
   }));
-
-  $("joinForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const match = $("joinCode").value.match(UUID_RE);   // accepts a bare code or a whole link
-    if (!match) {
-      toast("That doesn't look like a join code.", "error");
-      return;
-    }
-    busy([$("createBtn"), $("joinBtn")], async () => {
-      try {
-        await joinGame(match[0].toLowerCase());
-        $("joinCode").value = "";
-        toast("Joined the game.");
-      } catch (err) { toastError(err); }
-    });
-  });
-
-  $("copyBtn").addEventListener("click", async () => {
-    toast((await copyText(state.gameId)) ? "Join code copied." : "Copy failed. Long-press the code to copy it.");
-  });
-  $("shareBtn").addEventListener("click", shareLink);
 
   $("startBtn").addEventListener("click", () => busy([$("startBtn")], async () => {
     try {
@@ -501,12 +469,10 @@ function initLobby() {
 
   $("leaveBtn").addEventListener("click", () => {
     const warning = state.isAdmin
-      ? "Back to the menu? You stay the admin of this game, and you can rejoin with the same code."
-      : "Back to the menu? You stay on this game's player list, and you can rejoin with the same code.";
+      ? "Back to the menu? You stay the admin of this game, and you can rejoin it from Open games."
+      : "Back to the menu? You stay on this game's player list, and you can rejoin it from Open games.";
     if (confirm(warning)) leaveGame();
   });
-
-  takeJoinCodeFromUrl();
 }
 
 // ---------------------------------------------------------------------
@@ -1266,7 +1232,7 @@ function renderTargets() {
 async function submitSheet() {
   const { def } = sheet;
   if (!def) return;
-  const body = { actionType: def.actionType };
+  const body = { gameId: state.gameId, actionType: def.actionType };
   if (def.targeted) body.targetPlayerId = sheet.targetId;
   if (takesQuantity(def)) body.quantity = sheet.qty;
   const target = sheet.roster.find((p) => p.id === sheet.targetId);

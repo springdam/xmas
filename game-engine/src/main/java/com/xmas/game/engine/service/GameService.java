@@ -28,8 +28,12 @@ import com.xmas.game.engine.repository.PlayerSpecialWeaponsRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -67,6 +71,30 @@ public class GameService {
         return gameRepository.save(game);
     }
 
+    /** A game in the lobby list: the game, its players, and whether the caller is one of them. */
+    public record Listing(GameEntity game, List<PlayerEntity> players, boolean joined) {
+    }
+
+    /** Every game still in the lobby (open to anyone), plus started games the account is already in. */
+    @Transactional(readOnly = true)
+    public List<Listing> listGames(UUID accountId) {
+        Set<UUID> mine = playerRepository.findByAccountId(accountId).stream()
+                .map(PlayerEntity::getGameId)
+                .collect(Collectors.toSet());
+        List<GameEntity> games = new ArrayList<>(gameRepository.findByStatus(GameStatus.LOBBY));
+        gameRepository.findAllById(mine).stream()
+                .filter(game -> game.getStatus() == GameStatus.RUNNING || game.getStatus() == GameStatus.PAUSED)
+                .forEach(games::add);
+        Map<UUID, List<PlayerEntity>> players = playerRepository
+                .findByGameIdIn(games.stream().map(GameEntity::getId).toList()).stream()
+                .collect(Collectors.groupingBy(PlayerEntity::getGameId));
+        return games.stream()
+                .sorted(Comparator.comparing(GameEntity::getCreatedAt).reversed())
+                .map(game -> new Listing(game, players.getOrDefault(game.getId(), List.of()),
+                        mine.contains(game.getId())))
+                .toList();
+    }
+
     @Transactional
     public PlayerEntity joinGame(UUID gameId, UUID accountId) {
         GameEntity game = requireGame(gameId);
@@ -76,7 +104,12 @@ public class GameService {
         if (playerRepository.existsByGameIdAndAccountId(gameId, accountId)) {
             throw new BadRequestException("Account already joined this game");
         }
-        boolean firstPlayer = playerRepository.findByGameId(gameId).isEmpty();
+        List<PlayerEntity> joined = playerRepository.findByGameId(gameId);
+        boolean firstPlayer = joined.isEmpty();
+        // The first player is the admin; everyone after needs a nation of their own.
+        if (!firstPlayer && joined.stream().filter(p -> !p.isAdmin()).count() >= Nation.values().length) {
+            throw new BadRequestException("Game is full");
+        }
         PlayerEntity player = PlayerEntity.builder()
                 .id(UUID.randomUUID())
                 .gameId(gameId)

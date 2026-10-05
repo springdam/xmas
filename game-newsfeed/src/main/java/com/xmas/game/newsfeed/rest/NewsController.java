@@ -23,10 +23,10 @@ public class NewsController implements NewsfeedApi {
 
     @Override
     public ResponseEntity<List<NewsEvent>> getPlayerNews(UUID playerId, String xSessionToken, Integer limit) {
-        if (!sessionIdentity.requirePlayer(xSessionToken).equals(playerId)) {
+        UUID gameId = playerDirectory.requireGameId(playerId);
+        if (!sessionIdentity.requirePlayer(xSessionToken, gameId).equals(playerId)) {
             throw new ForbiddenException("You may only read your own news feed");
         }
-        UUID gameId = playerDirectory.requireGameId(playerId);
         List<NewsEvent> body = newsService.feedForPlayer(playerId, gameId, limit == null ? 50 : limit)
                 .stream()
                 .map(NewsMapper::toDto)

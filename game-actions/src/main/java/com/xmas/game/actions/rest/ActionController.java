@@ -32,7 +32,7 @@ public class ActionController implements ActionsApi {
     @Override
     public ResponseEntity<com.xmas.game.actions.api.model.ActionResult> submitAction(
             String xSessionToken, SubmitActionRequest request) {
-        UUID actorPlayerId = sessionIdentity.requirePlayer(xSessionToken);
+        UUID actorPlayerId = sessionIdentity.requirePlayer(xSessionToken, request.getGameId());
         ActionType type = ActionMapper.toDomainType(request.getActionType());
         int quantity = request.getQuantity() == null ? 1 : request.getQuantity();
         ActionResult result = actionService.submit(

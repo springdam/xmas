@@ -10,6 +10,22 @@ tags:
     description: Game lifecycle and player state
 paths:
   /games:
+    get:
+      tags:
+        - game
+      operationId: listGames
+      summary: Open games anyone can join (lobbies), plus started games you are already in
+      parameters:
+        - $ref: '#/components/parameters/SessionToken'
+      responses:
+        '200':
+          description: Games, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GameListing'
     post:
       tags:
         - game
@@ -221,6 +237,37 @@ components:
         tickDurationMillis:
           type: integer
           format: int64
+    GameListing:
+      type: object
+      required:
+        - id
+        - status
+        - createdAt
+        - nations
+        - maxNations
+        - joined
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/GameStatus'
+        createdAt:
+          type: string
+          format: date-time
+        adminUsername:
+          type: string
+          description: Who hosts the game (the first player to join), if anyone has joined yet.
+        nations:
+          type: integer
+          format: int32
+          description: Players who will get a nation (everyone but the admin).
+        maxNations:
+          type: integer
+          format: int32
+        joined:
+          type: boolean
+          description: Whether the caller is already in this game.
     PlayerResponse:
       type: object
       required:

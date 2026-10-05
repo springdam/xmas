@@ -1,6 +1,7 @@
 package com.xmas.game.engine.mapper;
 
 import com.xmas.game.engine.api.model.EconomyResponse;
+import com.xmas.game.engine.api.model.GameListing;
 import com.xmas.game.engine.api.model.GamePlayerSummary;
 import com.xmas.game.engine.api.model.GameResponse;
 import com.xmas.game.engine.api.model.GameStatus;
@@ -22,6 +23,7 @@ import com.xmas.game.engine.entity.PlayerProtectionEntity;
 import com.xmas.game.engine.entity.PlayerRelationEntity;
 import com.xmas.game.engine.entity.PlayerResearchEntity;
 import com.xmas.game.engine.entity.PlayerSpecialWeaponsEntity;
+import com.xmas.game.engine.service.GameService;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +40,17 @@ public final class GameMapper {
                 .currentTick(game.getCurrentTick())
                 .gameTime(game.getGameTime().atOffset(ZoneOffset.UTC))
                 .tickDurationMillis(game.getTickDurationMillis());
+    }
+
+    public static GameListing toGameListing(GameService.Listing listing, String adminUsername) {
+        return new GameListing()
+                .id(listing.game().getId())
+                .status(GameStatus.fromValue(listing.game().getStatus().name()))
+                .createdAt(listing.game().getCreatedAt().atOffset(ZoneOffset.UTC))
+                .adminUsername(adminUsername)
+                .nations((int) listing.players().stream().filter(p -> !p.isAdmin()).count())
+                .maxNations(com.xmas.game.common.domain.Nation.values().length)
+                .joined(listing.joined());
     }
 
     public static PlayerResponse toPlayerResponse(PlayerEntity player) {

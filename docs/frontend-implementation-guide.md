@@ -37,7 +37,8 @@ Base URL + JSON everywhere. Auth endpoints need **no** token; everything else ne
 |---|---|---|---|
 | Register | `POST /account/register` | no | `{username, password}` → `{id, username}` (201) |
 | Login | `POST /account/login` | no | `{username, password}` → `{accountId, sessionToken}` |
-| Create game | `POST /games` | no | → `GameResponse` (admin creates, shares the id) |
+| List games | `GET /games` | yes | → `GameListing[]` `{id, status, createdAt, adminUsername?, nations, maxNations, joined}` — every lobby, plus started games you're in |
+| Create game | `POST /games` | no | → `GameResponse` (then join it: the first joiner is the admin) |
 | Game status | `GET /games/{gameId}` | yes | → `GameResponse` — poll in the lobby for `RUNNING`; gives `currentTick` for the election freeze |
 | Roster | `GET /games/{gameId}/players` | yes | → `GamePlayerSummary[]` `{id, username, nation?, popularity, eliminated, admin}` — use for the target picker |
 | Join game | `POST /games/{gameId}/players` | yes | no body → `PlayerResponse` (**save `id` as your playerId**; first joiner is admin) |
@@ -45,7 +46,7 @@ Base URL + JSON everywhere. Auth endpoints need **no** token; everything else ne
 | Pause / Resume | `POST /games/{gameId}/pause` `…/resume` | yes | admin only |
 | Player state | `GET /players/{playerId}` | yes | → `PlayerStateResponse` (full for you / satellite intel, limited otherwise) |
 | Action catalog | `GET /actions` | no | → `ActionDefinition[]` (fetch once, cache) |
-| Submit action | `POST /actions` | yes | `{actionType, targetPlayerId?, quantity?}` → `ActionResult` |
+| Submit action | `POST /actions` | yes | `{gameId, actionType, targetPlayerId?, quantity?}` → `ActionResult` (you act as your player in `gameId`) |
 | News feed | `GET /players/{playerId}/news?limit=50` | yes | → `NewsEvent[]` filtered for that player; you may only read **your own** (403 otherwise) |
 
 ### Response shapes
@@ -143,8 +144,10 @@ async function login(username, password) {
 
 ### Lobby
 
-- **Create** (admin): `POST /games` → store `gameId`, display it so the admin can share it (a join code).
-- **Join**: the player types/pastes the `gameId`, then `POST /games/{gameId}/players`; store the returned `player.id` as `playerId` and `player.admin` as `isAdmin`.
+- **Open lobby**: poll `GET /games` on the menu and list the games; anyone can join any lobby (up to 13 nations + the admin).
+- **Create** (admin): `POST /games`, then join it.
+- **Join**: `POST /games/{gameId}/players`; store the returned `player.id` as `playerId` and `player.admin` as `isAdmin`. Rejoining a game you're already in returns 400; find yourself in the roster instead.
+- Identity is **per game**: an account can be in several games, so every call resolves your player within a game (the path's game, the viewed player's game, or `gameId` in the action body).
 - Poll `GET /games/{gameId}` to watch for `status === "RUNNING"`, then `show("game")`.
 - Admin gets **Start** (`POST /games/{id}/start`). After that, Pause/Resume live on the game screen.
 
@@ -244,7 +247,7 @@ async function pickTarget() {
 
 It's the *limited public view* only (username, nation, popularity, eliminated, admin) — never force composition or arsenals; those come from recon/satellites. Cache it per game screen and refresh on your poll if you like (nations don't change, but popularity and eliminated do).
 
-There is still **no "list games"** endpoint, so the join flow relies on the admin sharing the `gameId` as a join code — fine for a first version.
+Games are found through `GET /games` (an open lobby); there are no join codes.
 
 ---
 

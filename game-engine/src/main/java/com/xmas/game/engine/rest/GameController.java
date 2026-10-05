@@ -3,6 +3,7 @@ package com.xmas.game.engine.rest;
 import com.xmas.game.common.account.AccountDirectory;
 import com.xmas.game.common.security.SessionIdentity;
 import com.xmas.game.engine.api.GameApi;
+import com.xmas.game.engine.api.model.GameListing;
 import com.xmas.game.engine.api.model.GameResponse;
 import com.xmas.game.engine.api.model.PlayerResponse;
 import com.xmas.game.engine.api.model.PlayerStateResponse;
@@ -40,6 +41,24 @@ public class GameController implements GameApi {
     }
 
     @Override
+    public ResponseEntity<List<GameListing>> listGames(String xSessionToken) {
+        UUID accountId = sessionIdentity.requireAccountId(xSessionToken);
+        List<GameService.Listing> listings = gameService.listGames(accountId);
+        Map<UUID, String> usernames = accountDirectory.usernames(listings.stream()
+                .flatMap(listing -> listing.players().stream())
+                .filter(PlayerEntity::isAdmin)
+                .map(PlayerEntity::getAccountId)
+                .toList());
+        return ResponseEntity.ok(listings.stream()
+                .map(listing -> GameMapper.toGameListing(listing, listing.players().stream()
+                        .filter(PlayerEntity::isAdmin)
+                        .findFirst()
+                        .map(admin -> usernames.get(admin.getAccountId()))
+                        .orElse(null)))
+                .toList());
+    }
+
+    @Override
     public ResponseEntity<GameResponse> getGame(UUID gameId, String xSessionToken) {
         sessionIdentity.requireAccountId(xSessionToken);
         return ResponseEntity.ok(GameMapper.toGameResponse(gameService.getGame(gameId)));
@@ -66,26 +85,26 @@ public class GameController implements GameApi {
 
     @Override
     public ResponseEntity<GameResponse> startGame(UUID gameId, String xSessionToken) {
-        UUID playerId = sessionIdentity.requirePlayer(xSessionToken);
+        UUID playerId = sessionIdentity.requirePlayer(xSessionToken, gameId);
         return ResponseEntity.ok(GameMapper.toGameResponse(gameService.startGame(gameId, playerId)));
     }
 
     @Override
     public ResponseEntity<GameResponse> pauseGame(UUID gameId, String xSessionToken) {
-        UUID playerId = sessionIdentity.requirePlayer(xSessionToken);
+        UUID playerId = sessionIdentity.requirePlayer(xSessionToken, gameId);
         return ResponseEntity.ok(GameMapper.toGameResponse(gameService.pauseGame(gameId, playerId)));
     }
 
     @Override
     public ResponseEntity<GameResponse> resumeGame(UUID gameId, String xSessionToken) {
-        UUID playerId = sessionIdentity.requirePlayer(xSessionToken);
+        UUID playerId = sessionIdentity.requirePlayer(xSessionToken, gameId);
         return ResponseEntity.ok(GameMapper.toGameResponse(gameService.resumeGame(gameId, playerId)));
     }
 
     @Override
     public ResponseEntity<PlayerStateResponse> getPlayerState(UUID playerId, String xSessionToken) {
-        UUID viewerId = sessionIdentity.requirePlayer(xSessionToken);
         PlayerEntity player = gameService.getPlayer(playerId);
+        UUID viewerId = sessionIdentity.requirePlayer(xSessionToken, player.getGameId());
         boolean fullView = viewerId.equals(playerId) || gameService.hasSatelliteIntel(viewerId);
         if (!fullView) {
             return ResponseEntity.ok(GameMapper.toLimitedPlayerState(player, gameService.getRelations(playerId)));

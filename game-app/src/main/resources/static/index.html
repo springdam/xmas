@@ -104,15 +104,12 @@
         </div>
       </section>
 
-      <section class="win" aria-labelledby="joinTitle">
-        <div class="tbar"><span class="gad"></span><h2 id="joinTitle" class="ttl hd">JOIN GAME</h2><span class="grow"></span><span class="gad"></span></div>
-        <form id="joinForm" class="win-body stack">
-          <label class="field">Join code
-            <input id="joinCode" name="joinCode" required autocomplete="off" autocapitalize="none" spellcheck="false"
-                   placeholder="paste the admin's code or link">
-          </label>
-          <button id="joinBtn" class="btn pri" type="submit">JOIN</button>
-        </form>
+      <section class="win" aria-labelledby="gamesTitle">
+        <div class="tbar"><span class="gad"></span><h2 id="gamesTitle" class="ttl hd">OPEN GAMES</h2><span class="grow"></span><span class="gad"></span></div>
+        <div class="win-body">
+          <ul id="gameList" class="roster games"></ul>
+          <p id="gameListEmpty" class="dim small">No open games yet. Create one and the others can join it here<span class="cursor">_</span></p>
+        </div>
       </section>
 
       <div class="grow"></div>
@@ -128,13 +125,7 @@
         <div class="tbar"><span class="gad"></span><h2 id="roomTitle" class="ttl hd">GAME LOBBY</h2><span class="grow"></span><span class="gad"></span></div>
         <div class="win-body stack">
           <p class="status-line"><span class="tag warn">LOBBY</span><span>Waiting for players<span class="cursor">_</span></span></p>
-          <span class="hd label">JOIN CODE</span>
-          <output id="joinCodeBox" class="codebox"></output>
-          <div class="row2">
-            <button id="copyBtn" class="btn" type="button">COPY CODE</button>
-            <button id="shareBtn" class="btn" type="button">SHARE LINK</button>
-          </div>
-          <p class="dim small">Everyone else logs in on their own phone and pastes this code under Join game.</p>
+          <p class="dim small">Everyone else logs in on their own phone and joins this game from the Open games list.</p>
         </div>
       </section>
 

@@ -292,12 +292,6 @@ strong { font-weight: normal; color: var(--accent); }
 /* ---------- Lobby ---------- */
 .whoami-row { display: flex; align-items: center; gap: 10px; }
 .status-line { display: flex; align-items: center; gap: 8px; }
-.codebox {
-  display: block; padding: 8px 10px;
-  background: var(--field); font-size: 28px; line-height: 1;
-  word-break: break-all; user-select: all; -webkit-user-select: all;
-  border: 2px solid; border-color: var(--lo) var(--hi) var(--hi) var(--lo);
-}
 .roster { list-style: none; margin: -6px 0 0; padding: 0; counter-reset: roster; }
 .roster li {
   counter-increment: roster;
@@ -312,6 +306,9 @@ strong { font-weight: normal; color: var(--accent); }
 .roster .name { flex-grow: 1; font-size: 24px; overflow-wrap: anywhere; }
 .roster .nation { font-family: 'Silkscreen', ui-monospace, monospace; font-size: 11px; color: var(--dim); }
 .roster-note { margin-top: 10px; }
+.roster.games li::before { content: none; }
+.roster.games .count { font-family: 'Silkscreen', ui-monospace, monospace; font-size: 11px; color: var(--dim); }
+.roster.games .btn { min-height: 36px; padding: 0 10px; }
 
 /* ---------- Game screen ---------- */
 .screen.game { padding: 0; gap: 0; }
