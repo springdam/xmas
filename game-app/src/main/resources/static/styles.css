@@ -192,7 +192,8 @@ strong { font-weight: normal; color: var(--accent); }
    own start delay in --d. Choppy steps() timing keeps it retro. Skipped entirely for
    reduced motion. */
 .skyline.ruined { opacity: 0; }
-.skyline.ruined .fires rect { fill: #FF6600; }
+.skyline.ruined .fires .flame { fill: #FF6600; }
+.skyline.ruined .fires .core { fill: #FFCC00; }
 
 .blast {
   position: absolute; z-index: 0; pointer-events: none;
@@ -217,8 +218,11 @@ strong { font-weight: normal; color: var(--accent); }
 #auth.nuked .flash { animation: nuke-flash 1.6s ease-out var(--d) forwards; }
 #auth.nuked .skyline.intact { animation: nuke-hide 0s .08s forwards; }
 #auth.nuked .skyline.ruined { animation: nuke-show 0s .08s forwards; }
-#auth.nuked .skyline.ruined .fires rect { animation: nuke-flicker .4s steps(1) .7s infinite; }
-#auth.nuked .fires rect:nth-child(even) { animation-delay: .9s; }
+#auth.nuked .skyline.ruined .fires .flame { animation: nuke-flicker .4s steps(1) .7s infinite; }
+#auth.nuked .skyline.ruined .fires .core { animation: nuke-flicker-core .4s steps(1) .7s infinite; }
+/* Three flicker groups with their own pace, so the fires drift in and out of step. */
+#auth.nuked .skyline.ruined .fires g:nth-child(3n+2) > * { animation-duration: .55s; animation-delay: .85s; }
+#auth.nuked .skyline.ruined .fires g:nth-child(3n) > * { animation-duration: .7s; animation-delay: 1s; }
 #auth.nuked .fires.late { animation: nuke-show 0s 4.08s forwards; }
 
 #auth.nuked .cloud { animation: nuke-linger 2s ease-in calc(var(--d) + 3.8s) forwards; }
@@ -241,6 +245,7 @@ strong { font-weight: normal; color: var(--accent); }
 @keyframes nuke-hide { to { opacity: 0; } }
 @keyframes nuke-show { to { opacity: 1; } }
 @keyframes nuke-flicker { 50% { fill: #FFCC00; } }
+@keyframes nuke-flicker-core { 50% { fill: #FFFFEE; } }
 /* Fireball at ground level swelling up into the cap. */
 @keyframes nuke-cap {
   0% { opacity: 1; transform: translateY(22px) scale(.2); }
