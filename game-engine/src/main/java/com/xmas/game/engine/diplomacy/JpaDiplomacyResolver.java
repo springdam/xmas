@@ -35,6 +35,14 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
     private final NewsService newsService;
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean atWar(UUID a, UUID b) {
+        return relationRepository.findByPlayerLowAndPlayerHigh(low(a, b), high(a, b))
+                .map(r -> r.getStatus() == RelationStatus.WAR)
+                .orElse(false);
+    }
+
+    @Override
     @Transactional
     public void declareWar(UUID actorId, UUID targetId) {
         PlayerEntity actor = player(actorId);
@@ -64,7 +72,12 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
         PlayerEntity actor = player(actorId);
         PlayerEntity target = player(targetId);
         target.setCash(target.getCash() + amount);
-        actor.setPopularity(Popularity.clamp(actor.getPopularity() + properties.getSendMoneyBonus()));
+        // Only a real gift wins favour at home, and it wears off like parades do.
+        if (amount >= properties.getSendMoneyBonusMinAmount()) {
+            int gain = diminished(properties.getSendMoneyBonus(), actor.getPopularityBoostCount(), decay(actorId));
+            actor.setPopularity(Popularity.clamp(actor.getPopularity() + gain));
+            actor.setPopularityBoostCount(actor.getPopularityBoostCount() + 1);
+        }
         playerRepository.save(target);
         playerRepository.save(actor);
         record(actor, target, NewsVisibility.INVOLVED_ONLY,
@@ -121,8 +134,8 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
     }
 
     private void setRelation(UUID a, UUID b, RelationStatus status) {
-        UUID low = a.compareTo(b) <= 0 ? a : b;
-        UUID high = a.compareTo(b) <= 0 ? b : a;
+        UUID low = low(a, b);
+        UUID high = high(a, b);
         PlayerRelationEntity relation = relationRepository.findByPlayerLowAndPlayerHigh(low, high)
                 .orElseGet(() -> PlayerRelationEntity.builder()
                         .id(UUID.randomUUID())
@@ -132,6 +145,14 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
         relation.setStatus(status);
         relation.setUpdatedAt(Instant.now());
         relationRepository.save(relation);
+    }
+
+    private static UUID low(UUID a, UUID b) {
+        return a.compareTo(b) <= 0 ? a : b;
+    }
+
+    private static UUID high(UUID a, UUID b) {
+        return a.compareTo(b) <= 0 ? b : a;
     }
 
     private void record(PlayerEntity actor, PlayerEntity target, NewsVisibility visibility, String headline) {

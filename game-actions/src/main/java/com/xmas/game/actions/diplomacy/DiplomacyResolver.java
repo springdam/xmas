@@ -9,6 +9,9 @@ import java.util.UUID;
  */
 public interface DiplomacyResolver {
 
+    /** Whether the two players are currently at war with each other. */
+    boolean atWar(UUID playerA, UUID playerB);
+
     void declareWar(UUID actorPlayerId, UUID targetPlayerId);
 
     void declarePeace(UUID actorPlayerId, UUID targetPlayerId);

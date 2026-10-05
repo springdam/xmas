@@ -14,7 +14,9 @@ public class PopularityProperties {
 
     private int declareWarPenalty = 10;
     private int declarePeaceBonus = 8;
+    /** Aid earns the sender sendMoneyBonus (diminishing like parades) only from this amount up. */
     private int sendMoneyBonus = 3;
+    private long sendMoneyBonusMinAmount = 50_000;
     private int paradeBonus = 8;
     private int praiseBonus = 4;
     /** Each successive parade/praise on a player is multiplied by decay^boostCount until they hold an election. */
@@ -41,5 +43,5 @@ public class PopularityProperties {
     private int vulnerabilityThreshold = 20;
 
     /** Per-tick probability that a vulnerable (popularity &lt; threshold) leader is overthrown in a coup. */
-    private double coupChancePerTick = 0.2;
+    private double coupChancePerTick = 0.03;
 }

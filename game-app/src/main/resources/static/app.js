@@ -853,6 +853,8 @@ const WARNINGS = {
   DECAPITATION_STRIKE: "Only succeeds if the target's popularity is below 20%. You pay either way.",
   SPECIAL_WEAPON_ATTACK: "Every nation loses popularity when a nuke flies, you most of all.",
   DECLARE_WAR: "Declaring war costs you popularity.",
+  DECLARE_PEACE: "Only possible with a nation you are at war with. Making peace raises your popularity.",
+  SEND_MONEY: "Gifts of $50,000 or more raise your popularity, less each time (like parades).",
   HOLD_ELECTION: "Resets your parade bonus, but freezes all non-military actions for a while.",
   DEMOLISH_FARM: "Torn down at once, with no refund. The land is free to build on.",
   DEMOLISH_FACTORY: "Torn down at once, with no refund. The land is free to build on.",
@@ -905,6 +907,7 @@ function blockReason(def, me, info) {
   }
   if (def.maxTotal != null && ownedCount(me, def.actionType) >= def.maxTotal) return `Maximum of ${def.maxTotal} reached`;
   if (def.actionType === "SPECIAL_WEAPON_ATTACK" && !(me.specialWeapons?.nukes > 0)) return "No warheads built";
+  if (def.actionType === "DECLARE_PEACE" && !(me.relations || []).some((r) => r.status === "WAR")) return "Not at war";
   if (COVERT.has(def.actionType) && spyCount(me) === 0) {
     // Special ops can carry out an assassination on their own.
     if (def.actionType !== "ASSASSINATE_LEADER") return "Needs spies";
@@ -1188,6 +1191,9 @@ function renderTargets() {
   const relations = new Map((game.me.relations || []).map((r) => [r.otherPlayerId, r.status]));
   const targets = sheet.roster
     .filter((p) => p.id !== state.playerId && !p.admin && !p.eliminated)
+    // War and peace only make sense against the opposite relation.
+    .filter((p) => sheet.def.actionType !== "DECLARE_PEACE" || relations.get(p.id) === "WAR")
+    .filter((p) => sheet.def.actionType !== "DECLARE_WAR" || relations.get(p.id) !== "WAR")
     .sort((a, b) => formatNation(a.nation).localeCompare(formatNation(b.nation)));
   if (!targets.length) {
     $("targetList").replaceChildren(el("p", "dim", "No other nations to target."));

@@ -35,7 +35,7 @@ game:
   popularity:
     starting-popularity: 50
     vulnerability-threshold: 20
-    coup-chance-per-tick: 0.2
+    coup-chance-per-tick: 0.03
     nuke-victim-penalty: 15
     nuke-global-drop: 3
     nuke-attacker-penalty: 10
@@ -43,6 +43,7 @@ game:
     sabotage-victim-penalty: 6
     cyber-victim-penalty: 6
     heist-victim-penalty: 3
+    send-money-bonus-min-amount: 50000
     parade-bonus: 8
     praise-bonus: 4
     parade-praise-decay: 0.6
@@ -373,13 +374,13 @@ game:
         duration-millis: 0
         targeted: true
         public-visibility: true
-        description: "Offer peace to a rival nation."
+        description: "Make peace with a nation you are at war with."
       send-money:
         cost-cash: 1
         duration-millis: 0
         targeted: true
         public-visibility: false
-        description: "Send financial aid to another nation. Quantity is the dollar amount."
+        description: "Send financial aid to another nation. Gifts of $50,000+ raise your popularity. Quantity is the dollar amount."
       hold-parade:
         cost-cash: 20000
         duration-millis: 0
