@@ -659,7 +659,7 @@ function windowFrame(title, id) {
 }
 
 /** Land: each economy building takes a plot; buildings under construction count as taken. */
-const usesLand = (def) => def.category === "ECONOMY";
+const usesLand = (def) => def.category === "ECONOMY" && def.actionType.startsWith("BUILD_");
 const freeLand = (me) => {
   const e = me.economy;
   return e?.landCapacity == null ? Infinity : Math.max(0, e.landCapacity - (e.landInUse ?? 0));
@@ -815,7 +815,7 @@ async function setPaused(pause) {
 /** Display groups, in order. ATTACK and SPECIAL_WEAPON_ATTACK are DIPLOMACY in the
  *  catalog but players look for them under Army / Special weapons. */
 const GROUPS = [
-  ["ECONOMY", "ECONOMY"], ["ARMY", "ARMY"], ["SPECIAL_WEAPONS", "SPECIAL WEAPONS"],
+  ["ECONOMY", "ECONOMY"], ["DEMOLITION", "DEMOLITION"], ["ARMY", "ARMY"], ["SPECIAL_WEAPONS", "SPECIAL WEAPONS"],
   ["ESPIONAGE", "ESPIONAGE"], ["PERSONAL_PROTECTION", "PROTECTION"], ["RESEARCH", "RESEARCH"],
   ["DIPLOMACY", "DIPLOMACY"],
 ];
@@ -843,6 +843,8 @@ const OWNED = {
   HIRE_SPIES: ["espionage", "spies"], HIRE_COUNTER_INTEL: ["espionage", "counterIntel"],
   HIRE_DOUBLEGANGER: ["protection", "doublegangers"], BUILD_SECRET_BUNKER: ["protection", "bunkers"],
   HIRE_BODYGUARDS: ["protection", "bodyguards"], HIRE_NINJA_BODYGUARDS: ["protection", "ninjaBodyguards"],
+  DEMOLISH_FARM: ["economy", "farms"], DEMOLISH_FACTORY: ["economy", "factories"],
+  DEMOLISH_ROBOT_FACTORY: ["economy", "robotFactories"], DEMOLISH_BANK: ["economy", "banks"],
 };
 
 /** Extra warnings shown in the dialog, from the game rules. */
@@ -852,6 +854,10 @@ const WARNINGS = {
   SPECIAL_WEAPON_ATTACK: "Every nation loses popularity when a nuke flies, you most of all.",
   DECLARE_WAR: "Declaring war costs you popularity.",
   HOLD_ELECTION: "Resets your parade bonus, but freezes all non-military actions for a while.",
+  DEMOLISH_FARM: "Torn down at once, with no refund. The land is free to build on.",
+  DEMOLISH_FACTORY: "Torn down at once, with no refund. The land is free to build on.",
+  DEMOLISH_ROBOT_FACTORY: "Torn down at once, with no refund. The land is free to build on.",
+  DEMOLISH_BANK: "Torn down at once, with no refund. The land is free to build on.",
 };
 
 /** Spy operations: they need agents, and a failure can cost spies. */
@@ -865,9 +871,11 @@ const spyCount = (me) => me.espionage?.spies ?? 0;
 const actionLabel = (type) =>
   LABELS[type] || (type.startsWith("RESEARCH_") ? researchName(type) : type.replaceAll("_", " "));
 const titleCase = (s) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+const isDemolish = (def) => def.actionType.startsWith("DEMOLISH_");
 const uiGroup = (def) =>
   def.actionType === "ATTACK" ? "ARMY"
-    : def.actionType === "SPECIAL_WEAPON_ATTACK" ? "SPECIAL_WEAPONS" : def.category;
+    : def.actionType === "SPECIAL_WEAPON_ATTACK" ? "SPECIAL_WEAPONS"
+      : isDemolish(def) ? "DEMOLITION" : def.category;
 /** The server lets military actions through an election freeze. */
 const isMilitary = (def) =>
   def.category === "ARMY" || def.actionType === "ATTACK" || def.actionType === "SPECIAL_WEAPON_ATTACK";
@@ -904,6 +912,7 @@ function blockReason(def, me, info) {
   }
   if (p.frozenUntilTick > info.currentTick && !isMilitary(def)) return "Frozen by the election";
   if (usesLand(def) && freeLand(me) === 0) return "No free land";
+  if (isDemolish(def) && ownedCount(me, def.actionType) === 0) return "Nothing to demolish";
   if (def.actionType !== "SEND_MONEY" && p.cash < def.costCash) return "Not enough cash";
   return null;
 }
@@ -1062,7 +1071,7 @@ function openSheet(type, opener, targetId = null) {
   $("sheetDesc").textContent = def.description || "";
 
   const facts = [];
-  if (type !== "SEND_MONEY") facts.push([takesQuantity(def) && type !== "SPECIAL_WEAPON_ATTACK" ? "EACH" : "COST", fmtCash(def.costCash)]);
+  if (type !== "SEND_MONEY") facts.push([takesQuantity(def) && type !== "SPECIAL_WEAPON_ATTACK" ? "EACH" : "COST", costLabel(def)]);
   facts.push(["TIME", fmtDuration(def.durationMillis)]);
   if (type in OWNED) {
     const n = ownedCount(me, type);
@@ -1123,6 +1132,7 @@ function maxQty() {
   if (def.actionType === "SPECIAL_WEAPON_ATTACK") max = Math.min(max, me.specialWeapons?.nukes ?? 0);
   if (def.maxTotal != null) max = Math.min(max, def.maxTotal - ownedCount(me, def.actionType));
   if (usesLand(def)) max = Math.min(max, freeLand(me));
+  if (isDemolish(def)) max = Math.min(max, ownedCount(me, def.actionType));
   return Math.max(0, max);
 }
 

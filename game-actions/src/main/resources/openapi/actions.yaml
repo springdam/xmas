@@ -76,6 +76,10 @@ components:
         - BUILD_FACTORY
         - BUILD_ROBOT_FACTORY
         - BUILD_BANK
+        - DEMOLISH_FARM
+        - DEMOLISH_FACTORY
+        - DEMOLISH_ROBOT_FACTORY
+        - DEMOLISH_BANK
         - RECRUIT_INFANTRY
         - RECRUIT_TANK
         - BUILD_MISSILE_BATTERY

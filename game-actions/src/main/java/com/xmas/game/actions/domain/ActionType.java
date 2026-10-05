@@ -9,6 +9,10 @@ public enum ActionType {
     BUILD_FACTORY(ActionCategory.ECONOMY),
     BUILD_ROBOT_FACTORY(ActionCategory.ECONOMY),
     BUILD_BANK(ActionCategory.ECONOMY),
+    DEMOLISH_FARM(ActionCategory.ECONOMY),
+    DEMOLISH_FACTORY(ActionCategory.ECONOMY),
+    DEMOLISH_ROBOT_FACTORY(ActionCategory.ECONOMY),
+    DEMOLISH_BANK(ActionCategory.ECONOMY),
 
     RECRUIT_INFANTRY(ActionCategory.ARMY),
     RECRUIT_TANK(ActionCategory.ARMY),
@@ -69,8 +73,8 @@ public enum ActionType {
         this.category = category;
     }
 
-    /** Economy buildings each take a plot of the nation's land. */
+    /** Building an economy building takes a plot of the nation's land (demolishing frees one). */
     public boolean usesLand() {
-        return category == ActionCategory.ECONOMY;
+        return this == BUILD_FARM || this == BUILD_FACTORY || this == BUILD_ROBOT_FACTORY || this == BUILD_BANK;
     }
 }

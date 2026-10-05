@@ -7,6 +7,7 @@ import com.xmas.game.actions.config.ActionProperties;
 import com.xmas.game.actions.domain.ActionResult;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.handler.economy.BuildFarmHandler;
+import com.xmas.game.actions.handler.economy.DemolishFarmHandler;
 import com.xmas.game.actions.queue.PendingActionQueue;
 import com.xmas.game.actions.state.InMemoryPlayerStateGateway;
 import com.xmas.game.common.error.BadRequestException;
@@ -28,6 +29,7 @@ class ActionServiceTest {
     void setUp() {
         ActionProperties properties = new ActionProperties();
         properties.getDefinitions().put(ActionType.BUILD_FARM, definition(10_000, 0, false));
+        properties.getDefinitions().put(ActionType.DEMOLISH_FARM, definition(0, 0, false));
         properties.getDefinitions().put(ActionType.PERFORM_CYBER_ATTACK, definition(5_000, 15_000, true));
 
         state = new InMemoryPlayerStateGateway();
@@ -38,7 +40,8 @@ class ActionServiceTest {
     private ActionService buildService(ActionProperties properties) {
         ActionDefinitionCatalog catalog = new ActionDefinitionCatalog(properties);
         catalog.load();
-        ActionHandlerRegistry registry = new ActionHandlerRegistry(List.of(new BuildFarmHandler(state)));
+        ActionHandlerRegistry registry = new ActionHandlerRegistry(
+                List.of(new BuildFarmHandler(state), new DemolishFarmHandler(state)));
         return new ActionService(catalog, registry, queue, state, new AllResearchGateway());
     }
 
@@ -48,6 +51,28 @@ class ActionServiceTest {
         def.setDurationMillis(durationMillis);
         def.setTargeted(targeted);
         return def;
+    }
+
+    @Test
+    void demolishFarm_removesStandingFarmsForFree() {
+        actionService.submit(ActionType.BUILD_FARM, player, null, 3);
+        long before = state.getCash(player);
+
+        ActionResult result = actionService.submit(ActionType.DEMOLISH_FARM, player, null, 2);
+
+        assertThat(result.isCompletedImmediately()).isTrue();
+        assertThat(state.getAssetCount(player, ActionType.BUILD_FARM)).isEqualTo(1);
+        assertThat(state.getCash(player)).isEqualTo(before);
+    }
+
+    @Test
+    void demolishFarm_rejectsMoreThanStanding() {
+        actionService.submit(ActionType.BUILD_FARM, player, null, 1);
+
+        assertThatThrownBy(() -> actionService.submit(ActionType.DEMOLISH_FARM, player, null, 2))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Only 1 standing");
+        assertThat(state.getAssetCount(player, ActionType.BUILD_FARM)).isEqualTo(1);
     }
 
     @Test

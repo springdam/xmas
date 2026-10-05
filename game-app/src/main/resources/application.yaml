@@ -88,6 +88,30 @@ game:
         targeted: false
         public-visibility: false
         description: "Build a bank. Increases passive income each tick."
+      demolish-farm:
+        cost-cash: 0
+        duration-millis: 0
+        targeted: false
+        public-visibility: false
+        description: "Tear down a farm to free its land for something else. No refund."
+      demolish-factory:
+        cost-cash: 0
+        duration-millis: 0
+        targeted: false
+        public-visibility: false
+        description: "Tear down a factory to free its land for something else. No refund."
+      demolish-robot-factory:
+        cost-cash: 0
+        duration-millis: 0
+        targeted: false
+        public-visibility: false
+        description: "Tear down a robot factory to free its land for something else. No refund."
+      demolish-bank:
+        cost-cash: 0
+        duration-millis: 0
+        targeted: false
+        public-visibility: false
+        description: "Tear down a bank to free its land for something else. No refund."
       recruit-infantry:
         cost-cash: 2000
         duration-millis: 0
