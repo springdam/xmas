@@ -54,12 +54,14 @@ public final class GameMapper {
                 .frozenUntilTick(player.getFrozenUntilTick());
     }
 
-    public static EconomyResponse toEconomyResponse(PlayerEconomyEntity economy) {
+    public static EconomyResponse toEconomyResponse(PlayerEconomyEntity economy, int landCapacity, int landInUse) {
         return new EconomyResponse()
                 .farms(economy.getFarms())
                 .factories(economy.getFactories())
                 .robotFactories(economy.getRobotFactories())
-                .banks(economy.getBanks());
+                .banks(economy.getBanks())
+                .landCapacity(landCapacity)
+                .landInUse(landInUse);
     }
 
     public static GamePlayerSummary toGamePlayerSummary(PlayerEntity player, String username) {
@@ -116,6 +118,7 @@ public final class GameMapper {
     }
 
     public static PlayerStateResponse toPlayerState(PlayerEntity player, PlayerEconomyEntity economy,
+                                                    int landCapacity, int landInUse,
                                                     PlayerMilitaryEntity military, PlayerEspionageEntity espionage,
                                                     PlayerSpecialWeaponsEntity specialWeapons,
                                                     PlayerProtectionEntity protection,
@@ -123,7 +126,7 @@ public final class GameMapper {
                                                     List<PlayerRelationEntity> relations) {
         return new PlayerStateResponse()
                 .player(toPlayerResponse(player))
-                .economy(toEconomyResponse(economy))
+                .economy(toEconomyResponse(economy, landCapacity, landInUse))
                 .military(toMilitaryResponse(military))
                 .espionage(toEspionageResponse(espionage))
                 .specialWeapons(toSpecialWeaponsResponse(specialWeapons))

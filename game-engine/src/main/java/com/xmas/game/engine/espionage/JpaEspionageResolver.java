@@ -7,6 +7,7 @@ import com.xmas.game.engine.config.EspionageProperties;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.config.SpecialForcesProperties;
 import com.xmas.game.engine.domain.Popularity;
+import com.xmas.game.engine.economy.BuildingDamageService;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.research.ResearchGateway;
 import com.xmas.game.engine.entity.GameEntity;
@@ -55,6 +56,7 @@ public class JpaEspionageResolver implements EspionageResolver {
     private final LeaderKillService leaderKillService;
     private final SpecialForcesProperties specialForcesProperties;
     private final NewsService newsService;
+    private final BuildingDamageService buildingDamageService;
 
     @Override
     @Transactional
@@ -109,16 +111,12 @@ public class JpaEspionageResolver implements EspionageResolver {
             return;
         }
         PlayerEconomyEntity economy = economy(targetId);
-        int factoriesLost = scaled(economy.getFactories(), properties.getCyberFraction());
-        int robotFactoriesLost = scaled(economy.getRobotFactories(), properties.getCyberFraction());
-        economy.setFactories(economy.getFactories() - factoriesLost);
-        economy.setRobotFactories(economy.getRobotFactories() - robotFactoriesLost);
+        BuildingDamageService.Losses losses = buildingDamageService.strike(economy, properties.getCyberFraction());
         economyRepository.save(economy);
         target.setPopularity(Popularity.clamp(target.getPopularity() - victimPenalty(targetId, popularityProperties.getCyberVictimPenalty())));
         playerRepository.save(target);
-        record(actor, target, "%s's cyber attack crippled %s's industry, disabling %s and %s."
-                .formatted(actor.getNation(), target.getNation(), count(factoriesLost, "factory", "factories"),
-                        count(robotFactoriesLost, "robot factory", "robot factories")));
+        record(actor, target, "%s's cyber attack crippled %s's economy, destroying %s."
+                .formatted(actor.getNation(), target.getNation(), BuildingDamageService.describe(losses)));
     }
 
     @Override

@@ -68,4 +68,9 @@ public enum ActionType {
     ActionType(ActionCategory category) {
         this.category = category;
     }
+
+    /** Economy buildings each take a plot of the nation's land. */
+    public boolean usesLand() {
+        return category == ActionCategory.ECONOMY;
+    }
 }

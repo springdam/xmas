@@ -49,19 +49,19 @@ game:
     election-freeze-ticks: 12
   nations:
     start:
-      usa:        { starting-cash: 2000000, farms: 12, factories: 10, robot-factories: 3, banks: 6 }
-      china:      { starting-cash: 1800000, farms: 18, factories: 12, robot-factories: 2, banks: 4 }
-      russia:     { starting-cash: 1400000, farms: 10, factories: 8,  robot-factories: 2, banks: 3 }
-      uk:         { starting-cash: 1500000, farms: 6,  factories: 7,  robot-factories: 2, banks: 6 }
-      france:     { starting-cash: 1400000, farms: 8,  factories: 7,  robot-factories: 2, banks: 5 }
-      india:      { starting-cash: 1000000, farms: 16, factories: 6,  robot-factories: 1, banks: 3 }
-      israel:     { starting-cash: 1200000, farms: 3,  factories: 5,  robot-factories: 3, banks: 4 }
-      iran:       { starting-cash: 900000,  farms: 9,  factories: 5,  robot-factories: 1, banks: 2 }
-      pakistan:   { starting-cash: 700000,  farms: 8,  factories: 4,  robot-factories: 1, banks: 2 }
-      north-korea: { starting-cash: 500000,  farms: 6,  factories: 4,  robot-factories: 1, banks: 1 }
-      south-africa: { starting-cash: 800000, farms: 7,  factories: 4,  robot-factories: 1, banks: 2 }
-      denmark:    { starting-cash: 900000,  farms: 5,  factories: 4,  robot-factories: 2, banks: 3 }
-      saudi-arabia: { starting-cash: 2200000, farms: 4, factories: 5, robot-factories: 1, banks: 5 }
+      usa:        { starting-cash: 2000000, farms: 12, factories: 10, robot-factories: 3, banks: 6, land: 50 }
+      china:      { starting-cash: 1800000, farms: 18, factories: 12, robot-factories: 2, banks: 4, land: 55 }
+      russia:     { starting-cash: 1400000, farms: 10, factories: 8,  robot-factories: 2, banks: 3, land: 45 }
+      uk:         { starting-cash: 1500000, farms: 6,  factories: 7,  robot-factories: 2, banks: 6, land: 35 }
+      france:     { starting-cash: 1400000, farms: 8,  factories: 7,  robot-factories: 2, banks: 5, land: 35 }
+      india:      { starting-cash: 1000000, farms: 16, factories: 6,  robot-factories: 1, banks: 3, land: 45 }
+      israel:     { starting-cash: 1200000, farms: 3,  factories: 5,  robot-factories: 3, banks: 4, land: 25 }
+      iran:       { starting-cash: 900000,  farms: 9,  factories: 5,  robot-factories: 1, banks: 2, land: 35 }
+      pakistan:   { starting-cash: 700000,  farms: 8,  factories: 4,  robot-factories: 1, banks: 2, land: 30 }
+      north-korea: { starting-cash: 500000,  farms: 6,  factories: 4,  robot-factories: 1, banks: 1, land: 25 }
+      south-africa: { starting-cash: 800000, farms: 7,  factories: 4,  robot-factories: 1, banks: 2, land: 35 }
+      denmark:    { starting-cash: 900000,  farms: 5,  factories: 4,  robot-factories: 2, banks: 3, land: 25 }
+      saudi-arabia: { starting-cash: 2200000, farms: 4, factories: 5, robot-factories: 1, banks: 5, land: 40 }
   actions:
     definitions:
       build-farm:

@@ -47,4 +47,9 @@ public class InMemoryPlayerStateGateway implements PlayerStateGateway {
     public int getAssetCount(UUID playerId, ActionType assetType) {
         return assets.getOrDefault(playerId, Map.of()).getOrDefault(assetType, 0);
     }
+
+    @Override
+    public int getFreeLand(UUID playerId) {
+        return Integer.MAX_VALUE;   // in-memory test gateway: unlimited land
+    }
 }

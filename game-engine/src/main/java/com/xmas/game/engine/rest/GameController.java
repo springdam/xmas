@@ -6,6 +6,7 @@ import com.xmas.game.engine.api.GameApi;
 import com.xmas.game.engine.api.model.GameResponse;
 import com.xmas.game.engine.api.model.PlayerResponse;
 import com.xmas.game.engine.api.model.PlayerStateResponse;
+import com.xmas.game.engine.economy.LandService;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.mapper.GameMapper;
 import com.xmas.game.engine.service.GameService;
@@ -24,6 +25,7 @@ public class GameController implements GameApi {
     private final GameService gameService;
     private final SessionIdentity sessionIdentity;
     private final AccountDirectory accountDirectory;
+    private final LandService landService;
 
     @Override
     public ResponseEntity<GameResponse> createGame() {
@@ -85,6 +87,8 @@ public class GameController implements GameApi {
         return ResponseEntity.ok(GameMapper.toPlayerState(
                 player,
                 gameService.getEconomy(playerId),
+                landService.capacity(playerId),
+                landService.inUse(playerId),
                 gameService.getMilitary(playerId),
                 gameService.getEspionage(playerId),
                 gameService.getSpecialWeapons(playerId),

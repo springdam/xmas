@@ -22,4 +22,7 @@ public interface PlayerStateGateway {
     void addAsset(UUID playerId, ActionType assetType, int quantity);
 
     int getAssetCount(UUID playerId, ActionType assetType);
+
+    /** Land plots still free for economy buildings (counting those under construction as taken). */
+    int getFreeLand(UUID playerId);
 }

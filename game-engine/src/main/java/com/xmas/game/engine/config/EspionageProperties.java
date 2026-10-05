@@ -18,7 +18,7 @@ public class EspionageProperties {
     /** Fraction of the target's military destroyed on a successful sabotage. */
     private double sabotageFraction = 0.15;
 
-    /** Fraction of the target's industry destroyed on a successful cyber attack. */
+    /** Strike strength of a successful cyber attack: each building is destroyed with chance this × its fragility. */
     private double cyberFraction = 0.2;
 
     /** Fraction of the target's cash lost when their leader is assassinated. */

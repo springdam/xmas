@@ -7,6 +7,7 @@ import com.xmas.game.common.error.NotFoundException;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.config.SpecialWeaponProperties;
 import com.xmas.game.engine.entity.GameEntity;
+import com.xmas.game.engine.economy.BuildingDamageService;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
@@ -42,6 +43,7 @@ public class JpaSpecialWeaponResolver implements SpecialWeaponResolver {
     private final PopularityProperties popularityProperties;
     private final ResearchModifierService researchModifierService;
     private final NewsService newsService;
+    private final BuildingDamageService buildingDamageService;
 
     @Override
     @Transactional
@@ -101,11 +103,11 @@ public class JpaSpecialWeaponResolver implements SpecialWeaponResolver {
         }
     }
 
+    /** Buildings roll against the blast by fragility; ground forces lose a straight fraction. */
     private void applyDestruction(PlayerEconomyEntity economy, PlayerMilitaryEntity military, double fraction) {
-        economy.setFarms(reduce(economy.getFarms(), fraction));
-        economy.setFactories(reduce(economy.getFactories(), fraction));
-        economy.setRobotFactories(reduce(economy.getRobotFactories(), fraction));
-        economy.setBanks(reduce(economy.getBanks(), fraction));
+        if (fraction > 0) {
+            buildingDamageService.strike(economy, fraction);
+        }
         military.setInfantry(reduce(military.getInfantry(), fraction));
         military.setTanks(reduce(military.getTanks(), fraction));
     }

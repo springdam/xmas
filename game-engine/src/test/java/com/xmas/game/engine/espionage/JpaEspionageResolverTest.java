@@ -13,9 +13,11 @@ import static org.mockito.Mockito.when;
 import com.xmas.game.actions.research.ResearchGateway;
 import com.xmas.game.combat.random.RandomSource;
 import com.xmas.game.common.domain.Nation;
+import com.xmas.game.engine.config.EconomyProperties;
 import com.xmas.game.engine.config.EspionageProperties;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.config.SpecialForcesProperties;
+import com.xmas.game.engine.economy.BuildingDamageService;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerEspionageEntity;
@@ -79,7 +81,10 @@ class JpaEspionageResolverTest {
                 militaryRepository, mock(PlayerResearchRepository.class), gameRepository,
                 random, new EspionageProperties(), new PopularityProperties(), modifiers,
                 mock(ResearchGateway.class), mock(ProtectionService.class), mock(LeaderKillService.class),
-                new SpecialForcesProperties(), newsService);
+                new SpecialForcesProperties(), newsService,
+                // building rolls of 0.15 against cyber strength 0.2 x fragility:
+                // farms 0.05, factories 0.12 survive; banks 0.16, robot factories 0.2 fall
+                new BuildingDamageService(new EconomyProperties(), () -> 0.15));
     }
 
     @Test
@@ -113,9 +118,13 @@ class JpaEspionageResolverTest {
         resolver(0.0).performCyberAttack(actorId, targetId);
 
         assertThat(actorEsp.getSpies()).isEqualTo(10);
-        assertThat(targetEco.getFactories()).isEqualTo(8);       // 20% of 10
-        assertThat(targetEco.getRobotFactories()).isEqualTo(4);  // 20% of 5
+        assertThat(targetEco.getFarms()).isEqualTo(5);
+        assertThat(targetEco.getFactories()).isEqualTo(10);
+        assertThat(targetEco.getBanks()).isZero();
+        assertThat(targetEco.getRobotFactories()).isZero();
         verify(espionageRepository, never()).save(any());
+        verify(newsService).record(eq(gameId), any(), eq(NewsVisibility.INVOLVED_ONLY), eq(actorId), eq(targetId),
+                argThat(h -> h.endsWith("destroying 5 banks and 5 robot factories.")), any());
     }
 
     @Test

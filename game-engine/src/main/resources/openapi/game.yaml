@@ -302,6 +302,14 @@ components:
         banks:
           type: integer
           format: int32
+        landCapacity:
+          type: integer
+          format: int32
+          description: Land plots the nation has; each economy building takes one.
+        landInUse:
+          type: integer
+          format: int32
+          description: Plots taken by standing buildings plus those under construction.
     MilitaryResponse:
       type: object
       required:

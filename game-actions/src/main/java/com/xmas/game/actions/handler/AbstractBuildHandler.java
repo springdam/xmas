@@ -29,6 +29,14 @@ public abstract class AbstractBuildHandler implements ActionHandler {
                 && state.getAssetCount(ctx.getActorPlayerId(), type()) + ctx.getQuantity() > maxTotal) {
             throw new BadRequestException("Cannot hold more than " + maxTotal + " of " + type());
         }
+        if (type().usesLand()) {
+            int free = state.getFreeLand(ctx.getActorPlayerId());
+            if (ctx.getQuantity() > free) {
+                throw new BadRequestException(free == 0
+                        ? "No free land: every plot already holds a building"
+                        : "Not enough land: only " + free + " free plot" + (free == 1 ? "" : "s"));
+            }
+        }
         if (state.getCash(ctx.getActorPlayerId()) < totalCost(ctx)) {
             throw new BadRequestException("Insufficient funds for " + type());
         }

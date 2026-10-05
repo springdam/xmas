@@ -2,6 +2,7 @@ package com.xmas.game.engine.state;
 
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.state.PlayerStateGateway;
+import com.xmas.game.engine.economy.LandService;
 import com.xmas.game.engine.entity.GameEntity;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
@@ -34,6 +35,7 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
     private final PlayerSpecialWeaponsRepository specialWeaponsRepository;
     private final PlayerProtectionRepository protectionRepository;
     private final GameRepository gameRepository;
+    private final LandService landService;
 
     @Override
     @Transactional(readOnly = true)
@@ -144,6 +146,12 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
             }
             default -> throw new BadRequestException(assetType + " is not a storable asset");
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getFreeLand(UUID playerId) {
+        return landService.free(playerId);
     }
 
     @Override

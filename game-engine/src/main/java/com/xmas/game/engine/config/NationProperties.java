@@ -22,5 +22,7 @@ public class NationProperties {
         private int factories;
         private int robotFactories;
         private int banks;
+        /** Land plots: the most farms, factories, robot factories and banks the nation can hold. */
+        private int land = 40;
     }
 }

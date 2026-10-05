@@ -9,8 +9,10 @@ import static org.mockito.Mockito.when;
 
 import com.xmas.game.combat.random.RandomSource;
 import com.xmas.game.common.domain.Nation;
+import com.xmas.game.engine.config.EconomyProperties;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.config.SpecialWeaponProperties;
+import com.xmas.game.engine.economy.BuildingDamageService;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
@@ -67,12 +69,18 @@ class JpaSpecialWeaponResolverTest {
 
         JpaSpecialWeaponResolver resolver = new JpaSpecialWeaponResolver(
                 playerRepository, specialRepo, militaryRepo, economyRepo, gameRepo,
-                random, new SpecialWeaponProperties(), new PopularityProperties(), researchModifierService, newsService);
+                random, new SpecialWeaponProperties(), new PopularityProperties(), researchModifierService, newsService,
+                new BuildingDamageService(new EconomyProperties(), () -> 0.5));
 
         resolver.launch(attackerId, defenderId, 2);
 
-        // 2 warheads land, destruction = min(1, 2 * 0.35) = 0.7 -> factories 10 - round(7) = 3
-        assertThat(defenderEco.getFactories()).isEqualTo(3);
+        // 2 warheads land: strength min(1, 2 * 0.35) = 0.7. Each building is lost with chance
+        // 0.7 x fragility; rolling 0.5, farms (0.175) and factories (0.42) survive while
+        // banks (0.56) and robot factories (0.7) are destroyed.
+        assertThat(defenderEco.getFarms()).isEqualTo(10);
+        assertThat(defenderEco.getFactories()).isEqualTo(10);
+        assertThat(defenderEco.getBanks()).isZero();
+        assertThat(defenderEco.getRobotFactories()).isZero();
         assertThat(defenderMil.getInfantry()).isEqualTo(30);
         assertThat(arsenal.getNukes()).isEqualTo(1);
         verify(newsService).record(eq(gameId), any(), eq(NewsVisibility.PUBLIC), eq(attackerId), eq(defenderId),

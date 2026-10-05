@@ -648,20 +648,29 @@ const SECTIONS = [
   { key: "protection", title: "PROTECTION", fields: [["doublegangers", "Doubles"], ["bunkers", "Bunkers"], ["bodyguards", "Guards"], ["ninjaBodyguards", "Ninjas"]] },
 ];
 
-function windowFrame(title) {
+function windowFrame(title, id) {
   const win = el("section", "win");
   const bar = el("div", "tbar");
-  bar.append(el("span", "gad"), el("h3", "ttl hd", title), el("span", "grow"), el("span", "gad"));
+  const heading = el("h3", "ttl hd", title);
+  if (id) heading.id = id;
+  bar.append(el("span", "gad"), heading, el("span", "grow"), el("span", "gad"));
   win.append(bar);
   return win;
 }
+
+/** Land: each economy building takes a plot; buildings under construction count as taken. */
+const usesLand = (def) => def.category === "ECONOMY";
+const freeLand = (me) => {
+  const e = me.economy;
+  return e?.landCapacity == null ? Infinity : Math.max(0, e.landCapacity - (e.landInUse ?? 0));
+};
 
 /** Builds the stat windows once; later polls only update the numbers. */
 function buildNationSections() {
   const root = $("nationSections");
   let pair = null;
   for (const section of SECTIONS) {
-    const win = windowFrame(section.title);
+    const win = windowFrame(section.title, `title-${section.key}`);
     const dl = el("dl", "stats");
     dl.style.setProperty("--cols", section.half ? 1 : 2);
     for (const [field, label] of section.fields) {
@@ -721,6 +730,9 @@ function renderNation(me) {
 
   // Stat windows
   if (!$("nationSections").children.length) buildNationSections();
+  if (me.economy?.landCapacity != null) {
+    $("title-economy").textContent = `ECONOMY · LAND ${me.economy.landInUse}/${me.economy.landCapacity}`;
+  }
   const dgMax = state.actions.find((a) => a.actionType === "HIRE_DOUBLEGANGER")?.maxTotal;
   for (const section of SECTIONS) {
     const values = me[section.key] || {};
@@ -891,6 +903,7 @@ function blockReason(def, me, info) {
     if (!(me.military?.specialOps > 0)) return "Needs spies or special ops";
   }
   if (p.frozenUntilTick > info.currentTick && !isMilitary(def)) return "Frozen by the election";
+  if (usesLand(def) && freeLand(me) === 0) return "No free land";
   if (def.actionType !== "SEND_MONEY" && p.cash < def.costCash) return "Not enough cash";
   return null;
 }
@@ -1057,6 +1070,7 @@ function openSheet(type, opener, targetId = null) {
   }
   if (type === "SPECIAL_WEAPON_ATTACK") facts.push(["WARHEADS", String(me.specialWeapons?.nukes ?? 0)]);
   if (COVERT.has(type)) facts.push(["YOUR SPIES", String(spyCount(me))]);
+  if (usesLand(def) && freeLand(me) !== Infinity) facts.push(["FREE LAND", String(freeLand(me))]);
   $("sheetFacts").replaceChildren(...facts.map(([k, v]) => {
     const f = el("div", "fact");
     f.append(el("span", "k", k), el("span", "v", v));
@@ -1108,6 +1122,7 @@ function maxQty() {
   let max = def.costCash > 0 ? Math.floor(cash / def.costCash) : 999;
   if (def.actionType === "SPECIAL_WEAPON_ATTACK") max = Math.min(max, me.specialWeapons?.nukes ?? 0);
   if (def.maxTotal != null) max = Math.min(max, def.maxTotal - ownedCount(me, def.actionType));
+  if (usesLand(def)) max = Math.min(max, freeLand(me));
   return Math.max(0, max);
 }
 

@@ -14,4 +14,13 @@ public class EconomyProperties {
     private long factoryYield = 1500;
     private long robotFactoryYield = 4000;
     private long bankYield = 2500;
+
+    /**
+     * How easily each building is destroyed when struck (cyber attack, nuke): a building is
+     * lost with chance strikeStrength * fragility. Less productive buildings are sturdier.
+     */
+    private double farmFragility = 0.25;
+    private double factoryFragility = 0.6;
+    private double bankFragility = 0.8;
+    private double robotFactoryFragility = 1.0;
 }
