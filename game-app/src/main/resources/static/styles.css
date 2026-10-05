@@ -3,6 +3,38 @@
    Themes: wb (Workbench 1.3), wb2 (Workbench 2.0), cu (Copper, dark).
    ===================================================================== */
 
+/* ---------- Bundled fonts (SIL OFL 1.1, see fonts/OFL-*.txt) ---------- */
+@font-face {
+  font-family: 'Silkscreen'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/silkscreen-400-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Silkscreen'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/silkscreen-400-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Silkscreen'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url(fonts/silkscreen-700-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Silkscreen'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url(fonts/silkscreen-700-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'VT323'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/vt323-400-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'VT323'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/vt323-400-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root,
 :root[data-theme="wb"] {
   --bg: #0055AA; --win: #0055AA; --ink: #FFFFFF; --dim: #C8DAFF;
@@ -418,6 +450,46 @@ body.sheet-open { overflow: hidden; }
 .intel .full { grid-column: 1 / -1; }
 .intel .sub { grid-column: 1 / -1; font-family: 'Silkscreen', ui-monospace, monospace; font-size: 9px; color: var(--dim); margin-top: 4px; }
 .toast.alert { background: var(--warn); color: #000022; }
+
+/* ---------- World ---------- */
+.world-list { padding: 4px 8px 8px; display: flex; flex-direction: column; gap: 4px; }
+.nation-head {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 52px; padding: 4px 10px 4px 8px;
+  font: inherit; text-align: left; color: var(--btnInk); background: var(--btn); cursor: pointer;
+  border: 2px solid; border-color: var(--hi) var(--lo) var(--lo) var(--hi); border-radius: 0;
+}
+.nation-head[aria-expanded="true"] { background: var(--field); border-color: var(--lo) var(--hi) var(--hi) var(--lo); }
+.nation-head.me { cursor: default; }
+.nation-head.out { opacity: .6; }
+.nation-head.out .hd { text-decoration: line-through; }
+.nation-head .who { flex-grow: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nation-head .who .hd { font-size: 12px; font-weight: 700; }
+.nation-head .who .user { font-size: 18px; line-height: 1; color: var(--dim); }
+.nation-head .minibar { width: 48px; height: 10px; flex-shrink: 0; background: var(--field); border: 2px solid; border-color: var(--lo) var(--hi) var(--hi) var(--lo); }
+.nation-head .minibar span { display: block; height: 100%; background: var(--good); }
+.nation-head .minibar span.warn { background: var(--warn); }
+.nation-head .minibar span.bad { background: var(--bad); }
+.nation-head .pct { width: 38px; text-align: right; }
+
+.nation-body {
+  display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 12px;
+  border: 2px solid var(--dim); border-top: 0; margin-top: -4px;
+}
+.quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.qa {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px;
+  min-height: 48px; padding: 4px 8px; text-align: left;
+}
+.qa .qn { font-size: 11px; }
+.qa .qm { font-family: 'VT323', ui-monospace, monospace; font-size: 18px; font-weight: normal; line-height: 1; opacity: .85; }
+.more-actions > summary { list-style: none; cursor: pointer; padding: 6px 0; font-size: 11px; color: var(--dim); }
+.more-actions > summary::-webkit-details-marker { display: none; }
+.more-actions > summary::before { content: "+ "; }
+.more-actions[open] > summary::before { content: "− "; }
+.intel-title { display: flex; align-items: center; gap: 6px; }
+.intel-title .hd { font-size: 10px; color: var(--dim); }
+.wars { font-size: 20px; }
+.wars .k { color: var(--dim); }
 
 /* ---------- Pixel flags (simplified, 36×24) ---------- */
 .flag {

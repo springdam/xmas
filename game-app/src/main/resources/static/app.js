@@ -530,6 +530,7 @@ async function enterGame(info) {
   $("cashDelta").textContent = "";
   $("adminRoster").replaceChildren();
   resetNews();
+  resetWorld();
   show("game");
   selectTab(savedTab());
   // Admin view until we know better; the first poll sorts it out.
@@ -561,7 +562,7 @@ async function pollGame() {
     [info, me, roster, feed] = await Promise.all([
       api("GET", `/games/${state.gameId}`),
       api("GET", `/players/${state.playerId}`),
-      state.isAdmin ? api("GET", `/games/${state.gameId}/players`) : null,
+      api("GET", `/games/${state.gameId}/players`),
       state.isAdmin ? null : api("GET", `/players/${state.playerId}/news?limit=${NEWS_LIMIT}`),
     ]);
   } catch (e) {
@@ -578,9 +579,10 @@ async function pollGame() {
 
   const adminView = me.player.admin && !me.player.nation;
   applyRole(adminView);
-  if (adminView) renderAdmin(info, roster || []);
+  if (adminView) renderAdmin(info, roster);
   else renderPlayer(me, info);
   if (feed) receiveNews(feed);
+  if (!adminView) receiveRoster(roster);
   renderBanners(info, me.player, adminView);
 }
 
@@ -840,6 +842,10 @@ const takesQuantity = (def) =>
   def.actionType in OWNED || def.actionType === "SEND_MONEY" || def.actionType === "SPECIAL_WEAPON_ATTACK";
 const ownedCount = (me, type) => (OWNED[type] ? me[OWNED[type][0]]?.[OWNED[type][1]] ?? 0 : null);
 
+/** "$15,000", "Free", or "any sum" for sending money. */
+const costLabel = (def) =>
+  def.actionType === "SEND_MONEY" ? "any sum" : def.costCash > 0 ? fmtCash(def.costCash) : "Free";
+
 function fmtDuration(ms) {
   if (ms <= 0) return "Instant";
   const s = Math.ceil(ms / 1000);
@@ -891,8 +897,7 @@ function buildActionGroups() {
       const btn = el("button", "action");
       btn.type = "button";
       const top = el("span", "top");
-      top.append(el("span", "name", actionLabel(def.actionType)),
-        el("span", "cost", def.actionType === "SEND_MONEY" ? "any sum" : fmtCash(def.costCash)));
+      top.append(el("span", "name", actionLabel(def.actionType)), el("span", "cost", costLabel(def)));
       const meta = el("span", "meta");
       btn.append(top, meta);
       btn.addEventListener("click", () => openSheet(def.actionType, btn));
@@ -1008,11 +1013,11 @@ function renderPending() {
 
 const sheet = { def: null, qty: 1, targetId: null, roster: [], opener: null };
 
-function openSheet(type, opener) {
+function openSheet(type, opener, targetId = null) {
   const def = state.actions.find((a) => a.actionType === type);
   const me = game.me;
   if (!def || !me) return;
-  Object.assign(sheet, { def, qty: type === "SEND_MONEY" ? 10000 : 1, targetId: null, roster: [], opener });
+  Object.assign(sheet, { def, qty: type === "SEND_MONEY" ? 10000 : 1, targetId, roster: [], opener });
 
   $("sheetTitle").textContent = actionLabel(type);
   $("sheetDesc").textContent = def.description || "";
@@ -1406,6 +1411,214 @@ function initNews() {
       renderNews();
     });
   }
+}
+
+// ---------------------------------------------------------------------
+// World
+// ---------------------------------------------------------------------
+
+/** Shown up front on a nation card ("DIPLOMACY" = war or peace, whichever applies). */
+const QUICK_ACTIONS = ["ATTACK", "GATHER_INTELLIGENCE", "DIPLOMACY", "SEND_MONEY"];
+const DETAIL_REFRESH_MS = 10000;
+
+const world = {
+  roster: [],
+  openId: null,           // the expanded nation
+  moreOpen: false,        // "More actions" expanded on it
+  detail: new Map(),      // playerId → { at, state }: their (limited or satellite) state
+  buttons: [],            // quick-action buttons on the open card, to update per poll
+  signature: "",
+};
+
+const relationWith = (id) => (game.me?.relations || []).find((r) => r.otherPlayerId === id)?.status || null;
+const rosterEntry = (id) => world.roster.find((p) => p.id === id);
+const latestIntel = (id) => news.events.find((ev) =>
+  ev.targetPlayerId === id && ev.actorPlayerId === state.playerId && INTEL_RE.test(ev.headline));
+
+function receiveRoster(roster) {
+  world.roster = roster;
+  renderWorld();
+}
+
+/** Their state as we may see it: relations always, full stats only with satellite intel. */
+async function loadDetail(id, force = false) {
+  const cached = world.detail.get(id);
+  if (!force && cached && Date.now() - cached.at < DETAIL_REFRESH_MS) return;
+  world.detail.set(id, { ...cached, at: Date.now() });   // no duplicate fetches meanwhile
+  try {
+    const theirs = await api("GET", `/players/${id}`);
+    world.detail.set(id, { at: Date.now(), state: theirs });
+    if (world.openId === id) { world.signature = ""; renderWorld(); }
+  } catch { /* keep what we had; the game poll reports connection trouble */ }
+}
+
+function toggleNation(id) {
+  world.openId = world.openId === id ? null : id;
+  world.moreOpen = false;
+  world.signature = "";
+  renderWorld();
+  if (world.openId) {
+    loadDetail(id, true);
+    document.querySelector(`[data-nation-id="${id}"]`)?.scrollIntoView({ block: "nearest" });
+  }
+}
+
+function quickButton(def, targetId) {
+  const btn = el("button", "btn qa");
+  btn.type = "button";
+  btn.append(el("span", "qn", actionLabel(def.actionType)), el("span", "qm"));
+  btn.addEventListener("click", () => openSheet(def.actionType, btn, targetId));
+  world.buttons.push({ btn, def });
+  return btn;
+}
+
+function updateQuickButtons() {
+  if (!game.me || !game.info) return;
+  for (const { btn, def } of world.buttons) {
+    const reason = blockReason(def, game.me, game.info);
+    btn.disabled = !!reason;
+    btn.querySelector(".qm").textContent = reason || costLabel(def);
+  }
+}
+
+function nationHead(p) {
+  const mine = p.id === state.playerId;
+  const open = world.openId === p.id;
+  const interactive = !mine && !p.eliminated;
+  const head = el(interactive ? "button" : "div", `nation-head${mine ? " me" : ""}${p.eliminated ? " out" : ""}`);
+  head.dataset.nationId = p.id;
+  if (interactive) {
+    head.type = "button";
+    head.setAttribute("aria-expanded", String(open));
+    head.setAttribute("aria-controls", `nation-body-${p.id}`);
+    head.addEventListener("click", () => toggleNation(p.id));
+  }
+  const flag = el("span", "flag");
+  flag.dataset.nation = p.nation || "";
+  flag.setAttribute("aria-hidden", "true");
+  const who = el("span", "who");
+  who.append(el("span", "hd", formatNation(p.nation)), el("span", "user", p.username));
+  head.append(flag, who);
+
+  if (mine) head.append(el("span", "tag", "YOU"));
+  if (p.eliminated) {
+    head.append(el("span", "tag bad", "FALLEN"));
+    return head;
+  }
+  const rel = relationWith(p.id);
+  if (rel) head.append(el("span", `tag ${rel === "WAR" ? "bad" : "good"}`, rel));
+  if (p.popularity < VULNERABLE_BELOW) head.append(el("span", "tag bad", "WEAK"));
+  const bar = el("span", "minibar");
+  const fill = el("span", popLevel(p.popularity));
+  fill.style.width = `${p.popularity}%`;
+  bar.append(fill);
+  head.append(bar, el("span", "pct", `${p.popularity}%`));
+  return head;
+}
+
+/** Who they're at war with: public, from their relations. */
+function warsLine(theirs) {
+  const line = el("p", "wars");
+  if (!theirs) { line.append(el("span", "k", "Checking their wars…")); return line; }
+  const enemies = (theirs.relations || []).filter((r) => r.status === "WAR")
+    .map((r) => (r.otherPlayerId === state.playerId ? "YOU" : formatNation(rosterEntry(r.otherPlayerId)?.nation) || "?"));
+  line.append(el("span", "k", "At war with: "), enemies.length ? enemies.join(", ") : "nobody");
+  return line;
+}
+
+/** Full stats, when satellite intel lets us see them. */
+function satelliteBlock(theirs) {
+  const box = el("div", "intel");
+  for (const section of SECTIONS) {
+    box.append(el("span", "sub", section.title));
+    for (const [field, label] of section.fields) {
+      const row = el("div", "row");
+      row.append(el("span", "k", label), el("span", "", String(theirs[section.key]?.[field] ?? "?")));
+      box.append(row);
+    }
+  }
+  const tech = (theirs.research || []).map((r) => titleCase(researchName(r)));
+  const techLine = el("div", "full");
+  techLine.append(el("span", "k dim", "Tech: "), tech.length ? tech.join(", ") : "none");
+  box.append(el("span", "sub", "TECHNOLOGY"), techLine);
+  return box;
+}
+
+function intelSection(p) {
+  const wrap = el("div", "stack6");
+  const theirs = world.detail.get(p.id)?.state;
+  wrap.append(warsLine(theirs));
+
+  if (theirs?.military) {
+    const title = el("div", "intel-title");
+    title.append(el("span", "tag good", "SATELLITE"), el("span", "hd", "LIVE VIEW"));
+    wrap.append(title, satelliteBlock(theirs));
+    return wrap;
+  }
+  const report = latestIntel(p.id);
+  if (report) {
+    const title = el("div", "intel-title");
+    title.append(el("span", "tag good", "INTEL"), el("span", "hd", `LAST RECON · TICK ${eventTick(report) ?? "?"}`));
+    wrap.append(title, ...intelBlock(tidy(report.headline).match(INTEL_RE)).slice(1));
+    return wrap;
+  }
+  wrap.append(el("p", "dim small", "No intel on their army yet. Gather Intel needs spies; a satellite network shows everything."));
+  return wrap;
+}
+
+function nationBody(p) {
+  const body = el("div", "nation-body");
+  body.id = `nation-body-${p.id}`;
+  const targeted = state.actions.filter((d) => d.targeted);
+  const rel = relationWith(p.id);
+  const quickTypes = QUICK_ACTIONS.map((t) => (t === "DIPLOMACY" ? (rel === "WAR" ? "DECLARE_PEACE" : "DECLARE_WAR") : t));
+  const quick = el("div", "quick");
+  for (const type of quickTypes) {
+    const def = targeted.find((d) => d.actionType === type);
+    if (def) quick.append(quickButton(def, p.id));
+  }
+  const rest = targeted.filter((d) => !quickTypes.includes(d.actionType)
+    && !(d.actionType === "DECLARE_WAR" || d.actionType === "DECLARE_PEACE"));
+  const more = el("details", "more-actions");
+  more.open = world.moreOpen;
+  more.addEventListener("toggle", () => { world.moreOpen = more.open; });
+  more.append(el("summary", "hd", `MORE ACTIONS (${rest.length})`));
+  const moreGrid = el("div", "quick");
+  for (const def of rest) moreGrid.append(quickButton(def, p.id));
+  more.append(moreGrid);
+  body.append(quick, more, intelSection(p));
+  return body;
+}
+
+function renderWorld() {
+  if (!game.me || !game.info || !world.roster.length) return;
+  const rank = (p) => (p.id === state.playerId ? 0 : p.eliminated ? 2 : 1);
+  const nations = world.roster.filter((p) => !p.admin)
+    .sort((a, b) => rank(a) - rank(b) || formatNation(a.nation).localeCompare(formatNation(b.nation)));
+
+  const alive = nations.filter((p) => !p.eliminated).length;
+  const wars = (game.me.relations || []).filter((r) => r.status === "WAR").length;
+  $("worldTitle").textContent = wars ? `NATIONS ${alive} · AT WAR ${wars}` : `NATIONS ${alive}`;
+
+  // Rebuild only when something visible changed; cash-dependent button states update in place.
+  const signature = JSON.stringify([
+    nations.map((p) => [p.id, p.popularity, p.eliminated, relationWith(p.id)]),
+    world.openId, state.actions.length,
+    world.openId && latestIntel(world.openId)?.id,
+  ]);
+  if (signature !== world.signature) {
+    world.signature = signature;
+    world.buttons = [];
+    $("worldList").replaceChildren(...nations.flatMap((p) =>
+      (world.openId === p.id ? [nationHead(p), nationBody(p)] : [nationHead(p)])));
+  }
+  updateQuickButtons();
+  if (world.openId) loadDetail(world.openId);   // throttled refresh while a card is open
+}
+
+function resetWorld() {
+  Object.assign(world, { roster: [], openId: null, moreOpen: false, detail: new Map(), buttons: [], signature: "" });
+  $("worldList").replaceChildren(el("p", "dim news-empty", "Loading nations…"));
 }
 
 function initGame() {

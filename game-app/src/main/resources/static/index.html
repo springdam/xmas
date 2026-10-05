@@ -12,9 +12,9 @@
         || (matchMedia("(prefers-color-scheme: dark)").matches ? "cu" : "wb");
     } catch (e) { document.documentElement.dataset.theme = "wb"; }
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap">
+  <!-- Fonts are bundled (fonts/), so the game works on a LAN without internet. -->
+  <link rel="preload" href="fonts/vt323-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/silkscreen-700-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -168,8 +168,11 @@
       <div id="actionGroups" class="stack6"><p class="dim">Loading actions…</p></div>
     </div>
     <div id="tab-world" class="tabpanel" hidden>
-      <section class="win"><div class="tbar"><span class="gad"></span><h3 class="ttl hd">WORLD</h3><span class="grow"></span><span class="gad"></span></div>
-        <div class="win-body"><p class="dim">Rival nations, wars and alliances arrive in a later step.</p></div></section>
+      <section class="win" aria-labelledby="worldTitle">
+        <div class="tbar"><span class="gad"></span><h3 id="worldTitle" class="ttl hd">NATIONS</h3><span class="grow"></span><span class="gad"></span></div>
+        <div id="worldList" class="world-list"><p class="dim news-empty">Loading nations…</p></div>
+      </section>
+      <p class="dim small">Tap a nation for actions and intel. You only see their army through spies or satellites.</p>
     </div>
     <div id="tab-news" class="tabpanel" hidden>
       <div id="newsFilters" class="filters" role="group" aria-label="Filter news">
