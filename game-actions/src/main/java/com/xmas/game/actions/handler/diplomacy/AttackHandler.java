@@ -5,6 +5,7 @@ import com.xmas.game.actions.domain.ActionContext;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.handler.AbstractTargetedActionHandler;
 import com.xmas.game.actions.state.PlayerStateGateway;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,8 +24,8 @@ public class AttackHandler extends AbstractTargetedActionHandler {
     }
 
     @Override
-    protected boolean oneAtATimePerTarget() {
-        return true;
+    protected Set<ActionType> exclusiveWith() {
+        return Set.of(ActionType.ATTACK);
     }
 
     @Override

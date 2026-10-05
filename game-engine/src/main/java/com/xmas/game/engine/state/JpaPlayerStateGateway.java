@@ -21,6 +21,7 @@ import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.repository.PlayerSpecialWeaponsRepository;
 import com.xmas.game.common.error.BadRequestException;
 import com.xmas.game.common.error.NotFoundException;
+import java.util.Collection;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -159,9 +160,9 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean hasPendingAgainst(UUID playerId, ActionType type, UUID targetPlayerId) {
-        return pendingActionRepository.existsByActorPlayerIdAndActionTypeAndTargetPlayerIdAndStatus(
-                playerId, type, targetPlayerId, PendingActionStatus.PENDING);
+    public boolean hasPendingAgainst(UUID playerId, Collection<ActionType> types, UUID targetPlayerId) {
+        return pendingActionRepository.existsByActorPlayerIdAndActionTypeInAndTargetPlayerIdAndStatus(
+                playerId, types, targetPlayerId, PendingActionStatus.PENDING);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.xmas.game.actions.state;
 
 import com.xmas.game.actions.domain.ActionType;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
@@ -54,7 +55,7 @@ public class InMemoryPlayerStateGateway implements PlayerStateGateway {
     }
 
     @Override
-    public boolean hasPendingAgainst(UUID playerId, ActionType type, UUID targetPlayerId) {
+    public boolean hasPendingAgainst(UUID playerId, Collection<ActionType> types, UUID targetPlayerId) {
         return false;   // in-memory test gateway: no queue of its own
     }
 }

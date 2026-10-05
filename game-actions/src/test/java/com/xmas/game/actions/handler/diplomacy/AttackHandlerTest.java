@@ -12,6 +12,7 @@ import com.xmas.game.actions.domain.ActionDefinition;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.state.PlayerStateGateway;
 import com.xmas.game.common.error.BadRequestException;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +36,7 @@ class AttackHandlerTest {
         when(state.getCash(actor)).thenReturn(1_000_000L);
         assertThatCode(() -> handler.validate(ctx)).doesNotThrowAnyException();
 
-        when(state.hasPendingAgainst(actor, ActionType.ATTACK, target)).thenReturn(true);
+        when(state.hasPendingAgainst(actor, Set.of(ActionType.ATTACK), target)).thenReturn(true);
         assertThatThrownBy(() -> handler.validate(ctx))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("still under way");

@@ -4,6 +4,8 @@ import com.xmas.game.actions.domain.ActionContext;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.state.PlayerStateGateway;
 import com.xmas.game.common.error.BadRequestException;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -14,6 +16,21 @@ public abstract class AbstractCovertActionHandler extends AbstractTargetedAction
 
     protected AbstractCovertActionHandler(PlayerStateGateway state) {
         super(state);
+    }
+
+    /** Spy operations: the whole spy force goes on each, so only one runs against a nation at a time. */
+    public static final Set<ActionType> SPY_OPERATIONS = EnumSet.of(
+            ActionType.PERFORM_CYBER_ATTACK, ActionType.PERFORM_SABOTAGE, ActionType.PERFORM_HEIST,
+            ActionType.STEAL_TECHNOLOGY, ActionType.GATHER_INTELLIGENCE, ActionType.ASSASSINATE_LEADER);
+
+    @Override
+    protected Set<ActionType> exclusiveWith() {
+        return SPY_OPERATIONS;
+    }
+
+    @Override
+    protected String alreadyUnderWayMessage() {
+        return "Your spies are still on an operation against that nation";
     }
 
     @Override

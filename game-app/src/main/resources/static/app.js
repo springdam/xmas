@@ -868,7 +868,8 @@ const COVERT = new Set([
   "PERFORM_CYBER_ATTACK", "PERFORM_SABOTAGE", "PERFORM_HEIST", "STEAL_TECHNOLOGY",
   "GATHER_INTELLIGENCE", "ASSASSINATE_LEADER",
 ]);
-const SPY_RISK = "If it fails, some of your spies may be caught, and the target may learn who sent them.";
+const SPY_RISK = "If it fails, some of your spies may be caught, and the target may learn who sent them. "
+  + "Your spies run one operation per nation at a time.";
 const spyCount = (me) => me.espionage?.spies ?? 0;
 
 const actionLabel = (type) =>
@@ -992,10 +993,13 @@ pollers.push(pendingTicker);
 const serverNow = () => Date.now() + (state.clockSkew || 0);
 const pendingOf = (type) => pending.filter((p) => p.actionType === type);
 
-/** Strikes the server allows only one of per target at a time. */
-const ONE_PER_TARGET = new Set(["ATTACK", "DECAPITATION_STRIKE"]);
-const underWayAgainst = (type, targetId) =>
-  ONE_PER_TARGET.has(type) && pending.some((p) => p.actionType === type && p.targetId === targetId && serverNow() < p.completesAt);
+/** Actions the server allows only one of per target at a time; all spy operations share one slot. */
+const slotOf = (type) => (COVERT.has(type) ? "SPY" : type === "ATTACK" || type === "DECAPITATION_STRIKE" ? type : null);
+const underWayAgainst = (type, targetId) => {
+  const slot = slotOf(type);
+  return slot != null && pending.some((p) =>
+    slotOf(p.actionType) === slot && p.targetId === targetId && serverNow() < p.completesAt);
+};
 
 function loadPending() {
   try {
