@@ -30,8 +30,8 @@ public class EspionageProperties {
     private double doublegangerDefense = 3.0;
     private double bunkerDefense = 2.0;
 
-    /** Recon: spies lost per point of the target's counter-intelligence. */
-    private double reconSpyLossPerCounterIntel = 0.3;
+    /** On a failed operation, each spy is caught with chance spyCaptureRate * defense / (attack + defense). */
+    private double spyCaptureRate = 0.5;
     /** Recon: range half-width fraction at zero clarity (tighter as clarity rises to 1). */
     private double reconMaxUncertainty = 0.5;
 }

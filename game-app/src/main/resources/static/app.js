@@ -829,6 +829,14 @@ const WARNINGS = {
   HOLD_ELECTION: "Resets your parade bonus, but freezes all non-military actions for a while.",
 };
 
+/** Spy operations: they need agents, and a failure can cost spies. */
+const COVERT = new Set([
+  "PERFORM_CYBER_ATTACK", "PERFORM_SABOTAGE", "PERFORM_HEIST", "STEAL_TECHNOLOGY",
+  "GATHER_INTELLIGENCE", "ASSASSINATE_LEADER",
+]);
+const SPY_RISK = "If it fails, some of your spies may be caught, and the target may learn who sent them.";
+const spyCount = (me) => me.espionage?.spies ?? 0;
+
 const actionLabel = (type) =>
   LABELS[type] || (type.startsWith("RESEARCH_") ? researchName(type) : type.replaceAll("_", " "));
 const titleCase = (s) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
@@ -864,6 +872,11 @@ function blockReason(def, me, info) {
   }
   if (def.maxTotal != null && ownedCount(me, def.actionType) >= def.maxTotal) return `Maximum of ${def.maxTotal} reached`;
   if (def.actionType === "SPECIAL_WEAPON_ATTACK" && !(me.specialWeapons?.nukes > 0)) return "No warheads built";
+  if (COVERT.has(def.actionType) && spyCount(me) === 0) {
+    // Special ops can carry out an assassination on their own.
+    if (def.actionType !== "ASSASSINATE_LEADER") return "Needs spies";
+    if (!(me.military?.specialOps > 0)) return "Needs spies or special ops";
+  }
   if (p.frozenUntilTick > info.currentTick && !isMilitary(def)) return "Frozen by the election";
   if (def.actionType !== "SEND_MONEY" && p.cash < def.costCash) return "Not enough cash";
   return null;
@@ -1030,14 +1043,16 @@ function openSheet(type, opener, targetId = null) {
     facts.push(["OWNED", def.maxTotal != null ? `${n}/${def.maxTotal}` : String(n)]);
   }
   if (type === "SPECIAL_WEAPON_ATTACK") facts.push(["WARHEADS", String(me.specialWeapons?.nukes ?? 0)]);
+  if (COVERT.has(type)) facts.push(["YOUR SPIES", String(spyCount(me))]);
   $("sheetFacts").replaceChildren(...facts.map(([k, v]) => {
     const f = el("div", "fact");
     f.append(el("span", "k", k), el("span", "v", v));
     return f;
   }));
 
-  $("sheetWarn").hidden = !WARNINGS[type];
-  $("sheetWarn").textContent = WARNINGS[type] || "";
+  const warning = [WARNINGS[type], COVERT.has(type) ? SPY_RISK : null].filter(Boolean).join(" ");
+  $("sheetWarn").hidden = !warning;
+  $("sheetWarn").textContent = warning;
 
   // Quantity / amount
   $("qtyBlock").hidden = !takesQuantity(def);

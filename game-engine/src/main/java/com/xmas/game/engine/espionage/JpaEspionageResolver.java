@@ -30,6 +30,7 @@ import com.xmas.game.newsfeed.service.NewsService;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,8 +61,9 @@ public class JpaEspionageResolver implements EspionageResolver {
     public void performHeist(UUID actorId, UUID targetId) {
         PlayerEntity actor = player(actorId);
         PlayerEntity target = player(targetId);
-        if (!attemptSucceeds(actorId, targetId)) {
-            recordFailure(actor, target, "heist");
+        Attempt attempt = attempt(actorId, targetId, 0.0, 0.0);
+        if (!attempt.isSuccess()) {
+            recordFailure(actor, target, "a heist", attempt.getSpiesCaught());
             return;
         }
         long stolen = Math.round(target.getCash() * properties.getHeistCashFraction());
@@ -79,8 +81,9 @@ public class JpaEspionageResolver implements EspionageResolver {
     public void performSabotage(UUID actorId, UUID targetId) {
         PlayerEntity actor = player(actorId);
         PlayerEntity target = player(targetId);
-        if (!attemptSucceeds(actorId, targetId)) {
-            recordFailure(actor, target, "sabotage");
+        Attempt attempt = attempt(actorId, targetId, 0.0, 0.0);
+        if (!attempt.isSuccess()) {
+            recordFailure(actor, target, "sabotage", attempt.getSpiesCaught());
             return;
         }
         PlayerMilitaryEntity military = military(targetId);
@@ -91,8 +94,8 @@ public class JpaEspionageResolver implements EspionageResolver {
         militaryRepository.save(military);
         target.setPopularity(Popularity.clamp(target.getPopularity() - victimPenalty(targetId, popularityProperties.getSabotageVictimPenalty())));
         playerRepository.save(target);
-        record(actor, target, "%s sabotaged %s's forces, destroying %d infantry and %d tanks.".formatted(
-                actor.getNation(), target.getNation(), infantryLost, tanksLost));
+        record(actor, target, "%s sabotaged %s's forces, destroying %d infantry and %s.".formatted(
+                actor.getNation(), target.getNation(), infantryLost, count(tanksLost, "tank", "tanks")));
     }
 
     @Override
@@ -100,8 +103,9 @@ public class JpaEspionageResolver implements EspionageResolver {
     public void performCyberAttack(UUID actorId, UUID targetId) {
         PlayerEntity actor = player(actorId);
         PlayerEntity target = player(targetId);
-        if (!attemptSucceeds(actorId, targetId)) {
-            recordFailure(actor, target, "cyber attack");
+        Attempt attempt = attempt(actorId, targetId, 0.0, 0.0);
+        if (!attempt.isSuccess()) {
+            recordFailure(actor, target, "a cyber attack", attempt.getSpiesCaught());
             return;
         }
         PlayerEconomyEntity economy = economy(targetId);
@@ -112,8 +116,9 @@ public class JpaEspionageResolver implements EspionageResolver {
         economyRepository.save(economy);
         target.setPopularity(Popularity.clamp(target.getPopularity() - victimPenalty(targetId, popularityProperties.getCyberVictimPenalty())));
         playerRepository.save(target);
-        record(actor, target, "%s's cyber attack crippled %s's industry, disabling %d factories and %d robot factories."
-                .formatted(actor.getNation(), target.getNation(), factoriesLost, robotFactoriesLost));
+        record(actor, target, "%s's cyber attack crippled %s's industry, disabling %s and %s."
+                .formatted(actor.getNation(), target.getNation(), count(factoriesLost, "factory", "factories"),
+                        count(robotFactoriesLost, "robot factory", "robot factories")));
     }
 
     @Override
@@ -121,8 +126,9 @@ public class JpaEspionageResolver implements EspionageResolver {
     public void stealTechnology(UUID actorId, UUID targetId) {
         PlayerEntity actor = player(actorId);
         PlayerEntity target = player(targetId);
-        if (!attemptSucceeds(actorId, targetId)) {
-            recordFailure(actor, target, "technology theft");
+        Attempt attempt = attempt(actorId, targetId, 0.0, 0.0);
+        if (!attempt.isSuccess()) {
+            recordFailure(actor, target, "technology theft", attempt.getSpiesCaught());
             return;
         }
         ActionType stolen = null;
@@ -146,35 +152,14 @@ public class JpaEspionageResolver implements EspionageResolver {
     public void gatherIntelligence(UUID actorId, UUID targetId) {
         PlayerEntity actor = player(actorId);
         PlayerEntity target = player(targetId);
-        PlayerEspionageEntity actorEsp = espionage(actorId);
-
-        double spies = actorEsp.getSpies() * researchModifierService.espionageMultiplier(actorId);
-        double counterIntel = espionage(targetId).getCounterIntel()
-                * researchModifierService.counterIntelMultiplier(targetId);
-        double clarity = spies <= 0 ? 0.0 : spies / (spies + counterIntel + properties.getBaseResistance());
-        boolean success = random.nextDouble() < clarity;
-
-        int spiesLost = Math.min(actorEsp.getSpies(),
-                (int) Math.round(counterIntel * properties.getReconSpyLossPerCounterIntel()));
-        if (spiesLost > 0) {
-            actorEsp.setSpies(actorEsp.getSpies() - spiesLost);
-            espionageRepository.save(actorEsp);
-            newsService.record(actor.getGameId(), NewsType.ESPIONAGE, NewsVisibility.INVOLVED_ONLY, actorId, targetId,
-                    "%s's counter-intelligence caught and expelled %d foreign spies.".formatted(
-                            target.getNation(), spiesLost),
-                    gameTime(actor));
-        }
-
-        if (!success) {
-            newsService.record(actor.getGameId(), NewsType.ESPIONAGE, NewsVisibility.ACTOR_ONLY, actorId, targetId,
-                    "Your intelligence operation against %s came back empty%s.".formatted(
-                            target.getNation(), spiesLost > 0 ? " (spies compromised)" : ""),
-                    gameTime(actor));
+        Attempt attempt = attempt(actorId, targetId, 0.0, 0.0);
+        if (!attempt.isSuccess()) {
+            recordFailure(actor, target, "an intelligence operation", attempt.getSpiesCaught());
             return;
         }
-
+        // A clean success: the target never learns. Clarity sets how tight the ranges are.
         newsService.record(actor.getGameId(), NewsType.ESPIONAGE, NewsVisibility.ACTOR_ONLY, actorId, targetId,
-                buildReport(target, targetId, clarity), gameTime(actor));
+                buildReport(target, targetId, attempt.getSuccessChance()), gameTime(actor));
     }
 
     private String buildReport(PlayerEntity target, UUID targetId, double clarity) {
@@ -214,7 +199,8 @@ public class JpaEspionageResolver implements EspionageResolver {
         double opsBonus = specialOps * specialForcesProperties.getSpecialOpsAssassinationWeight();
 
         boolean vulnerable = target.getPopularity() < popularityProperties.getVulnerabilityThreshold();
-        boolean success = vulnerable && attemptSucceeds(actorId, targetId, protectionService.defenseScore(targetId), opsBonus);
+        Attempt attempt = attempt(actorId, targetId, protectionService.defenseScore(targetId), opsBonus);
+        boolean success = vulnerable && attempt.isSuccess();
 
         int opsLost = Math.min(specialOps, (int) Math.round(
                 protectionService.bodyguards(targetId) * specialForcesProperties.getSpecialOpsLossPerBodyguard()));
@@ -224,26 +210,41 @@ public class JpaEspionageResolver implements EspionageResolver {
         }
 
         if (!success) {
-            recordFailure(actor, target, "assassination");
+            recordFailure(actor, target, "an assassination", attempt.getSpiesCaught());
             return;
         }
         leaderKillService.attemptKill(actor, target, NewsType.ESPIONAGE, "assassination");
     }
 
-    private boolean attemptSucceeds(UUID actorId, UUID targetId) {
-        return attemptSucceeds(actorId, targetId, 0.0, 0.0);
+    /** The outcome of one spy operation. */
+    @Value
+    private static class Attempt {
+        boolean success;
+        int spiesCaught;
+        double successChance;
     }
 
-    private boolean attemptSucceeds(UUID actorId, UUID targetId, double extraDefense) {
-        return attemptSucceeds(actorId, targetId, extraDefense, 0.0);
-    }
-
-    private boolean attemptSucceeds(UUID actorId, UUID targetId, double extraDefense, double extraAttack) {
-        double spies = espionage(actorId).getSpies() * researchModifierService.espionageMultiplier(actorId) + extraAttack;
-        double counterIntel = espionage(targetId).getCounterIntel()
-                * researchModifierService.counterIntelMultiplier(targetId);
-        double probability = spies / (spies + counterIntel + extraDefense + properties.getBaseResistance());
-        return random.nextDouble() < probability;
+    /**
+     * Rolls a spy operation: attack (spies, Cryptography, extra agents) against defense
+     * (counter-intel, Counter-Intelligence Doctrine, extra protection). On failure each of
+     * the actor's spies may be caught; they are removed here.
+     */
+    private Attempt attempt(UUID actorId, UUID targetId, double extraDefense, double extraAttack) {
+        PlayerEspionageEntity actorEsp = espionage(actorId);
+        double attack = actorEsp.getSpies() * researchModifierService.espionageMultiplier(actorId) + extraAttack;
+        double defense = espionage(targetId).getCounterIntel()
+                * researchModifierService.counterIntelMultiplier(targetId) + extraDefense;
+        double chance = CovertOdds.successChance(attack, defense, properties.getBaseResistance());
+        if (random.nextDouble() < chance) {
+            return new Attempt(true, 0, chance);
+        }
+        int caught = CovertOdds.spiesCaught(actorEsp.getSpies(),
+                CovertOdds.captureChance(attack, defense, properties.getSpyCaptureRate()), random);
+        if (caught > 0) {
+            actorEsp.setSpies(actorEsp.getSpies() - caught);
+            espionageRepository.save(actorEsp);
+        }
+        return new Attempt(false, caught, chance);
     }
 
     private void record(PlayerEntity actor, PlayerEntity target, String headline) {
@@ -252,11 +253,38 @@ public class JpaEspionageResolver implements EspionageResolver {
         log.info("Espionage by {} against {} succeeded", actor.getId(), target.getId());
     }
 
-    private void recordFailure(PlayerEntity actor, PlayerEntity target, String operation) {
+    /**
+     * News for a failed operation. Caught spies give the attacker away; if nobody was caught
+     * the target only learns that someone tried, and the attacker hears it went unnoticed.
+     */
+    private void recordFailure(PlayerEntity actor, PlayerEntity target, String operation, int spiesCaught) {
+        Instant when = gameTime(actor);
+        if (spiesCaught > 0) {
+            newsService.record(actor.getGameId(), NewsType.ESPIONAGE, NewsVisibility.INVOLVED_ONLY,
+                    actor.getId(), target.getId(),
+                    "%s caught %s from %s attempting %s.".formatted(target.getNation(),
+                            count(spiesCaught, "spy", "spies"), actor.getNation(), operation),
+                    when);
+            return;
+        }
         newsService.record(actor.getGameId(), NewsType.ESPIONAGE, NewsVisibility.INVOLVED_ONLY,
+                null, target.getId(),
+                "Foreign agents attempted %s against %s and failed.".formatted(operation, target.getNation()),
+                when);
+        newsService.record(actor.getGameId(), NewsType.ESPIONAGE, NewsVisibility.ACTOR_ONLY,
                 actor.getId(), target.getId(),
-                "%s detected and repelled a %s from %s.".formatted(target.getNation(), operation, actor.getNation()),
-                gameTime(actor));
+                "%s against %s failed. None of your spies were caught.".formatted(
+                        capitalize(operation), target.getNation()),
+                when);
+    }
+
+    /** "1 tank", "3 tanks". */
+    private static String count(int n, String one, String many) {
+        return n + " " + (n == 1 ? one : many);
+    }
+
+    private static String capitalize(String text) {
+        return Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
 
     private int scaled(int units, double fraction) {
