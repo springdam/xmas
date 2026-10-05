@@ -1,0 +1,82 @@
+# Test shortcuts only: slow builds and research become instant, strikes and spy ops take
+# 5 seconds (so the one-at-a-time rules can still be tested), and timers are short.
+# Combine with develop for local testing: -Dspring.profiles.active=develop,fast
+# Never use for a real game night: it breaks the 2-5 hour pacing.
+game:
+  popularity:
+    election-freeze-ticks: 2
+    war-strain-recovery-ticks: 2
+  actions:
+    definitions:
+      build-factory:
+        duration-millis: 0
+      build-robot-factory:
+        duration-millis: 0
+      recruit-tank:
+        duration-millis: 0
+      build-missile-battery:
+        duration-millis: 0
+      build-air-defense-battery:
+        duration-millis: 0
+      build-stealth-bomber:
+        duration-millis: 0
+      recruit-special-ops:
+        duration-millis: 0
+      attack:
+        duration-millis: 5000
+      perform-cyber-attack:
+        duration-millis: 5000
+      perform-sabotage:
+        duration-millis: 5000
+      perform-heist:
+        duration-millis: 5000
+      gather-intelligence:
+        duration-millis: 5000
+      build-espionage-satellite:
+        duration-millis: 0
+      build-nuke:
+        duration-millis: 0
+      steal-technology:
+        duration-millis: 5000
+      assassinate-leader:
+        duration-millis: 5000
+      decapitation-strike:
+        duration-millis: 5000
+      build-secret-bunker:
+        duration-millis: 0
+      research-advanced-farming:
+        duration-millis: 0
+      research-advanced-weaponry:
+        duration-millis: 0
+      research-cryptography:
+        duration-millis: 0
+      research-nuclear-program:
+        duration-millis: 0
+      research-stealth-technology:
+        duration-millis: 0
+      research-special-forces-training:
+        duration-millis: 0
+      research-continuity-of-government:
+        duration-millis: 0
+      research-satellite-network:
+        duration-millis: 0
+      research-industrial-automation:
+        duration-millis: 0
+      research-central-banking:
+        duration-millis: 0
+      research-war-economy:
+        duration-millis: 0
+      research-fortifications:
+        duration-millis: 0
+      research-air-superiority:
+        duration-millis: 0
+      research-mirv:
+        duration-millis: 0
+      research-counter-intelligence-doctrine:
+        duration-millis: 0
+      research-praetorian-guard:
+        duration-millis: 0
+      research-mass-media:
+        duration-millis: 0
+      research-propaganda-ministry:
+        duration-millis: 0

@@ -27,18 +27,18 @@ game:
     tick-millis: 5000
     game-time-step-millis: 5000
   economy:
-    base-income: 1000
-    farm-yield: 500
-    factory-yield: 1500
-    robot-factory-yield: 4000
-    bank-yield: 2500
+    base-income: 125
+    farm-yield: 60
+    factory-yield: 190
+    robot-factory-yield: 500
+    bank-yield: 310
     industry-per-farm: 3
     unfed-industry-factor: 0.5
   upkeep:
-    infantry: 20
-    tank: 80
-    stealth-bomber: 250
-    special-ops: 200
+    infantry: 5
+    tank: 20
+    stealth-bomber: 60
+    special-ops: 50
     desertion-fraction: 0.1
   popularity:
     starting-popularity: 50
@@ -49,30 +49,30 @@ game:
     nuke-attacker-penalty: 10
     attack-victim-penalty: 5
     attack-penalty-decay: 0.7
-    war-strain-recovery-ticks: 12
+    war-strain-recovery-ticks: 60
     sabotage-victim-penalty: 6
     cyber-victim-penalty: 6
     heist-victim-penalty: 3
-    send-money-bonus-min-amount: 50000
+    send-money-bonus-min-amount: 10000
     parade-bonus: 8
     praise-bonus: 4
     parade-praise-decay: 0.6
-    election-freeze-ticks: 12
+    election-freeze-ticks: 60
   nations:
     start:
-      usa:        { starting-cash: 2000000, farms: 12, factories: 10, robot-factories: 3, banks: 6, land: 44 }
-      china:      { starting-cash: 1800000, farms: 18, factories: 12, robot-factories: 2, banks: 4, land: 45 }
-      russia:     { starting-cash: 1400000, farms: 10, factories: 8,  robot-factories: 2, banks: 3, land: 42 }
-      uk:         { starting-cash: 1500000, farms: 6,  factories: 7,  robot-factories: 2, banks: 6, land: 38 }
-      france:     { starting-cash: 1400000, farms: 8,  factories: 7,  robot-factories: 2, banks: 5, land: 38 }
-      india:      { starting-cash: 1000000, farms: 16, factories: 6,  robot-factories: 1, banks: 3, land: 42 }
-      israel:     { starting-cash: 1200000, farms: 3,  factories: 5,  robot-factories: 3, banks: 4, land: 35 }
-      iran:       { starting-cash: 900000,  farms: 9,  factories: 5,  robot-factories: 1, banks: 2, land: 38 }
-      pakistan:   { starting-cash: 700000,  farms: 8,  factories: 4,  robot-factories: 1, banks: 2, land: 36 }
-      north-korea: { starting-cash: 500000,  farms: 6,  factories: 4,  robot-factories: 1, banks: 1, land: 35 }
-      south-africa: { starting-cash: 800000, farms: 7,  factories: 4,  robot-factories: 1, banks: 2, land: 38 }
-      denmark:    { starting-cash: 900000,  farms: 5,  factories: 4,  robot-factories: 2, banks: 3, land: 35 }
-      saudi-arabia: { starting-cash: 2200000, farms: 4, factories: 5, robot-factories: 1, banks: 5, land: 40 }
+      usa:        { starting-cash: 500000, farms: 12, factories: 10, robot-factories: 3, banks: 6, land: 44 }
+      china:      { starting-cash: 450000, farms: 18, factories: 12, robot-factories: 2, banks: 4, land: 45 }
+      russia:     { starting-cash: 350000, farms: 10, factories: 8,  robot-factories: 2, banks: 3, land: 42 }
+      uk:         { starting-cash: 375000, farms: 6,  factories: 7,  robot-factories: 2, banks: 6, land: 38 }
+      france:     { starting-cash: 350000, farms: 8,  factories: 7,  robot-factories: 2, banks: 5, land: 38 }
+      india:      { starting-cash: 250000, farms: 16, factories: 6,  robot-factories: 1, banks: 3, land: 42 }
+      israel:     { starting-cash: 300000, farms: 3,  factories: 5,  robot-factories: 3, banks: 4, land: 35 }
+      iran:       { starting-cash: 225000,  farms: 9,  factories: 5,  robot-factories: 1, banks: 2, land: 38 }
+      pakistan:   { starting-cash: 175000,  farms: 8,  factories: 4,  robot-factories: 1, banks: 2, land: 36 }
+      north-korea: { starting-cash: 125000,  farms: 6,  factories: 4,  robot-factories: 1, banks: 1, land: 35 }
+      south-africa: { starting-cash: 200000, farms: 7,  factories: 4,  robot-factories: 1, banks: 2, land: 38 }
+      denmark:    { starting-cash: 225000,  farms: 5,  factories: 4,  robot-factories: 2, banks: 3, land: 35 }
+      saudi-arabia: { starting-cash: 550000, farms: 4, factories: 5, robot-factories: 1, banks: 5, land: 40 }
   actions:
     definitions:
       build-farm:
@@ -83,13 +83,13 @@ game:
         description: "Build a farm. Feeds 3 factories or robot factories and adds a little income each tick."
       build-factory:
         cost-cash: 25000
-        duration-millis: 6000
+        duration-millis: 60000
         targeted: false
         public-visibility: false
         description: "Build a factory. Boosts industrial income; takes time to construct. Needs farms to feed it."
       build-robot-factory:
         cost-cash: 60000
-        duration-millis: 10000
+        duration-millis: 120000
         targeted: false
         public-visibility: false
         description: "Build a robot factory. High industrial output; slow to construct. Needs farms to feed it."
@@ -131,39 +131,39 @@ game:
         description: "Recruit an infantry unit."
       recruit-tank:
         cost-cash: 8000
-        duration-millis: 4000
+        duration-millis: 30000
         targeted: false
         public-visibility: false
         description: "Recruit a tank unit."
       build-missile-battery:
         cost-cash: 30000
-        duration-millis: 8000
+        duration-millis: 60000
         targeted: false
         public-visibility: false
         description: "Build a missile battery."
       build-air-defense-battery:
         cost-cash: 35000
-        duration-millis: 8000
+        duration-millis: 60000
         targeted: false
         public-visibility: false
         description: "Build an air defense battery: intercepts nukes and negates stealth bombers on decapitation strikes."
       build-stealth-bomber:
         cost-cash: 25000
-        duration-millis: 18000
+        duration-millis: 150000
         targeted: false
         public-visibility: false
         required-research: RESEARCH_STEALTH_TECHNOLOGY
         description: "Build a stealth bomber: a strong air unit that also boosts decapitation strike success."
       recruit-special-ops:
         cost-cash: 20000
-        duration-millis: 16000
+        duration-millis: 150000
         targeted: false
         public-visibility: false
         required-research: RESEARCH_SPECIAL_FORCES_TRAINING
         description: "Recruit a special ops unit: elite troops that also boost assassination success."
       attack:
         cost-cash: 15000
-        duration-millis: 20000
+        duration-millis: 60000
         targeted: true
         public-visibility: true
         description: "Launch a conventional attack against a rival nation. It is announced publicly and lands after a delay."
@@ -181,37 +181,37 @@ game:
         description: "Hire counter-intelligence to defend against espionage."
       perform-cyber-attack:
         cost-cash: 5000
-        duration-millis: 15000
+        duration-millis: 60000
         targeted: true
         public-visibility: false
         description: "Launch a covert cyber attack to cripple a rival's industry."
       perform-sabotage:
         cost-cash: 7000
-        duration-millis: 12000
+        duration-millis: 45000
         targeted: true
         public-visibility: false
         description: "Sabotage a rival nation's military forces."
       perform-heist:
         cost-cash: 8000
-        duration-millis: 12000
+        duration-millis: 45000
         targeted: true
         public-visibility: false
-        description: "Steal cash from a rival nation's treasury (a fifth of it, at most three ticks of their income)."
+        description: "Steal cash from a rival nation's treasury (a fifth of it, at most two minutes of their income)."
       gather-intelligence:
         cost-cash: 6000
-        duration-millis: 12000
+        duration-millis: 45000
         targeted: true
         public-visibility: false
         description: "Recon a rival: get ranged estimates of their army, economy and tech. Spies may be lost."
       build-espionage-satellite:
         cost-cash: 120000
-        duration-millis: 15000
+        duration-millis: 180000
         targeted: false
         public-visibility: false
         description: "Build an espionage satellite for intelligence gathering."
       build-nuke:
         cost-cash: 250000
-        duration-millis: 20000
+        duration-millis: 300000
         targeted: false
         public-visibility: false
         required-research: RESEARCH_NUCLEAR_PROGRAM
@@ -224,19 +224,19 @@ game:
         description: "Launch nuclear warheads at a rival nation."
       steal-technology:
         cost-cash: 12000
-        duration-millis: 15000
+        duration-millis: 60000
         targeted: true
         public-visibility: false
         description: "Steal a researched technology from a rival nation."
       assassinate-leader:
         cost-cash: 20000
-        duration-millis: 12000
+        duration-millis: 60000
         targeted: true
         public-visibility: false
         description: "Attempt to assassinate a rival nation's leader (only when their popularity is below the vulnerability threshold)."
       decapitation-strike:
         cost-cash: 45000
-        duration-millis: 8000
+        duration-millis: 30000
         targeted: true
         public-visibility: true
         description: "A military strike to kill a rival's leader (only when their popularity is below the vulnerability threshold)."
@@ -249,7 +249,7 @@ game:
         description: "Hire a body double (max 2) that absorbs one assassination or decapitation strike."
       build-secret-bunker:
         cost-cash: 40000
-        duration-millis: 10000
+        duration-millis: 60000
         targeted: false
         public-visibility: false
         description: "Build a secret bunker to shelter the leader."
@@ -267,109 +267,109 @@ game:
         description: "Hire elite ninja bodyguards for maximum protection."
       research-advanced-farming:
         cost-cash: 80000
-        duration-millis: 15000
+        duration-millis: 300000
         targeted: false
         public-visibility: false
         description: "Permanently boost income from your economy."
       research-advanced-weaponry:
         cost-cash: 100000
-        duration-millis: 15000
+        duration-millis: 360000
         targeted: false
         public-visibility: false
         description: "Permanently boost the power of your attacks."
       research-cryptography:
         cost-cash: 90000
-        duration-millis: 15000
+        duration-millis: 300000
         targeted: false
         public-visibility: false
         description: "Permanently boost the success of your espionage."
       research-nuclear-program:
         cost-cash: 200000
-        duration-millis: 25000
+        duration-millis: 720000
         targeted: false
         public-visibility: true
         description: "Unlock the ability to build nuclear warheads."
       research-stealth-technology:
         cost-cash: 160000
-        duration-millis: 22000
+        duration-millis: 600000
         targeted: false
         public-visibility: false
         description: "Unlock the ability to build stealth bombers."
       research-special-forces-training:
         cost-cash: 140000
-        duration-millis: 20000
+        duration-millis: 540000
         targeted: false
         public-visibility: false
         description: "Unlock the ability to recruit special ops."
       research-continuity-of-government:
         cost-cash: 120000
-        duration-millis: 18000
+        duration-millis: 480000
         targeted: false
         public-visibility: false
         description: "Greatly reduce the chance of a coup while your popularity is low."
       research-satellite-network:
         cost-cash: 150000
-        duration-millis: 20000
+        duration-millis: 600000
         targeted: false
         public-visibility: false
         description: "Your espionage satellites reveal rivals' full state (military, arsenals, tech)."
       research-industrial-automation:
         cost-cash: 110000
-        duration-millis: 16000
+        duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Factories and robot factories generate significantly more income."
       research-central-banking:
         cost-cash: 110000
-        duration-millis: 16000
+        duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Banks generate significantly more income."
       research-war-economy:
         cost-cash: 100000
-        duration-millis: 15000
+        duration-millis: 300000
         targeted: false
         public-visibility: false
         description: "Your economy produces more income while you are at war."
       research-fortifications:
         cost-cash: 120000
-        duration-millis: 16000
+        duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Your forces are much stronger when defending against attacks."
       research-air-superiority:
         cost-cash: 150000
-        duration-millis: 18000
+        duration-millis: 480000
         targeted: false
         public-visibility: false
         description: "Stealth bombers are far more effective in decapitation strikes."
       research-mirv:
         cost-cash: 220000
-        duration-millis: 24000
+        duration-millis: 720000
         targeted: false
         public-visibility: true
         description: "Each launched warhead splits into multiple, overwhelming air defenses."
       research-counter-intelligence-doctrine:
         cost-cash: 110000
-        duration-millis: 16000
+        duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Your counter-intelligence is far more effective against enemy espionage."
       research-praetorian-guard:
         cost-cash: 120000
-        duration-millis: 16000
+        duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Your leadership protection is much stronger against assassination and decapitation."
       research-mass-media:
         cost-cash: 100000
-        duration-millis: 14000
+        duration-millis: 240000
         targeted: false
         public-visibility: false
         description: "Parades and praise keep their effect far longer before diminishing."
       research-propaganda-ministry:
         cost-cash: 110000
-        duration-millis: 15000
+        duration-millis: 300000
         targeted: false
         public-visibility: false
         description: "You lose much less popularity from enemy attacks, nukes and sabotage."
@@ -390,7 +390,7 @@ game:
         duration-millis: 0
         targeted: true
         public-visibility: false
-        description: "Send financial aid to another nation. Gifts of $50,000+ raise your popularity. Quantity is the dollar amount."
+        description: "Send financial aid to another nation. Gifts of $10,000+ raise your popularity. Quantity is the dollar amount."
       hold-parade:
         cost-cash: 20000
         duration-millis: 0

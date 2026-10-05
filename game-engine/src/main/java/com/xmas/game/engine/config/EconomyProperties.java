@@ -9,11 +9,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "game.economy")
 public class EconomyProperties {
 
-    private long baseIncome = 1000;
-    private long farmYield = 500;
-    private long factoryYield = 1500;
-    private long robotFactoryYield = 4000;
-    private long bankYield = 2500;
+    private long baseIncome = 125;
+    private long farmYield = 60;
+    private long factoryYield = 190;
+    private long robotFactoryYield = 500;
+    private long bankYield = 310;
 
     /**
      * Food: each farm feeds this many factories/robot factories (robot factories first).

@@ -155,12 +155,13 @@ class JpaEspionageResolverTest {
     }
 
     @Test
-    void heistOnAHoardIsCappedAtThreeTicksOfIncome() {
+    void heistOnAHoardIsCappedAtTwoMinutesOfIncome() {
         targetCash = 1_000_000;
-        when(incomeService.perTick(eq(targetId), any(), eq(50))).thenReturn(10_000L);
+        when(incomeService.perTick(eq(targetId), any(), eq(50))).thenReturn(5_000L);
         resolver(0.0).performHeist(actorId, targetId);
 
-        assertThat(actor.getCash()).isEqualTo(30_000);
-        assertThat(target.getCash()).isEqualTo(970_000);
+        // a fifth would be 200k; 24 ticks of 5k income caps it at 120k
+        assertThat(actor.getCash()).isEqualTo(120_000);
+        assertThat(target.getCash()).isEqualTo(880_000);
     }
 }

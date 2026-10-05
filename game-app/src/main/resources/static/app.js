@@ -836,7 +836,7 @@ const WARNINGS = {
   DECAPITATION_STRIKE: "Only succeeds if the target's popularity is below 20%. You pay either way. One strike per nation at a time.",
   DECLARE_WAR: "Declaring war costs you popularity.",
   DECLARE_PEACE: "Only possible with a nation you are at war with. Making peace raises your popularity.",
-  SEND_MONEY: "Gifts of $50,000 or more raise your popularity, less each time (like parades).",
+  SEND_MONEY: "Gifts of $10,000 or more raise your popularity, less each time (like parades).",
   HOLD_ELECTION: "Resets your parade bonus, but freezes all non-military actions for a while.",
   DEMOLISH_FARM: "Torn down at once, with no refund. The land is free to build on. " + FOOD_RULE,
   BUILD_FACTORY: FOOD_RULE,
@@ -892,6 +892,7 @@ function blockReason(def, me, info) {
   if (p.eliminated) return "Your government has fallen";
   if (def.category === "RESEARCH" && research.includes(def.actionType)) return "Researched";
   if (def.category === "RESEARCH" && pendingOf(def.actionType).length) return "Research under way";
+  if (def.category === "RESEARCH" && pending.some((p) => p.actionType.startsWith("RESEARCH_"))) return "Lab busy";
   if (def.requiredResearch && !research.includes(def.requiredResearch)) {
     return `Needs ${titleCase(researchName(def.requiredResearch))}`;
   }

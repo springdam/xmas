@@ -109,8 +109,8 @@ class GameTickServiceTest {
 
         tickService.tick();
 
-        // base 1000 + farms 2*500 + factories 1*1500 = 3500
-        assertThat(player.getCash()).isEqualTo(3600);
+        // base 125 + farms 2*60 + factories 1*190 = 435
+        assertThat(player.getCash()).isEqualTo(535);
         assertThat(game.getCurrentTick()).isEqualTo(5);
         assertThat(game.getGameTime()).isEqualTo(Instant.parse("2026-01-01T00:00:05Z"));
     }
@@ -167,8 +167,8 @@ class GameTickServiceTest {
 
         tickService.tick();
 
-        // base 1000 + farm 500 + robots 2*4000 + fed factory 1500 + unfed factory 1500*0.5 = 11750
-        assertThat(player.getCash()).isEqualTo(11_750);
+        // base 125 + farm 60 + robots 2*500 + fed factory 190 + unfed factory 190*0.5 = 1470
+        assertThat(player.getCash()).isEqualTo(1_470);
     }
 
     /** One running game with one player who has the given cash, 2 farms and the given army. */
@@ -201,8 +201,8 @@ class GameTickServiceTest {
 
         tickService.tick();
 
-        // income 1000 + 2*500 = 2000; upkeep 10*20 + 5*80 + 2*250 + 1*200 = 1300
-        assertThat(player.getCash()).isEqualTo(10_700);
+        // income 125 + 2*60 = 245; upkeep 10*5 + 5*20 + 2*60 + 1*50 = 320
+        assertThat(player.getCash()).isEqualTo(9_925);
     }
 
     @Test
@@ -214,7 +214,7 @@ class GameTickServiceTest {
 
         tickService.tick();
 
-        // income 2000 < upkeep 10000 + 3200 + 750: broke, 10% of each type (rounded up) walks off
+        // income 245 < upkeep 2500 + 800 + 180: broke, 10% of each type (rounded up) walks off
         assertThat(player.getCash()).isZero();
         assertThat(military.getInfantry()).isEqualTo(450);
         assertThat(military.getTanks()).isEqualTo(36);
@@ -226,7 +226,7 @@ class GameTickServiceTest {
         UUID gameId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
         GameEntity game = GameEntity.builder()
-                .id(gameId).status(GameStatus.RUNNING).currentTick(10)
+                .id(gameId).status(GameStatus.RUNNING).currentTick(58)
                 .gameTime(Instant.parse("2026-01-01T00:00:00Z")).tickDurationMillis(5000).createdAt(Instant.now())
                 .build();
         PlayerEntity player = PlayerEntity.builder()
@@ -240,9 +240,9 @@ class GameTickServiceTest {
                 .findByStatusAndCompletesAtLessThanEqualOrderByCompletesAt(eq(PendingActionStatus.PENDING), any()))
                 .thenReturn(List.of());
 
-        tickService.tick(); // tick 11
+        tickService.tick(); // tick 59
         assertThat(player.getWarStrain()).isEqualTo(2);
-        tickService.tick(); // tick 12: recovery happens every 12 ticks
+        tickService.tick(); // tick 60: recovery happens every 60 ticks
         assertThat(player.getWarStrain()).isEqualTo(1);
     }
 

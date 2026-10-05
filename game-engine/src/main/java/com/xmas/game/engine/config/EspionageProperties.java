@@ -15,7 +15,7 @@ public class EspionageProperties {
     /** Fraction of the target's cash stolen on a successful heist. */
     private double heistCashFraction = 0.2;
     /** ...but never more than this many ticks of the target's income, so hoards aren't a jackpot. */
-    private double heistMaxIncomeTicks = 3.0;
+    private double heistMaxIncomeTicks = 24.0;
 
     /** Fraction of the target's military destroyed on a successful sabotage. */
     private double sabotageFraction = 0.15;

@@ -22,10 +22,17 @@ mvn clean test
 
 ## Run locally (develop profile: H2 + in-memory sessions, no Postgres/Redis needed)
 
+Run from the repo root (the develop profile serves the UI straight from source):
+
 ```bash
 mvn -pl game-app -am -DskipTests package
 SPRING_PROFILES_ACTIVE=develop java -jar game-app/target/game-app-0.0.1-SNAPSHOT.jar
 ```
+
+`develop` uses the real game timings, so it's what you play a game night on. For quick
+testing add the `fast` profile (`SPRING_PROFILES_ACTIVE=develop,fast`): builds and research
+become instant, strikes and spy ops take 5 seconds, and election/war-strain timers are short.
+Data lives in memory either way and is lost when the server stops.
 
 Then:
 

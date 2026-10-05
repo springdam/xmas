@@ -22,6 +22,10 @@ public abstract class AbstractResearchHandler implements ActionHandler {
         if (research.hasResearch(ctx.getActorPlayerId(), type())) {
             throw new BadRequestException(type() + " has already been researched");
         }
+        // One project at a time: the tech tree takes longer than a game, so picks matter.
+        state.pendingResearch(ctx.getActorPlayerId()).ifPresent(busy -> {
+            throw new BadRequestException("Your scientists are still working on " + busy);
+        });
         if (state.getCash(ctx.getActorPlayerId()) < ctx.getDefinition().getCostCash()) {
             throw new BadRequestException("Insufficient funds for " + type());
         }

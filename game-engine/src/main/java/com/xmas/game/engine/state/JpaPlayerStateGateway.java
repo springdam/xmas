@@ -1,11 +1,13 @@
 package com.xmas.game.engine.state;
 
+import com.xmas.game.actions.domain.ActionCategory;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.state.PlayerStateGateway;
 import com.xmas.game.engine.domain.PendingActionStatus;
 import com.xmas.game.engine.economy.LandService;
 import com.xmas.game.engine.entity.GameEntity;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
+import com.xmas.game.engine.entity.PendingActionEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerEspionageEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
@@ -21,7 +23,10 @@ import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.repository.PlayerSpecialWeaponsRepository;
 import com.xmas.game.common.error.BadRequestException;
 import com.xmas.game.common.error.NotFoundException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -40,6 +45,10 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
     private final GameRepository gameRepository;
     private final LandService landService;
     private final PendingActionRepository pendingActionRepository;
+
+    private static final List<ActionType> RESEARCH_TYPES = Arrays.stream(ActionType.values())
+            .filter(type -> type.getCategory() == ActionCategory.RESEARCH)
+            .toList();
 
     @Override
     @Transactional(readOnly = true)
@@ -171,6 +180,14 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
     @Transactional(readOnly = true)
     public int getFreeLand(UUID playerId) {
         return landService.free(playerId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ActionType> pendingResearch(UUID playerId) {
+        return pendingActionRepository.findFirstByActorPlayerIdAndActionTypeInAndStatus(
+                        playerId, RESEARCH_TYPES, PendingActionStatus.PENDING)
+                .map(PendingActionEntity::getActionType);
     }
 
     @Override

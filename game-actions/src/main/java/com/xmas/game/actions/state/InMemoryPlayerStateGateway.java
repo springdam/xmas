@@ -4,6 +4,7 @@ import com.xmas.game.actions.domain.ActionType;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -57,6 +58,11 @@ public class InMemoryPlayerStateGateway implements PlayerStateGateway {
     @Override
     public void assertValidTarget(UUID actorId, UUID targetId) {
         // in-memory test gateway: every target is valid
+    }
+
+    @Override
+    public Optional<ActionType> pendingResearch(UUID playerId) {
+        return Optional.empty();   // in-memory test gateway: no queue of its own
     }
 
     @Override

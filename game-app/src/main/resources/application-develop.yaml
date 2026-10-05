@@ -1,3 +1,5 @@
+# Local play without Postgres/Redis: in-memory H2 database and sessions, UI served from source.
+# Uses the real game timings; add the `fast` profile (develop,fast) for quick testing.
 spring:
   datasource:
     url: jdbc:h2:mem:xmas;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
@@ -13,38 +15,6 @@ spring:
       static-locations: file:game-app/src/main/resources/static/, classpath:/static/
       cache:
         period: 0
-
-game:
-  popularity:
-    election-freeze-ticks: 2
-  actions:
-    definitions:
-      build-stealth-bomber:
-        duration-millis: 0
-      recruit-special-ops:
-        duration-millis: 0
-      build-air-defense-battery:
-        duration-millis: 0
-      build-espionage-satellite:
-        duration-millis: 0
-      research-nuclear-program:
-        duration-millis: 0
-      research-stealth-technology:
-        duration-millis: 0
-      research-special-forces-training:
-        duration-millis: 0
-      research-continuity-of-government:
-        duration-millis: 0
-      research-satellite-network:
-        duration-millis: 0
-      research-mass-media:
-        duration-millis: 0
-      research-industrial-automation:
-        duration-millis: 0
-      research-propaganda-ministry:
-        duration-millis: 0
-      gather-intelligence:
-        duration-millis: 0
 
 logging:
   level:

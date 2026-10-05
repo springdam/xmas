@@ -16,13 +16,13 @@ public class PopularityProperties {
     private int declarePeaceBonus = 8;
     /** Aid earns the sender sendMoneyBonus (diminishing like parades) only from this amount up. */
     private int sendMoneyBonus = 3;
-    private long sendMoneyBonusMinAmount = 50_000;
+    private long sendMoneyBonusMinAmount = 10_000;
     private int paradeBonus = 8;
     private int praiseBonus = 4;
     /** Each successive parade/praise on a player is multiplied by decay^boostCount until they hold an election. */
     private double paradePraiseDecay = 0.6;
     /** How many ticks a player is frozen (military actions only) after holding an election. */
-    private long electionFreezeTicks = 12;
+    private long electionFreezeTicks = 60;
 
     // Popularity a target loses when their nation is hit (a weakened leader becomes vulnerable).
     private int nukeVictimPenalty = 15;
@@ -32,7 +32,7 @@ public class PopularityProperties {
     private int attackVictimPenalty = 5;
     /** Each lost battle is multiplied by decay^warStrain; strain drops by one every recovery-ticks ticks. */
     private double attackPenaltyDecay = 0.7;
-    private long warStrainRecoveryTicks = 12;
+    private long warStrainRecoveryTicks = 60;
     private int sabotageVictimPenalty = 6;
     private int cyberVictimPenalty = 6;
     private int heistVictimPenalty = 3;

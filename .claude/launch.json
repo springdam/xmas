@@ -6,6 +6,12 @@
       "runtimeExecutable": "java",
       "runtimeArgs": ["-Dspring.profiles.active=develop", "-jar", "game-app/target/game-app-0.0.1-SNAPSHOT.jar"],
       "port": 8080
+    },
+    {
+      "name": "xmas-game (fast)",
+      "runtimeExecutable": "java",
+      "runtimeArgs": ["-Dspring.profiles.active=develop,fast", "-jar", "game-app/target/game-app-0.0.1-SNAPSHOT.jar"],
+      "port": 8080
     }
   ]
 }

@@ -2,6 +2,7 @@ package com.xmas.game.actions.state;
 
 import com.xmas.game.actions.domain.ActionType;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -29,6 +30,9 @@ public interface PlayerStateGateway {
 
     /** Land plots still free for economy buildings (counting those under construction as taken). */
     int getFreeLand(UUID playerId);
+
+    /** The research project the player has under way, if any (one at a time). */
+    Optional<ActionType> pendingResearch(UUID playerId);
 
     /** Whether the player already has an action of one of these types under way against the target. */
     boolean hasPendingAgainst(UUID playerId, Collection<ActionType> types, UUID targetPlayerId);

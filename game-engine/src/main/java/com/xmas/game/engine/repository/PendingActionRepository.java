@@ -6,6 +6,7 @@ import com.xmas.game.engine.entity.PendingActionEntity;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +16,9 @@ public interface PendingActionRepository extends JpaRepository<PendingActionEnti
 
     List<PendingActionEntity> findByStatusAndCompletesAtLessThanEqualOrderByCompletesAt(
             PendingActionStatus status, Instant threshold);
+
+    Optional<PendingActionEntity> findFirstByActorPlayerIdAndActionTypeInAndStatus(
+            UUID actorPlayerId, Collection<ActionType> actionTypes, PendingActionStatus status);
 
     boolean existsByActorPlayerIdAndActionTypeInAndTargetPlayerIdAndStatus(
             UUID actorPlayerId, Collection<ActionType> actionTypes, UUID targetPlayerId, PendingActionStatus status);
