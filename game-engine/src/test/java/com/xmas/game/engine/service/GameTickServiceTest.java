@@ -132,6 +132,36 @@ class GameTickServiceTest {
     }
 
     @Test
+    void tick_industryBeyondWhatFarmsFeedEarnsHalf() {
+        UUID gameId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+        GameEntity game = GameEntity.builder()
+                .id(gameId).status(GameStatus.RUNNING).currentTick(1)
+                .gameTime(Instant.parse("2026-01-01T00:00:00Z")).tickDurationMillis(5000).createdAt(Instant.now())
+                .build();
+        PlayerEntity player = PlayerEntity.builder()
+                .id(playerId).gameId(gameId).accountId(UUID.randomUUID())
+                .cash(0).popularity(50).joinedAt(Instant.now())
+                .build();
+        // 1 farm feeds 3: both robot factories first, then 1 of the 2 factories.
+        PlayerEconomyEntity economy = PlayerEconomyEntity.builder()
+                .playerId(playerId).farms(1).factories(2).robotFactories(2).banks(0)
+                .build();
+
+        when(gameRepository.findByStatus(GameStatus.RUNNING)).thenReturn(List.of(game));
+        when(playerRepository.findByGameId(gameId)).thenReturn(List.of(player));
+        when(economyRepository.findById(playerId)).thenReturn(Optional.of(economy));
+        when(pendingActionRepository
+                .findByStatusAndCompletesAtLessThanEqualOrderByCompletesAt(eq(PendingActionStatus.PENDING), any()))
+                .thenReturn(List.of());
+
+        tickService.tick();
+
+        // base 1000 + farm 500 + robots 2*4000 + fed factory 1500 + unfed factory 1500*0.5 = 11750
+        assertThat(player.getCash()).isEqualTo(11_750);
+    }
+
+    @Test
     void tick_warStrainRecoversOnlyOnRecoveryTicks() {
         UUID gameId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();

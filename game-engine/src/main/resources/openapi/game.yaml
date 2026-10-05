@@ -310,6 +310,10 @@ components:
           type: integer
           format: int32
           description: Plots taken by standing buildings plus those under construction.
+        industryCapacity:
+          type: integer
+          format: int32
+          description: Factories and robot factories the farms can feed; any beyond earn reduced income.
     MilitaryResponse:
       type: object
       required:

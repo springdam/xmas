@@ -641,7 +641,7 @@ function selectTab(name) {
 // ---------- Nation header + tab ----------
 
 const SECTIONS = [
-  { key: "economy", title: "ECONOMY", fields: [["farms", "Farms"], ["factories", "Factories"], ["robotFactories", "Robot fac."], ["banks", "Banks"]] },
+  { key: "economy", title: "ECONOMY", fields: [["farms", "Farms"], ["factories", "Factories"], ["robotFactories", "Robot fac."], ["banks", "Banks"], ["fed", "Fed ind."]] },
   { key: "military", title: "MILITARY", fields: [["infantry", "Infantry"], ["tanks", "Tanks"], ["stealthBombers", "Bombers"], ["specialOps", "Spec. ops"], ["airDefenseBatteries", "Air def."], ["missileBatteries", "Missiles"]] },
   { key: "espionage", title: "ESPIONAGE", half: true, fields: [["spies", "Spies"], ["counterIntel", "Counter"]] },
   { key: "specialWeapons", title: "WEAPONS", half: true, fields: [["nukes", "Nukes"], ["espionageSatellites", "Satellites"]] },
@@ -739,6 +739,7 @@ function renderNation(me) {
     for (const [field] of section.fields) {
       let text = String(values[field] ?? "–");
       if (field === "doublegangers" && dgMax) text += `/${dgMax}`;
+      if (field === "fed") text = fedText(values);
       setValue($(`stat-${section.key}-${field}`), text);
     }
   }
@@ -847,6 +848,15 @@ const OWNED = {
   DEMOLISH_ROBOT_FACTORY: ["economy", "robotFactories"], DEMOLISH_BANK: ["economy", "banks"],
 };
 
+/** Industry the farms feed, e.g. "13/36"; over capacity means the extra runs at half output. */
+function fedText(e) {
+  if (e.industryCapacity == null) return "–";
+  const industry = (e.factories ?? 0) + (e.robotFactories ?? 0);
+  return `${industry}/${e.industryCapacity}${industry > e.industryCapacity ? " !" : ""}`;
+}
+
+const FOOD_RULE = "Each farm feeds 3 factories or robot factories. Any beyond that earn only half.";
+
 /** Extra warnings shown in the dialog, from the game rules. */
 const WARNINGS = {
   ASSASSINATE_LEADER: "Only succeeds if the target's popularity is below 20%. You pay either way.",
@@ -857,7 +867,10 @@ const WARNINGS = {
   DECLARE_PEACE: "Only possible with a nation you are at war with. Making peace raises your popularity.",
   SEND_MONEY: "Gifts of $50,000 or more raise your popularity, less each time (like parades).",
   HOLD_ELECTION: "Resets your parade bonus, but freezes all non-military actions for a while.",
-  DEMOLISH_FARM: "Torn down at once, with no refund. The land is free to build on.",
+  DEMOLISH_FARM: "Torn down at once, with no refund. The land is free to build on. " + FOOD_RULE,
+  BUILD_FACTORY: FOOD_RULE,
+  BUILD_ROBOT_FACTORY: FOOD_RULE,
+  BUILD_FARM: FOOD_RULE,
   DEMOLISH_FACTORY: "Torn down at once, with no refund. The land is free to build on.",
   DEMOLISH_ROBOT_FACTORY: "Torn down at once, with no refund. The land is free to build on.",
   DEMOLISH_BANK: "Torn down at once, with no refund. The land is free to build on.",

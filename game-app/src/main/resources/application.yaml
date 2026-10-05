@@ -32,6 +32,8 @@ game:
     factory-yield: 1500
     robot-factory-yield: 4000
     bank-yield: 2500
+    industry-per-farm: 3
+    unfed-industry-factor: 0.5
   popularity:
     starting-popularity: 50
     vulnerability-threshold: 20
@@ -72,19 +74,19 @@ game:
         duration-millis: 0
         targeted: false
         public-visibility: false
-        description: "Build a farm. Increases food output and passive income each tick."
+        description: "Build a farm. Feeds 3 factories or robot factories and adds a little income each tick."
       build-factory:
         cost-cash: 25000
         duration-millis: 6000
         targeted: false
         public-visibility: false
-        description: "Build a factory. Boosts industrial income; takes time to construct."
+        description: "Build a factory. Boosts industrial income; takes time to construct. Needs farms to feed it."
       build-robot-factory:
         cost-cash: 60000
         duration-millis: 10000
         targeted: false
         public-visibility: false
-        description: "Build a robot factory. High industrial output; slow to construct."
+        description: "Build a robot factory. High industrial output; slow to construct. Needs farms to feed it."
       build-bank:
         cost-cash: 40000
         duration-millis: 0
@@ -140,14 +142,14 @@ game:
         public-visibility: false
         description: "Build an air defense battery: intercepts nukes and negates stealth bombers on decapitation strikes."
       build-stealth-bomber:
-        cost-cash: 180000
+        cost-cash: 25000
         duration-millis: 18000
         targeted: false
         public-visibility: false
         required-research: RESEARCH_STEALTH_TECHNOLOGY
         description: "Build a stealth bomber: a strong air unit that also boosts decapitation strike success."
       recruit-special-ops:
-        cost-cash: 150000
+        cost-cash: 20000
         duration-millis: 16000
         targeted: false
         public-visibility: false

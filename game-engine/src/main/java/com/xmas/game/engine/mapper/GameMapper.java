@@ -54,14 +54,16 @@ public final class GameMapper {
                 .frozenUntilTick(player.getFrozenUntilTick());
     }
 
-    public static EconomyResponse toEconomyResponse(PlayerEconomyEntity economy, int landCapacity, int landInUse) {
+    public static EconomyResponse toEconomyResponse(PlayerEconomyEntity economy, int landCapacity, int landInUse,
+                                                    int industryCapacity) {
         return new EconomyResponse()
                 .farms(economy.getFarms())
                 .factories(economy.getFactories())
                 .robotFactories(economy.getRobotFactories())
                 .banks(economy.getBanks())
                 .landCapacity(landCapacity)
-                .landInUse(landInUse);
+                .landInUse(landInUse)
+                .industryCapacity(industryCapacity);
     }
 
     public static GamePlayerSummary toGamePlayerSummary(PlayerEntity player, String username) {
@@ -118,7 +120,7 @@ public final class GameMapper {
     }
 
     public static PlayerStateResponse toPlayerState(PlayerEntity player, PlayerEconomyEntity economy,
-                                                    int landCapacity, int landInUse,
+                                                    int landCapacity, int landInUse, int industryCapacity,
                                                     PlayerMilitaryEntity military, PlayerEspionageEntity espionage,
                                                     PlayerSpecialWeaponsEntity specialWeapons,
                                                     PlayerProtectionEntity protection,
@@ -126,7 +128,7 @@ public final class GameMapper {
                                                     List<PlayerRelationEntity> relations) {
         return new PlayerStateResponse()
                 .player(toPlayerResponse(player))
-                .economy(toEconomyResponse(economy, landCapacity, landInUse))
+                .economy(toEconomyResponse(economy, landCapacity, landInUse, industryCapacity))
                 .military(toMilitaryResponse(military))
                 .espionage(toEspionageResponse(espionage))
                 .specialWeapons(toSpecialWeaponsResponse(specialWeapons))
