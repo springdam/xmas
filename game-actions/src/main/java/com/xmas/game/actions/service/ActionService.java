@@ -37,7 +37,7 @@ public class ActionService {
         ActionDefinition definition = catalog.getDefinition(type);
         playerStateGateway.assertNotFrozen(actorPlayerId, isMilitary(type, definition));
         requireResearch(definition, actorPlayerId);
-        validateTargeting(definition, targetPlayerId);
+        validateTargeting(definition, actorPlayerId, targetPlayerId);
 
         ActionContext ctx = ActionContext.builder()
                 .actorPlayerId(actorPlayerId)
@@ -85,12 +85,15 @@ public class ActionService {
                 || type == ActionType.SPECIAL_WEAPON_ATTACK;
     }
 
-    private void validateTargeting(ActionDefinition definition, UUID targetPlayerId) {
+    private void validateTargeting(ActionDefinition definition, UUID actorPlayerId, UUID targetPlayerId) {
         if (definition.isTargeted() && targetPlayerId == null) {
             throw new BadRequestException("Action " + definition.getActionType() + " requires a target player");
         }
         if (!definition.isTargeted() && targetPlayerId != null) {
             throw new BadRequestException("Action " + definition.getActionType() + " cannot target a player");
+        }
+        if (targetPlayerId != null) {
+            playerStateGateway.assertValidTarget(actorPlayerId, targetPlayerId);
         }
     }
 }

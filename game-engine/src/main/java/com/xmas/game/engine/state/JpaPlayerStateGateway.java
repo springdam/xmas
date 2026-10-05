@@ -55,6 +55,21 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
 
     @Override
     @Transactional(readOnly = true)
+    public void assertValidTarget(UUID actorId, UUID targetId) {
+        PlayerEntity target = player(targetId);
+        if (!target.getGameId().equals(player(actorId).getGameId())) {
+            throw new BadRequestException("That nation is not in your game");
+        }
+        if (target.isAdmin()) {
+            throw new BadRequestException("The admin does not control a nation and cannot be targeted");
+        }
+        if (target.isEliminated()) {
+            throw new BadRequestException("That nation has fallen and can no longer be targeted");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public void assertNotFrozen(UUID playerId, boolean militaryAction) {
         if (militaryAction) {
             return;

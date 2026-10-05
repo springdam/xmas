@@ -8,6 +8,7 @@ import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.config.SpecialForcesProperties;
 import com.xmas.game.engine.domain.Popularity;
 import com.xmas.game.engine.economy.BuildingDamageService;
+import com.xmas.game.engine.economy.IncomeService;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.research.ResearchGateway;
 import com.xmas.game.engine.entity.GameEntity;
@@ -57,6 +58,7 @@ public class JpaEspionageResolver implements EspionageResolver {
     private final SpecialForcesProperties specialForcesProperties;
     private final NewsService newsService;
     private final BuildingDamageService buildingDamageService;
+    private final IncomeService incomeService;
 
     @Override
     @Transactional
@@ -68,7 +70,9 @@ public class JpaEspionageResolver implements EspionageResolver {
             recordFailure(actor, target, "a heist", attempt.getSpiesCaught());
             return;
         }
-        long stolen = Math.round(target.getCash() * properties.getHeistCashFraction());
+        long incomeCap = Math.round(incomeService.perTick(targetId, economy(targetId), target.getPopularity())
+                * properties.getHeistMaxIncomeTicks());
+        long stolen = Math.min(Math.round(target.getCash() * properties.getHeistCashFraction()), incomeCap);
         target.setCash(target.getCash() - stolen);
         target.setPopularity(Popularity.clamp(target.getPopularity() - victimPenalty(targetId, popularityProperties.getHeistVictimPenalty())));
         actor.setCash(actor.getCash() + stolen);

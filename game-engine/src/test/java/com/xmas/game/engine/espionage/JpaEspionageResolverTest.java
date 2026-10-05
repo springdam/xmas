@@ -18,6 +18,7 @@ import com.xmas.game.engine.config.EspionageProperties;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.config.SpecialForcesProperties;
 import com.xmas.game.engine.economy.BuildingDamageService;
+import com.xmas.game.engine.economy.IncomeService;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerEspionageEntity;
@@ -48,6 +49,10 @@ class JpaEspionageResolverTest {
     private final PlayerEconomyRepository economyRepository = mock(PlayerEconomyRepository.class);
     private final PlayerMilitaryRepository militaryRepository = mock(PlayerMilitaryRepository.class);
     private final NewsService newsService = mock(NewsService.class);
+    private final IncomeService incomeService = mock(IncomeService.class);
+    private long targetCash = 0;
+    private PlayerEntity actor;
+    private PlayerEntity target;
 
     private final PlayerEspionageEntity actorEsp = PlayerEspionageEntity.builder().playerId(actorId).spies(10).counterIntel(0).build();
     private final PlayerEspionageEntity targetEsp = PlayerEspionageEntity.builder().playerId(targetId).spies(0).counterIntel(10).build();
@@ -59,8 +64,9 @@ class JpaEspionageResolverTest {
         int[] next = {0};
         RandomSource random = () -> rolls[next[0]++];
 
-        PlayerEntity actor = PlayerEntity.builder().id(actorId).gameId(gameId).nation(Nation.RUSSIA).popularity(50).build();
-        PlayerEntity target = PlayerEntity.builder().id(targetId).gameId(gameId).nation(Nation.DENMARK).popularity(50).build();
+        actor = PlayerEntity.builder().id(actorId).gameId(gameId).nation(Nation.RUSSIA).popularity(50).build();
+        target = PlayerEntity.builder().id(targetId).gameId(gameId).nation(Nation.DENMARK).popularity(50)
+                .cash(targetCash).build();
         when(playerRepository.findById(actorId)).thenReturn(Optional.of(actor));
         when(playerRepository.findById(targetId)).thenReturn(Optional.of(target));
         when(espionageRepository.findById(actorId)).thenReturn(Optional.of(actorEsp));
@@ -84,7 +90,8 @@ class JpaEspionageResolverTest {
                 new SpecialForcesProperties(), newsService,
                 // building rolls of 0.15 against cyber strength 0.2 x fragility:
                 // farms 0.05, factories 0.12 survive; banks 0.16, robot factories 0.2 fall
-                new BuildingDamageService(new EconomyProperties(), () -> 0.15));
+                new BuildingDamageService(new EconomyProperties(), () -> 0.15),
+                incomeService);
     }
 
     @Test
@@ -135,5 +142,25 @@ class JpaEspionageResolverTest {
         verify(newsService).record(eq(gameId), any(), eq(NewsVisibility.ACTOR_ONLY), eq(actorId), eq(targetId),
                 argThat(h -> h.startsWith("INTEL on DENMARK")), any());
         verify(newsService, never()).record(any(), any(), eq(NewsVisibility.INVOLVED_ONLY), any(), any(), any(), any());
+    }
+
+    @Test
+    void heistTakesAFifthOfTheTreasury() {
+        targetCash = 100_000;
+        when(incomeService.perTick(eq(targetId), any(), eq(50))).thenReturn(10_000L);
+        resolver(0.0).performHeist(actorId, targetId);
+
+        assertThat(actor.getCash()).isEqualTo(20_000);
+        assertThat(target.getCash()).isEqualTo(80_000);
+    }
+
+    @Test
+    void heistOnAHoardIsCappedAtThreeTicksOfIncome() {
+        targetCash = 1_000_000;
+        when(incomeService.perTick(eq(targetId), any(), eq(50))).thenReturn(10_000L);
+        resolver(0.0).performHeist(actorId, targetId);
+
+        assertThat(actor.getCash()).isEqualTo(30_000);
+        assertThat(target.getCash()).isEqualTo(970_000);
     }
 }

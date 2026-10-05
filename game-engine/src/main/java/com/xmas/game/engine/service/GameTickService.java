@@ -6,12 +6,12 @@ import com.xmas.game.actions.handler.ActionHandler;
 import com.xmas.game.actions.service.ActionDefinitionCatalog;
 import com.xmas.game.actions.service.ActionHandlerRegistry;
 import com.xmas.game.combat.random.RandomSource;
-import com.xmas.game.engine.config.EconomyProperties;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.domain.GameStatus;
 import com.xmas.game.engine.domain.PendingActionStatus;
 import com.xmas.game.engine.entity.GameEntity;
 import com.xmas.game.engine.entity.PendingActionEntity;
+import com.xmas.game.engine.economy.IncomeService;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
@@ -20,7 +20,6 @@ import com.xmas.game.engine.repository.GameRepository;
 import com.xmas.game.engine.repository.PendingActionRepository;
 import com.xmas.game.engine.repository.PlayerEconomyRepository;
 import com.xmas.game.engine.repository.PlayerMilitaryRepository;
-import com.xmas.game.engine.repository.PlayerRelationRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.research.ResearchModifierService;
 import com.xmas.game.newsfeed.domain.NewsType;
@@ -28,7 +27,6 @@ import com.xmas.game.newsfeed.domain.NewsVisibility;
 import com.xmas.game.newsfeed.service.NewsService;
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,9 +40,8 @@ public class GameTickService {
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
     private final PlayerEconomyRepository economyRepository;
-    private final PlayerRelationRepository relationRepository;
     private final PendingActionRepository pendingActionRepository;
-    private final EconomyProperties economyProperties;
+    private final IncomeService incomeService;
     private final ActionHandlerRegistry handlerRegistry;
     private final ActionDefinitionCatalog definitionCatalog;
     private final ResearchModifierService researchModifierService;
@@ -92,7 +89,7 @@ public class GameTickService {
             if (economy == null) {
                 continue;
             }
-            player.setCash(player.getCash() + income(player.getId(), economy, player.getPopularity()));
+            player.setCash(player.getCash() + incomeService.perTick(player.getId(), economy, player.getPopularity()));
             payUpkeep(game, player);
             playerRepository.save(player);
         }
@@ -130,36 +127,6 @@ public class GameTickService {
                 game.getGameTime());
         log.info("Player {} ({}) overthrown by coup at popularity {}",
                 player.getId(), player.getNation(), player.getPopularity());
-    }
-
-    private double popularityIncomeFactor(int popularity) {
-        double factor = 1.0 + (popularity - 50) * popularityProperties.getIncomePerPopularityPoint();
-        return Math.max(popularityProperties.getMinIncomeFactor(),
-                Math.min(popularityProperties.getMaxIncomeFactor(), factor));
-    }
-
-    private long income(UUID playerId, PlayerEconomyEntity e, int popularity) {
-        double farmIncome = (double) e.getFarms() * economyProperties.getFarmYield();
-        // Farms feed industry; the most productive buildings get fed first.
-        int food = economyProperties.industryCapacity(e.getFarms());
-        int fedRobots = Math.min(e.getRobotFactories(), food);
-        int fedFactories = Math.min(e.getFactories(), food - fedRobots);
-        double factoryIncome = (fedOutput(fedFactories, e.getFactories()) * economyProperties.getFactoryYield()
-                + fedOutput(fedRobots, e.getRobotFactories()) * economyProperties.getRobotFactoryYield())
-                * researchModifierService.factoryIncomeMultiplier(playerId);
-        double bankIncome = (double) e.getBanks() * economyProperties.getBankYield()
-                * researchModifierService.bankIncomeMultiplier(playerId);
-        double raw = economyProperties.getBaseIncome() + farmIncome + factoryIncome + bankIncome;
-        double total = raw
-                * researchModifierService.economyMultiplier(playerId)
-                * popularityIncomeFactor(popularity)
-                * researchModifierService.warEconomyMultiplier(playerId, relationRepository.isAtWar(playerId));
-        return Math.round(total);
-    }
-
-    /** Effective building count: fed buildings in full, the rest at the unfed factor. */
-    private double fedOutput(int fed, int total) {
-        return fed + (total - fed) * economyProperties.getUnfedIndustryFactor();
     }
 
     private void resolveDueActions() {

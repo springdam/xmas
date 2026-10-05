@@ -196,7 +196,7 @@ game:
         duration-millis: 12000
         targeted: true
         public-visibility: false
-        description: "Steal cash from a rival nation's treasury."
+        description: "Steal cash from a rival nation's treasury (a fifth of it, at most three ticks of their income)."
       gather-intelligence:
         cost-cash: 6000
         duration-millis: 12000

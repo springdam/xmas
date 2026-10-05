@@ -55,6 +55,11 @@ public class InMemoryPlayerStateGateway implements PlayerStateGateway {
     }
 
     @Override
+    public void assertValidTarget(UUID actorId, UUID targetId) {
+        // in-memory test gateway: every target is valid
+    }
+
+    @Override
     public boolean hasPendingAgainst(UUID playerId, Collection<ActionType> types, UUID targetPlayerId) {
         return false;   // in-memory test gateway: no queue of its own
     }

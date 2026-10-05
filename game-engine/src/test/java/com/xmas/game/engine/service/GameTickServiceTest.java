@@ -16,6 +16,7 @@ import com.xmas.game.actions.service.ActionDefinitionCatalog;
 import com.xmas.game.actions.service.ActionHandlerRegistry;
 import com.xmas.game.engine.config.EconomyProperties;
 import com.xmas.game.engine.config.UpkeepProperties;
+import com.xmas.game.engine.economy.IncomeService;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.domain.GameStatus;
 import com.xmas.game.engine.domain.PendingActionStatus;
@@ -74,8 +75,10 @@ class GameTickServiceTest {
         when(researchModifierService.warEconomyMultiplier(any(), org.mockito.ArgumentMatchers.anyBoolean()))
                 .thenReturn(1.0);
         RandomSource random = () -> 0.0; // coup roll always fires when a player is vulnerable
+        IncomeService incomeService = new IncomeService(new EconomyProperties(), researchModifierService,
+                new PopularityProperties(), relationRepository);
         tickService = new GameTickService(gameRepository, playerRepository, economyRepository,
-                relationRepository, pendingActionRepository, new EconomyProperties(), handlerRegistry,
+                pendingActionRepository, incomeService, handlerRegistry,
                 definitionCatalog, researchModifierService, new PopularityProperties(), random, newsService,
                 militaryRepository, new UpkeepService(new UpkeepProperties()));
     }

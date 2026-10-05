@@ -16,6 +16,9 @@ public interface PlayerStateGateway {
     /** Throws if the player is frozen (e.g. holding an election) and this is not a military action. */
     void assertNotFrozen(UUID playerId, boolean militaryAction);
 
+    /** Throws unless the target is a standing nation in the actor's game (not the admin, not fallen). */
+    void assertValidTarget(UUID actorId, UUID targetId);
+
     long getCash(UUID playerId);
 
     void charge(UUID playerId, long amount);
