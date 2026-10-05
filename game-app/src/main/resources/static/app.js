@@ -791,6 +791,18 @@ const GROUPS = [
 ];
 const GROUPS_KEY = "xmas.groups";
 
+/** 8x8 pixel icons for the action categories (same style as the tab bar). */
+const GROUP_ICONS = {
+  ECONOMY: "M6 0h1v1H6zM6 1h1v1H6zM0 2h1v1H0zM3 2h1v1H3zM6 2h2v1H6zM0 3h2v1H0zM3 3h2v1H3zM6 3h2v1H6zM0 4h8v1H0zM0 5h1v1H0zM2 5h1v1H2zM4 5h1v1H4zM6 5h2v1H6zM0 6h8v1H0zM0 7h8v1H0z",
+  DEMOLITION: "M1 0h6v1H1zM1 1h6v1H1zM1 2h6v1H1zM3 3h2v1H3zM3 4h2v1H3zM3 5h2v1H3zM3 6h2v1H3zM3 7h2v1H3z",
+  ARMY: "M2 2h3v1H2zM2 3h6v1H2zM1 4h6v1H1zM0 5h8v1H0zM0 6h1v1H0zM2 6h1v1H2zM4 6h1v1H4zM6 6h1v1H6zM1 7h6v1H1z",
+  SPECIAL_WEAPONS: "M3 0h2v1H3zM2 1h4v1H2zM2 2h4v1H2zM2 3h4v1H2zM2 4h4v1H2zM1 5h6v1H1zM0 6h2v1H0zM3 6h2v1H3zM6 6h2v1H6zM0 7h1v1H0zM3 7h2v1H3zM7 7h1v1H7z",
+  ESPIONAGE: "M2 1h4v1H2zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM3 3h2v1H3zM7 3h1v1H7zM0 4h1v1H0zM3 4h2v1H3zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h4v1H2z",
+  PERSONAL_PROTECTION: "M0 0h8v1H0zM0 1h1v1H0zM7 1h1v1H7zM0 2h1v1H0zM7 2h1v1H7zM0 3h1v1H0zM7 3h1v1H7zM1 4h1v1H1zM6 4h1v1H6zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z",
+  RESEARCH: "M2 0h4v1H2zM3 1h2v1H3zM3 2h2v1H3zM2 3h4v1H2zM1 4h2v1H1zM4 4h3v1H4zM0 5h8v1H0zM0 6h3v1H0zM4 6h4v1H4zM1 7h6v1H1z",
+  DIPLOMACY: "M1 0h5v1H1zM0 1h7v1H0zM0 2h1v1H0zM2 2h1v1H2zM4 2h1v1H4zM6 2h1v1H6zM0 3h7v1H0zM1 4h5v1H1zM1 5h2v1H1zM1 6h1v1H1z",
+};
+
 const LABELS = {
   HIRE_DOUBLEGANGER: "HIRE BODY DOUBLE",
   BUILD_ESPIONAGE_SATELLITE: "BUILD SPY SATELLITE",
@@ -920,7 +932,8 @@ function savedGroups() {
 /** Builds the grouped action list once; later polls only update each row. */
 function buildActionGroups() {
   const open = new Set(savedGroups());
-  const chevron = '<svg viewBox="0 0 8 8" aria-hidden="true"><path d="M2 1h1v1H2zM3 2h1v1H3zM4 3h1v2H4zM3 5h1v1H3zM2 6h1v1H2z"/></svg>';
+  const chevron = '<svg class="chev" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 1h1v1H2zM3 2h1v1H3zM4 3h1v2H4zM3 5h1v1H3zM2 6h1v1H2z"/></svg>';
+  const icon = (key) => `<svg class="gicon" viewBox="0 0 8 8" aria-hidden="true"><path d="${GROUP_ICONS[key] || ""}"/></svg>`;
   const groups = GROUPS.map(([key, title]) => {
     const defs = state.actions.filter((d) => uiGroup(d) === key);
     if (!defs.length) return null;
@@ -932,8 +945,8 @@ function buildActionGroups() {
       try { localStorage.setItem(GROUPS_KEY, JSON.stringify([...now])); } catch { /* ignore */ }
     });
     const summary = el("summary", "btn");
-    summary.innerHTML = chevron;
-    summary.append(el("span", "grow", title), el("span", "count", String(defs.length)));
+    summary.innerHTML = chevron + icon(key);
+    summary.append(el("span", "grow", title));
     const rows = el("div", "group-rows");
     for (const def of defs) {
       const btn = el("button", "action");

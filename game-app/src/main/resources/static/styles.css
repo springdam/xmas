@@ -410,12 +410,10 @@ strong { font-weight: normal; color: var(--accent); }
   background: var(--title); color: var(--titleInk);
 }
 .group > summary::-webkit-details-marker { display: none; }
-.group > summary svg { width: 14px; height: 14px; fill: currentColor; shape-rendering: crispEdges; transition: transform .1s steps(1); }
-.group[open] > summary svg { transform: rotate(90deg); }
-.group > summary .count {
-  font-size: 11px; padding: 1px 6px;
-  background: var(--titleInk); color: var(--title);
-}
+.group > summary svg { fill: currentColor; shape-rendering: crispEdges; flex-shrink: 0; }
+.group > summary .chev { width: 14px; height: 14px; transition: transform .1s steps(1); }
+.group[open] > summary .chev { transform: rotate(90deg); }
+.group > summary .gicon { width: 18px; height: 18px; }
 .group + .group { margin-top: 4px; }
 .group-rows { display: flex; flex-direction: column; gap: 6px; padding: 6px 0 4px 10px; }
 
