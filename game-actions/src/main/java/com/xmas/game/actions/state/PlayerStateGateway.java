@@ -25,4 +25,7 @@ public interface PlayerStateGateway {
 
     /** Land plots still free for economy buildings (counting those under construction as taken). */
     int getFreeLand(UUID playerId);
+
+    /** Whether the player already has an action of this type under way against the target. */
+    boolean hasPendingAgainst(UUID playerId, ActionType type, UUID targetPlayerId);
 }

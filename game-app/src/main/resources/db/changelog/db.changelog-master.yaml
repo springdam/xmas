@@ -23,3 +23,5 @@ databaseChangeLog:
       file: db/changelog/changes/011-combat-units.yaml
   - include:
       file: db/changelog/changes/012-news-headline-length.yaml
+  - include:
+      file: db/changelog/changes/013-player-war-strain.yaml

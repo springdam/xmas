@@ -54,6 +54,10 @@ public class PlayerEntity {
     @Column(name = "frozen_until_tick", nullable = false)
     private long frozenUntilTick;
 
+    /** Recent battles lost; each makes the next defeat hurt popularity less. Recovers over time. */
+    @Column(name = "war_strain", nullable = false)
+    private int warStrain;
+
     @Column(name = "joined_at", nullable = false)
     private Instant joinedAt;
 }

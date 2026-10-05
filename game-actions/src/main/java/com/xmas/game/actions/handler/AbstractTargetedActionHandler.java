@@ -14,6 +14,11 @@ public abstract class AbstractTargetedActionHandler implements ActionHandler {
 
     protected final PlayerStateGateway state;
 
+    /** Whether only one of these may be under way against the same target at a time. */
+    protected boolean oneAtATimePerTarget() {
+        return false;
+    }
+
     protected long totalCost(ActionContext ctx) {
         return ctx.getDefinition().getCostCash() * ctx.getQuantity();
     }
@@ -22,6 +27,10 @@ public abstract class AbstractTargetedActionHandler implements ActionHandler {
     public void validate(ActionContext ctx) {
         if (ctx.getActorPlayerId().equals(ctx.getTargetPlayerId())) {
             throw new BadRequestException("A player cannot target themselves with " + type());
+        }
+        if (oneAtATimePerTarget()
+                && state.hasPendingAgainst(ctx.getActorPlayerId(), type(), ctx.getTargetPlayerId())) {
+            throw new BadRequestException("Your last " + type() + " against that nation is still under way");
         }
         if (state.getCash(ctx.getActorPlayerId()) < totalCost(ctx)) {
             throw new BadRequestException("Insufficient funds for " + type());

@@ -40,6 +40,8 @@ game:
     nuke-global-drop: 3
     nuke-attacker-penalty: 10
     attack-victim-penalty: 5
+    attack-penalty-decay: 0.7
+    war-strain-recovery-ticks: 12
     sabotage-victim-penalty: 6
     cyber-victim-penalty: 6
     heist-victim-penalty: 3
@@ -153,10 +155,10 @@ game:
         description: "Recruit a special ops unit: elite troops that also boost assassination success."
       attack:
         cost-cash: 15000
-        duration-millis: 0
+        duration-millis: 20000
         targeted: true
         public-visibility: true
-        description: "Launch a conventional attack against a rival nation."
+        description: "Launch a conventional attack against a rival nation. It is announced publicly and lands after a delay."
       hire-spies:
         cost-cash: 6000
         duration-millis: 0

@@ -850,8 +850,9 @@ const OWNED = {
 /** Extra warnings shown in the dialog, from the game rules. */
 const WARNINGS = {
   ASSASSINATE_LEADER: "Only succeeds if the target's popularity is below 20%. You pay either way.",
-  DECAPITATION_STRIKE: "Only succeeds if the target's popularity is below 20%. You pay either way.",
   SPECIAL_WEAPON_ATTACK: "Every nation loses popularity when a nuke flies, you most of all.",
+  ATTACK: "Everyone sees it coming: the attack lands after a delay. One attack per nation at a time.",
+  DECAPITATION_STRIKE: "Only succeeds if the target's popularity is below 20%. You pay either way. One strike per nation at a time.",
   DECLARE_WAR: "Declaring war costs you popularity.",
   DECLARE_PEACE: "Only possible with a nation you are at war with. Making peace raises your popularity.",
   SEND_MONEY: "Gifts of $50,000 or more raise your popularity, less each time (like parades).",
@@ -983,13 +984,18 @@ function renderActions(me, info) {
 // ---------------------------------------------------------------------
 
 const PENDING_KEY = "xmas.pending";
-let pending = [];   // { actionType, quantity, targetName, completesAt (ms, server clock), baseline }
+let pending = [];   // { actionType, quantity, targetId, targetName, completesAt (ms, server clock), baseline }
 
 const pendingTicker = makePoller(renderPending, 1000);
 pollers.push(pendingTicker);
 
 const serverNow = () => Date.now() + (state.clockSkew || 0);
 const pendingOf = (type) => pending.filter((p) => p.actionType === type);
+
+/** Strikes the server allows only one of per target at a time. */
+const ONE_PER_TARGET = new Set(["ATTACK", "DECAPITATION_STRIKE"]);
+const underWayAgainst = (type, targetId) =>
+  ONE_PER_TARGET.has(type) && pending.some((p) => p.actionType === type && p.targetId === targetId && serverNow() < p.completesAt);
 
 function loadPending() {
   try {
@@ -1009,6 +1015,7 @@ function addPending(def, body, completesAt, targetName) {
   pending.push({
     actionType: def.actionType,
     quantity: takesQuantity(def) && def.actionType !== "SEND_MONEY" ? body.quantity : 1,
+    targetId: body.targetPlayerId,
     targetName,
     completesAt: Date.parse(completesAt),
     baseline: owned == null ? null : owned + inFlight,
@@ -1168,10 +1175,13 @@ function updateSheet() {
   if (def.actionType === "SEND_MONEY") go = `SEND ${fmtCash(sheet.qty)}`;
   else if (quantity) go = `${actionLabel(def.actionType).split(" ")[0]} ×${sheet.qty}`;
   else go = actionLabel(def.actionType).length <= 16 ? actionLabel(def.actionType) : "CONFIRM";
+
+  const busyTarget = def.targeted && underWayAgainst(def.actionType, sheet.targetId);
+  if (busyTarget) go = "UNDER WAY";
   $("sheetGo").textContent = go;
 
   const overCap = quantity && def.actionType !== "SEND_MONEY" && sheet.qty > maxQty();
-  $("sheetGo").disabled = left < 0 || overCap || (def.targeted && !sheet.targetId);
+  $("sheetGo").disabled = left < 0 || overCap || busyTarget || (def.targeted && !sheet.targetId);
 }
 
 async function loadTargets() {

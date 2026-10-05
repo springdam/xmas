@@ -8,6 +8,9 @@ import java.util.UUID;
  */
 public interface CombatResolver {
 
+    /** Publicly announces that an attack has been launched and is on its way. */
+    void announceAttack(UUID attackerPlayerId, UUID defenderPlayerId);
+
     void resolveAttack(UUID attackerPlayerId, UUID defenderPlayerId, int quantity);
 
     void resolveDecapitationStrike(UUID attackerPlayerId, UUID targetPlayerId);

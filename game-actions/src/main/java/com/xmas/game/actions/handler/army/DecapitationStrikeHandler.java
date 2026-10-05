@@ -23,6 +23,11 @@ public class DecapitationStrikeHandler extends AbstractTargetedActionHandler {
     }
 
     @Override
+    protected boolean oneAtATimePerTarget() {
+        return true;
+    }
+
+    @Override
     public void onComplete(ActionContext ctx) {
         combatResolver.resolveDecapitationStrike(ctx.getActorPlayerId(), ctx.getTargetPlayerId());
     }

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-player-war-strain
+      author: xmas
+      changes:
+        - addColumn:
+            tableName: player
+            columns:
+              - column:
+                  name: war_strain
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

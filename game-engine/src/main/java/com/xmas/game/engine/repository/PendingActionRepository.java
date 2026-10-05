@@ -16,6 +16,9 @@ public interface PendingActionRepository extends JpaRepository<PendingActionEnti
     List<PendingActionEntity> findByStatusAndCompletesAtLessThanEqualOrderByCompletesAt(
             PendingActionStatus status, Instant threshold);
 
+    boolean existsByActorPlayerIdAndActionTypeAndTargetPlayerIdAndStatus(
+            UUID actorPlayerId, ActionType actionType, UUID targetPlayerId, PendingActionStatus status);
+
     /** Total quantity of this player's pending actions of the given types (e.g. buildings under construction). */
     @Query("""
             select coalesce(sum(p.quantity), 0) from PendingActionEntity p

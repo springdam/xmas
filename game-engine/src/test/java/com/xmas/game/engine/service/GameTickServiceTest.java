@@ -132,6 +132,31 @@ class GameTickServiceTest {
     }
 
     @Test
+    void tick_warStrainRecoversOnlyOnRecoveryTicks() {
+        UUID gameId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+        GameEntity game = GameEntity.builder()
+                .id(gameId).status(GameStatus.RUNNING).currentTick(10)
+                .gameTime(Instant.parse("2026-01-01T00:00:00Z")).tickDurationMillis(5000).createdAt(Instant.now())
+                .build();
+        PlayerEntity player = PlayerEntity.builder()
+                .id(playerId).gameId(gameId).accountId(UUID.randomUUID())
+                .cash(0).popularity(50).warStrain(2).joinedAt(Instant.now())
+                .build();
+
+        when(gameRepository.findByStatus(GameStatus.RUNNING)).thenReturn(List.of(game));
+        when(playerRepository.findByGameId(gameId)).thenReturn(List.of(player));
+        when(pendingActionRepository
+                .findByStatusAndCompletesAtLessThanEqualOrderByCompletesAt(eq(PendingActionStatus.PENDING), any()))
+                .thenReturn(List.of());
+
+        tickService.tick(); // tick 11
+        assertThat(player.getWarStrain()).isEqualTo(2);
+        tickService.tick(); // tick 12: recovery happens every 12 ticks
+        assertThat(player.getWarStrain()).isEqualTo(1);
+    }
+
+    @Test
     void tick_resolvesDueActionAndMarksCompleted() {
         UUID gameId = UUID.randomUUID();
         GameEntity game = GameEntity.builder()

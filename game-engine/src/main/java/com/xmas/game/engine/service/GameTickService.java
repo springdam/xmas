@@ -79,6 +79,10 @@ public class GameTickService {
                 overthrow(game, player);
                 continue;
             }
+            if (player.getWarStrain() > 0
+                    && game.getCurrentTick() % popularityProperties.getWarStrainRecoveryTicks() == 0) {
+                player.setWarStrain(player.getWarStrain() - 1);
+            }
             PlayerEconomyEntity economy = economyRepository.findById(player.getId()).orElse(null);
             if (economy == null) {
                 continue;

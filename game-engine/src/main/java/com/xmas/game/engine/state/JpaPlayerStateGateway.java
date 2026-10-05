@@ -2,6 +2,7 @@ package com.xmas.game.engine.state;
 
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.state.PlayerStateGateway;
+import com.xmas.game.engine.domain.PendingActionStatus;
 import com.xmas.game.engine.economy.LandService;
 import com.xmas.game.engine.entity.GameEntity;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
@@ -11,6 +12,7 @@ import com.xmas.game.engine.entity.PlayerMilitaryEntity;
 import com.xmas.game.engine.entity.PlayerProtectionEntity;
 import com.xmas.game.engine.entity.PlayerSpecialWeaponsEntity;
 import com.xmas.game.engine.repository.GameRepository;
+import com.xmas.game.engine.repository.PendingActionRepository;
 import com.xmas.game.engine.repository.PlayerEconomyRepository;
 import com.xmas.game.engine.repository.PlayerEspionageRepository;
 import com.xmas.game.engine.repository.PlayerMilitaryRepository;
@@ -36,6 +38,7 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
     private final PlayerProtectionRepository protectionRepository;
     private final GameRepository gameRepository;
     private final LandService landService;
+    private final PendingActionRepository pendingActionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -152,6 +155,13 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
     @Transactional(readOnly = true)
     public int getFreeLand(UUID playerId) {
         return landService.free(playerId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasPendingAgainst(UUID playerId, ActionType type, UUID targetPlayerId) {
+        return pendingActionRepository.existsByActorPlayerIdAndActionTypeAndTargetPlayerIdAndStatus(
+                playerId, type, targetPlayerId, PendingActionStatus.PENDING);
     }
 
     @Override

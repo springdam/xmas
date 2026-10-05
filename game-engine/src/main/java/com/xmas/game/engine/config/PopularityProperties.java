@@ -30,6 +30,9 @@ public class PopularityProperties {
     private int nukeGlobalDrop = 3;
     private int nukeAttackerPenalty = 10;
     private int attackVictimPenalty = 5;
+    /** Each lost battle is multiplied by decay^warStrain; strain drops by one every recovery-ticks ticks. */
+    private double attackPenaltyDecay = 0.7;
+    private long warStrainRecoveryTicks = 12;
     private int sabotageVictimPenalty = 6;
     private int cyberVictimPenalty = 6;
     private int heistVictimPenalty = 3;

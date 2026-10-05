@@ -23,6 +23,18 @@ public class AttackHandler extends AbstractTargetedActionHandler {
     }
 
     @Override
+    protected boolean oneAtATimePerTarget() {
+        return true;
+    }
+
+    @Override
+    public void begin(ActionContext ctx) {
+        super.begin(ctx);
+        // The attack takes time to land; the target sees it coming and can prepare.
+        combatResolver.announceAttack(ctx.getActorPlayerId(), ctx.getTargetPlayerId());
+    }
+
+    @Override
     public void onComplete(ActionContext ctx) {
         combatResolver.resolveAttack(ctx.getActorPlayerId(), ctx.getTargetPlayerId(), ctx.getQuantity());
     }

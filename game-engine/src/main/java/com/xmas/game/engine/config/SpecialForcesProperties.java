@@ -11,8 +11,8 @@ public class SpecialForcesProperties {
 
     /** Decapitation strike power contributed per (air-defense-surviving) stealth bomber. */
     private double bomberDecapWeight = 4.0;
-    /** Small decapitation strike power per ground unit (infantry + tanks). */
-    private double groundDecapWeight = 0.4;
+    /** Decapitation strike power per square root of ground units (infantry + tanks): 100 units give 5. */
+    private double groundDecapWeight = 0.5;
     /** Stealth bombers neutralized per air-defense battery on a decapitation strike. */
     private int airDefenseNegationPerBattery = 2;
     /** Stealth bombers lost per defending bodyguard on a decapitation strike. */

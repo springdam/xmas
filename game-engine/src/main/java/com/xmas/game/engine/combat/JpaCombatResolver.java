@@ -46,6 +46,17 @@ public class JpaCombatResolver implements CombatResolver {
 
     @Override
     @Transactional
+    public void announceAttack(UUID attackerPlayerId, UUID defenderPlayerId) {
+        PlayerEntity attacker = player(attackerPlayerId);
+        PlayerEntity defender = player(defenderPlayerId);
+        newsService.record(attacker.getGameId(), NewsType.ATTACK, NewsVisibility.PUBLIC,
+                attackerPlayerId, defenderPlayerId,
+                "%s's forces are on the move against %s.".formatted(attacker.getNation(), defender.getNation()),
+                gameTime(attacker));
+    }
+
+    @Override
+    @Transactional
     public void resolveAttack(UUID attackerPlayerId, UUID defenderPlayerId, int quantity) {
         PlayerEntity attacker = player(attackerPlayerId);
         PlayerEntity defender = player(defenderPlayerId);
@@ -62,9 +73,12 @@ public class JpaCombatResolver implements CombatResolver {
         militaryRepository.save(attackerMil);
         militaryRepository.save(defenderMil);
         if (outcome.isAttackerVictory()) {
+            // Repeated defeats hurt less: the public is already braced for bad news.
             int penalty = (int) Math.round(popularityProperties.getAttackVictimPenalty()
+                    * Math.pow(popularityProperties.getAttackPenaltyDecay(), defender.getWarStrain())
                     * researchModifierService.popularityDamageMultiplier(defenderPlayerId));
             defender.setPopularity(Popularity.clamp(defender.getPopularity() - penalty));
+            defender.setWarStrain(defender.getWarStrain() + 1);
             playerRepository.save(defender);
         }
 
@@ -84,7 +98,8 @@ public class JpaCombatResolver implements CombatResolver {
 
         int negated = targetMil.getAirDefenseBatteries() * specialForcesProperties.getAirDefenseNegationPerBattery();
         int effectiveBombers = Math.max(0, attackerMil.getStealthBombers() - negated);
-        double strikePower = ((attackerMil.getInfantry() + attackerMil.getTanks())
+        // Ground forces help with diminishing returns: a huge army alone can't brute-force the strike.
+        double strikePower = (Math.sqrt(attackerMil.getInfantry() + attackerMil.getTanks())
                 * specialForcesProperties.getGroundDecapWeight()
                 + effectiveBombers * specialForcesProperties.getBomberDecapWeight())
                 * researchModifierService.airSuperiorityMultiplier(attackerPlayerId);

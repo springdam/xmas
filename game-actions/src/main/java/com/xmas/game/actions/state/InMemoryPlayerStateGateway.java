@@ -52,4 +52,9 @@ public class InMemoryPlayerStateGateway implements PlayerStateGateway {
     public int getFreeLand(UUID playerId) {
         return Integer.MAX_VALUE;   // in-memory test gateway: unlimited land
     }
+
+    @Override
+    public boolean hasPendingAgainst(UUID playerId, ActionType type, UUID targetPlayerId) {
+        return false;   // in-memory test gateway: no queue of its own
+    }
 }
