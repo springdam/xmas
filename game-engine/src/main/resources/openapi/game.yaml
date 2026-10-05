@@ -342,6 +342,10 @@ components:
         specialOps:
           type: integer
           format: int32
+        upkeepPerTick:
+          type: integer
+          format: int64
+          description: Cash the army costs every tick (infantry, tanks, stealth bombers, special ops).
     EspionageResponse:
       type: object
       required:

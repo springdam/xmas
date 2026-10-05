@@ -34,6 +34,12 @@ game:
     bank-yield: 2500
     industry-per-farm: 3
     unfed-industry-factor: 0.5
+  upkeep:
+    infantry: 20
+    tank: 80
+    stealth-bomber: 250
+    special-ops: 200
+    desertion-fraction: 0.1
   popularity:
     starting-popularity: 50
     vulnerability-threshold: 20

@@ -733,6 +733,9 @@ function renderNation(me) {
   if (me.economy?.landCapacity != null) {
     $("title-economy").textContent = `ECONOMY · LAND ${me.economy.landInUse}/${me.economy.landCapacity}`;
   }
+  if (me.military?.upkeepPerTick != null) {
+    $("title-military").textContent = `MILITARY · UPKEEP ${fmtCash(me.military.upkeepPerTick)}/TICK`;
+  }
   const dgMax = state.actions.find((a) => a.actionType === "HIRE_DOUBLEGANGER")?.maxTotal;
   for (const section of SECTIONS) {
     const values = me[section.key] || {};
@@ -855,6 +858,8 @@ function fedText(e) {
   return `${industry}/${e.industryCapacity}${industry > e.industryCapacity ? " !" : ""}`;
 }
 
+const UPKEEP_RULE = "Troops cost upkeep every tick. If your treasury runs dry, some of them desert.";
+
 const FOOD_RULE = "Each farm feeds 3 factories or robot factories. Any beyond that earn only half.";
 
 /** Extra warnings shown in the dialog, from the game rules. */
@@ -871,6 +876,10 @@ const WARNINGS = {
   BUILD_FACTORY: FOOD_RULE,
   BUILD_ROBOT_FACTORY: FOOD_RULE,
   BUILD_FARM: FOOD_RULE,
+  RECRUIT_INFANTRY: UPKEEP_RULE,
+  RECRUIT_TANK: UPKEEP_RULE,
+  BUILD_STEALTH_BOMBER: UPKEEP_RULE,
+  RECRUIT_SPECIAL_OPS: UPKEEP_RULE,
   DEMOLISH_FACTORY: "Torn down at once, with no refund. The land is free to build on.",
   DEMOLISH_ROBOT_FACTORY: "Torn down at once, with no refund. The land is free to build on.",
   DEMOLISH_BANK: "Torn down at once, with no refund. The land is free to build on.",

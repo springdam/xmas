@@ -14,9 +14,12 @@ import com.xmas.game.engine.entity.GameEntity;
 import com.xmas.game.engine.entity.PendingActionEntity;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
+import com.xmas.game.engine.entity.PlayerMilitaryEntity;
+import com.xmas.game.engine.military.UpkeepService;
 import com.xmas.game.engine.repository.GameRepository;
 import com.xmas.game.engine.repository.PendingActionRepository;
 import com.xmas.game.engine.repository.PlayerEconomyRepository;
+import com.xmas.game.engine.repository.PlayerMilitaryRepository;
 import com.xmas.game.engine.repository.PlayerRelationRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.research.ResearchModifierService;
@@ -48,6 +51,8 @@ public class GameTickService {
     private final PopularityProperties popularityProperties;
     private final RandomSource random;
     private final NewsService newsService;
+    private final PlayerMilitaryRepository militaryRepository;
+    private final UpkeepService upkeepService;
 
     @Transactional
     public void tick() {
@@ -88,7 +93,31 @@ public class GameTickService {
                 continue;
             }
             player.setCash(player.getCash() + income(player.getId(), economy, player.getPopularity()));
+            payUpkeep(game, player);
             playerRepository.save(player);
+        }
+    }
+
+    /** Pays the army from the treasury; if the money runs out, cash stops at zero and troops desert. */
+    private void payUpkeep(GameEntity game, PlayerEntity player) {
+        PlayerMilitaryEntity military = militaryRepository.findById(player.getId()).orElse(null);
+        if (military == null) {
+            return;
+        }
+        long upkeep = upkeepService.perTick(military);
+        if (player.getCash() >= upkeep) {
+            player.setCash(player.getCash() - upkeep);
+            return;
+        }
+        player.setCash(0);
+        UpkeepService.Deserters deserters = upkeepService.desert(military);
+        militaryRepository.save(military);
+        if (deserters.any()) {
+            newsService.record(game.getId(), NewsType.ATTACK, NewsVisibility.ACTOR_ONLY, player.getId(), null,
+                    "Unpaid troops deserted: %d infantry, %d tanks, %d bombers and %d special ops walked off."
+                            .formatted(deserters.getInfantry(), deserters.getTanks(),
+                                    deserters.getStealthBombers(), deserters.getSpecialOps()),
+                    game.getGameTime());
         }
     }
 

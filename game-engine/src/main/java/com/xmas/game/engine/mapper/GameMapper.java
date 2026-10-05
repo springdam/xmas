@@ -76,14 +76,15 @@ public final class GameMapper {
                 .admin(player.isAdmin());
     }
 
-    public static MilitaryResponse toMilitaryResponse(PlayerMilitaryEntity military) {
+    public static MilitaryResponse toMilitaryResponse(PlayerMilitaryEntity military, long upkeepPerTick) {
         return new MilitaryResponse()
                 .infantry(military.getInfantry())
                 .tanks(military.getTanks())
                 .missileBatteries(military.getMissileBatteries())
                 .airDefenseBatteries(military.getAirDefenseBatteries())
                 .stealthBombers(military.getStealthBombers())
-                .specialOps(military.getSpecialOps());
+                .specialOps(military.getSpecialOps())
+                .upkeepPerTick(upkeepPerTick);
     }
 
     public static EspionageResponse toEspionageResponse(PlayerEspionageEntity espionage) {
@@ -121,7 +122,8 @@ public final class GameMapper {
 
     public static PlayerStateResponse toPlayerState(PlayerEntity player, PlayerEconomyEntity economy,
                                                     int landCapacity, int landInUse, int industryCapacity,
-                                                    PlayerMilitaryEntity military, PlayerEspionageEntity espionage,
+                                                    PlayerMilitaryEntity military, long upkeepPerTick,
+                                                    PlayerEspionageEntity espionage,
                                                     PlayerSpecialWeaponsEntity specialWeapons,
                                                     PlayerProtectionEntity protection,
                                                     List<PlayerResearchEntity> research,
@@ -129,7 +131,7 @@ public final class GameMapper {
         return new PlayerStateResponse()
                 .player(toPlayerResponse(player))
                 .economy(toEconomyResponse(economy, landCapacity, landInUse, industryCapacity))
-                .military(toMilitaryResponse(military))
+                .military(toMilitaryResponse(military, upkeepPerTick))
                 .espionage(toEspionageResponse(espionage))
                 .specialWeapons(toSpecialWeaponsResponse(specialWeapons))
                 .protection(toProtectionResponse(protection))

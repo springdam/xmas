@@ -15,6 +15,7 @@ import com.xmas.game.actions.handler.ActionHandler;
 import com.xmas.game.actions.service.ActionDefinitionCatalog;
 import com.xmas.game.actions.service.ActionHandlerRegistry;
 import com.xmas.game.engine.config.EconomyProperties;
+import com.xmas.game.engine.config.UpkeepProperties;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.domain.GameStatus;
 import com.xmas.game.engine.domain.PendingActionStatus;
@@ -22,9 +23,12 @@ import com.xmas.game.engine.entity.GameEntity;
 import com.xmas.game.engine.entity.PendingActionEntity;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
+import com.xmas.game.engine.entity.PlayerMilitaryEntity;
+import com.xmas.game.engine.military.UpkeepService;
 import com.xmas.game.engine.repository.GameRepository;
 import com.xmas.game.engine.repository.PendingActionRepository;
 import com.xmas.game.engine.repository.PlayerEconomyRepository;
+import com.xmas.game.engine.repository.PlayerMilitaryRepository;
 import com.xmas.game.combat.random.RandomSource;
 import com.xmas.game.engine.repository.PlayerRelationRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
@@ -48,6 +52,7 @@ class GameTickServiceTest {
     private ActionDefinitionCatalog definitionCatalog;
     private ResearchModifierService researchModifierService;
     private NewsService newsService;
+    private PlayerMilitaryRepository militaryRepository;
     private GameTickService tickService;
 
     @BeforeEach
@@ -61,6 +66,7 @@ class GameTickServiceTest {
         definitionCatalog = mock(ActionDefinitionCatalog.class);
         researchModifierService = mock(ResearchModifierService.class);
         newsService = mock(NewsService.class);
+        militaryRepository = mock(PlayerMilitaryRepository.class);
         when(researchModifierService.economyMultiplier(any())).thenReturn(1.0);
         when(researchModifierService.coupChanceMultiplier(any())).thenReturn(1.0);
         when(researchModifierService.factoryIncomeMultiplier(any())).thenReturn(1.0);
@@ -70,7 +76,8 @@ class GameTickServiceTest {
         RandomSource random = () -> 0.0; // coup roll always fires when a player is vulnerable
         tickService = new GameTickService(gameRepository, playerRepository, economyRepository,
                 relationRepository, pendingActionRepository, new EconomyProperties(), handlerRegistry,
-                definitionCatalog, researchModifierService, new PopularityProperties(), random, newsService);
+                definitionCatalog, researchModifierService, new PopularityProperties(), random, newsService,
+                militaryRepository, new UpkeepService(new UpkeepProperties()));
     }
 
     @Test
@@ -159,6 +166,56 @@ class GameTickServiceTest {
 
         // base 1000 + farm 500 + robots 2*4000 + fed factory 1500 + unfed factory 1500*0.5 = 11750
         assertThat(player.getCash()).isEqualTo(11_750);
+    }
+
+    /** One running game with one player who has the given cash, 2 farms and the given army. */
+    private PlayerEntity armedPlayer(long cash, PlayerMilitaryEntity.PlayerMilitaryEntityBuilder army) {
+        UUID gameId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+        GameEntity game = GameEntity.builder()
+                .id(gameId).status(GameStatus.RUNNING).currentTick(1)
+                .gameTime(Instant.parse("2026-01-01T00:00:00Z")).tickDurationMillis(5000).createdAt(Instant.now())
+                .build();
+        PlayerEntity player = PlayerEntity.builder()
+                .id(playerId).gameId(gameId).accountId(UUID.randomUUID())
+                .cash(cash).popularity(50).joinedAt(Instant.now())
+                .build();
+        when(gameRepository.findByStatus(GameStatus.RUNNING)).thenReturn(List.of(game));
+        when(playerRepository.findByGameId(gameId)).thenReturn(List.of(player));
+        when(economyRepository.findById(playerId)).thenReturn(Optional.of(
+                PlayerEconomyEntity.builder().playerId(playerId).farms(2).build()));
+        when(militaryRepository.findById(playerId)).thenReturn(Optional.of(army.playerId(playerId).build()));
+        when(pendingActionRepository
+                .findByStatusAndCompletesAtLessThanEqualOrderByCompletesAt(eq(PendingActionStatus.PENDING), any()))
+                .thenReturn(List.of());
+        return player;
+    }
+
+    @Test
+    void tick_paysArmyUpkeepFromIncome() {
+        PlayerEntity player = armedPlayer(10_000,
+                PlayerMilitaryEntity.builder().infantry(10).tanks(5).stealthBombers(2).specialOps(1));
+
+        tickService.tick();
+
+        // income 1000 + 2*500 = 2000; upkeep 10*20 + 5*80 + 2*250 + 1*200 = 1300
+        assertThat(player.getCash()).isEqualTo(10_700);
+    }
+
+    @Test
+    void tick_unpaidArmyDeserts() {
+        PlayerMilitaryEntity.PlayerMilitaryEntityBuilder army =
+                PlayerMilitaryEntity.builder().infantry(500).tanks(40).stealthBombers(3);
+        PlayerEntity player = armedPlayer(0, army);
+        PlayerMilitaryEntity military = militaryRepository.findById(player.getId()).orElseThrow();
+
+        tickService.tick();
+
+        // income 2000 < upkeep 10000 + 3200 + 750: broke, 10% of each type (rounded up) walks off
+        assertThat(player.getCash()).isZero();
+        assertThat(military.getInfantry()).isEqualTo(450);
+        assertThat(military.getTanks()).isEqualTo(36);
+        assertThat(military.getStealthBombers()).isEqualTo(2);
     }
 
     @Test
