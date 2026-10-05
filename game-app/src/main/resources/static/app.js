@@ -286,7 +286,7 @@ function showAuth() {
   scheduleNuke();
 }
 
-// A bit of fun: a few seconds after the title screen shows, the city gets nuked.
+// A bit of fun: a few seconds after the title screen shows, the city gets nuked (twice).
 // Once per page load, and never for players who ask for reduced motion.
 const NUKE_DELAY_MS = 2500;
 let nukeTimer = null;

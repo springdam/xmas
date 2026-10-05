@@ -187,15 +187,19 @@ strong { font-weight: normal; color: var(--accent); }
 
 /* ---------- Title-screen nuke ----------
    app.js adds .nuked to #auth a few seconds after it shows: a flash and shake, the city
-   turns to ruins, and a pixel mushroom cloud rises and cools to lingering smoke.
-   Choppy steps() timing keeps it retro. Skipped entirely for reduced motion. */
+   turns to ruins, and a pixel mushroom cloud rises and cools to lingering smoke. A few
+   seconds later a second warhead lands further left. Each blast and flash carries its
+   own start delay in --d. Choppy steps() timing keeps it retro. Skipped entirely for
+   reduced motion. */
 .skyline.ruined { opacity: 0; }
 .skyline.ruined .fires rect { fill: #FF6600; }
 
 .blast {
   position: absolute; z-index: 0; pointer-events: none;
   left: calc(68% - 72px); bottom: 4px; width: 144px; height: 180px;
+  --d: 0s;
 }
+.blast.second { left: calc(24% - 60px); width: 120px; height: 150px; --d: 4s; }
 .cloud { display: block; width: 100%; height: 100%; overflow: visible; }
 .cloud g { opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; }
 .cloud .ring { transform-origin: 50% 50%; }
@@ -205,25 +209,28 @@ strong { font-weight: normal; color: var(--accent); }
 .c-stem { fill: #FFAA33; }
 .c-dust { fill: #CC7733; }
 
-.flash { position: fixed; inset: 0; z-index: 500; background: #FFFFFF; opacity: 0; pointer-events: none; }
+.flash { position: fixed; inset: 0; z-index: 500; background: #FFFFFF; opacity: 0; pointer-events: none; --d: 0s; }
+.flash.second { --d: 4s; }
+.fires.late { opacity: 0; }
 
-#auth.nuked { animation: nuke-shake .6s steps(1) .05s; }
-#auth.nuked .flash { animation: nuke-flash 1.6s ease-out forwards; }
+#auth.nuked { animation: nuke-shake .6s steps(1) .05s, nuke-shake .6s steps(1) 4.05s; }
+#auth.nuked .flash { animation: nuke-flash 1.6s ease-out var(--d) forwards; }
 #auth.nuked .skyline.intact { animation: nuke-hide 0s .08s forwards; }
 #auth.nuked .skyline.ruined { animation: nuke-show 0s .08s forwards; }
 #auth.nuked .skyline.ruined .fires rect { animation: nuke-flicker .4s steps(1) .7s infinite; }
 #auth.nuked .fires rect:nth-child(even) { animation-delay: .9s; }
+#auth.nuked .fires.late { animation: nuke-show 0s 4.08s forwards; }
 
-#auth.nuked .cloud { animation: nuke-linger 2s ease-in 3.8s forwards; }
-#auth.nuked .cloud .cap { animation: nuke-cap 1.4s steps(12) .1s forwards; }
-#auth.nuked .cloud .stem { animation: nuke-grow 1.2s steps(10) .15s forwards; }
-#auth.nuked .cloud .ring { animation: nuke-ring .6s steps(5) .85s forwards; }
-#auth.nuked .cloud .dust { animation: nuke-dust .9s steps(7) .1s forwards; }
-#auth.nuked .c-core { animation: nuke-cool-core 2s steps(6) 1.1s forwards; }
-#auth.nuked .c-mid { animation: nuke-cool-mid 2s steps(6) 1.2s forwards; }
-#auth.nuked .c-outer { animation: nuke-cool-outer 2s steps(6) 1.3s forwards; }
-#auth.nuked .c-stem { animation: nuke-cool-outer 2s steps(6) 1.3s forwards; }
-#auth.nuked .c-dust { animation: nuke-cool-dust 2s steps(6) 1s forwards; }
+#auth.nuked .cloud { animation: nuke-linger 2s ease-in calc(var(--d) + 3.8s) forwards; }
+#auth.nuked .cloud .cap { animation: nuke-cap 1.4s steps(12) calc(var(--d) + .1s) forwards; }
+#auth.nuked .cloud .stem { animation: nuke-grow 1.2s steps(10) calc(var(--d) + .15s) forwards; }
+#auth.nuked .cloud .ring { animation: nuke-ring .6s steps(5) calc(var(--d) + .85s) forwards; }
+#auth.nuked .cloud .dust { animation: nuke-dust .9s steps(7) calc(var(--d) + .1s) forwards; }
+#auth.nuked .c-core { animation: nuke-cool-core 2s steps(6) calc(var(--d) + 1.1s) forwards; }
+#auth.nuked .c-mid { animation: nuke-cool-mid 2s steps(6) calc(var(--d) + 1.2s) forwards; }
+#auth.nuked .c-outer { animation: nuke-cool-outer 2s steps(6) calc(var(--d) + 1.3s) forwards; }
+#auth.nuked .c-stem { animation: nuke-cool-outer 2s steps(6) calc(var(--d) + 1.3s) forwards; }
+#auth.nuked .c-dust { animation: nuke-cool-dust 2s steps(6) calc(var(--d) + 1s) forwards; }
 
 @keyframes nuke-flash { 0% { opacity: 0; } 4% { opacity: .9; } 35% { opacity: .9; } 100% { opacity: 0; } }
 @keyframes nuke-shake {
