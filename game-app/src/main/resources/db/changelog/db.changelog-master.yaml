@@ -37,3 +37,5 @@ databaseChangeLog:
       file: db/changelog/changes/018-player-space-part.yaml
   - include:
       file: db/changelog/changes/019-game-winner.yaml
+  - include:
+      file: db/changelog/changes/020-account-avatar.yaml

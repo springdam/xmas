@@ -387,6 +387,23 @@ strong { font-weight: normal; color: var(--accent); }
 .palace-part .what .hd { display: block; font-size: 11px; }
 .palace-part .btn { min-height: 36px; padding: 0 10px; }
 .palace-thumb { display: flex; flex-direction: column; gap: 4px; }
+
+/* ---------- Portraits ---------- */
+.avatar {
+  width: 32px; height: 32px; flex: none; image-rendering: pixelated; object-fit: cover;
+  background: var(--field); border: 2px solid; border-color: var(--lo) var(--hi) var(--hi) var(--lo);
+}
+.avatar.big { width: 96px; height: 96px; }
+.avatar.huge { width: 160px; height: 160px; }
+.avatar-none { display: grid; place-items: center; font-size: 40px; color: var(--dim); }
+.center-self { align-self: center; }
+.portrait-row { display: flex; gap: 12px; align-items: flex-start; }
+.file-btn { display: grid; place-items: center; }
+.portrait-canvas {
+  align-self: center; width: 192px; height: 192px; image-rendering: pixelated;
+  border: 2px solid; border-color: var(--lo) var(--hi) var(--hi) var(--lo);
+}
+.roster.board li.out .avatar, .nation-head.out .avatar { filter: grayscale(1); }
 .roster.board li.out { opacity: 0.45; filter: grayscale(1); }
 
 /* ---------- Finale: launch, winner, final standings ---------- */

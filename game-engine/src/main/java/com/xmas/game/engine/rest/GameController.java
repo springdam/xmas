@@ -82,11 +82,16 @@ public class GameController implements GameApi {
             UUID gameId, String xSessionToken) {
         sessionIdentity.requireAccountId(xSessionToken);
         List<PlayerEntity> players = gameService.getPlayers(gameId);
-        Map<UUID, String> usernames = accountDirectory.usernames(
-                players.stream().map(PlayerEntity::getAccountId).toList());
+        List<UUID> accountIds = players.stream().map(PlayerEntity::getAccountId).toList();
+        Map<UUID, String> usernames = accountDirectory.usernames(accountIds);
+        Map<UUID, java.time.Instant> avatars = accountDirectory.avatarVersions(accountIds);
         return ResponseEntity.ok(players.stream()
                 .map(player -> GameMapper.toGamePlayerSummary(player, usernames.get(player.getAccountId()))
-                        .palaceValue(palaceService.value(player.getId())))
+                        .palaceValue(palaceService.value(player.getId()))
+                        .avatarUrl(avatars.containsKey(player.getAccountId())
+                                ? "/account/%s/avatar?v=%d".formatted(player.getAccountId(),
+                                        avatars.get(player.getAccountId()).toEpochMilli())
+                                : null))
                 .toList());
     }
 

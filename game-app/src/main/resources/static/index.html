@@ -96,6 +96,18 @@
 
     <!-- Menu: not in a game yet -->
     <div id="lobbyMenu" class="stack16">
+      <section class="win" aria-labelledby="portraitTitle">
+        <div class="tbar"><span class="gad"></span><h2 id="portraitTitle" class="ttl hd">YOUR PORTRAIT</h2><span class="grow"></span><span class="gad"></span></div>
+        <div class="win-body portrait-row">
+          <img id="myAvatar" class="avatar big" alt="Your portrait" hidden>
+          <span id="myAvatarNone" class="avatar big avatar-none" aria-hidden="true">?</span>
+          <div class="stack6 grow">
+            <p class="small">Take a selfie: it becomes your pixel portrait next to your name in every game.</p>
+            <label class="btn pri file-btn">TAKE SELFIE<input id="selfieInput" type="file" accept="image/*" capture="user" hidden></label>
+            <label class="btn file-btn">CHOOSE PHOTO<input id="photoInput" type="file" accept="image/*" hidden></label>
+          </div>
+        </div>
+      </section>
       <section class="win" aria-labelledby="newGameTitle">
         <div class="tbar"><span class="gad"></span><h2 id="newGameTitle" class="ttl hd">NEW GAME</h2><span class="grow"></span><span class="gad"></span></div>
         <div class="win-body stack">
@@ -281,6 +293,7 @@
   </section>
   <section class="finale-step" data-step="winner" hidden>
     <h2 class="hd finale-title">VICTORY</h2>
+    <img id="winnerAvatar" class="avatar huge center-self" alt="" hidden>
     <div id="winnerPalace" class="palace-art"></div>
     <p class="winner-name"><span id="winnerFlag" class="flag" aria-hidden="true"></span><span id="winnerName" class="hd"></span></p>
     <p id="winnerLine" class="center"></p>
@@ -301,6 +314,30 @@
     <div class="row2">
       <button type="button" class="btn" data-finale="replay">REPLAY LAUNCH</button>
       <button type="button" class="btn pri" data-finale="close">CLOSE</button>
+    </div>
+  </section>
+</div>
+
+<!-- Portrait: frame and pixelate a selfie -------------------------------------- -->
+<div id="portraitSheet" class="sheet" hidden>
+  <div class="sheet-shade dither" data-close-portrait></div>
+  <section class="win sheet-win" role="dialog" aria-modal="true" aria-labelledby="portraitSheetTitle">
+    <div class="tbar">
+      <button type="button" class="gad-btn" data-close-portrait aria-label="Close"><span class="gad"></span></button>
+      <h2 id="portraitSheetTitle" class="ttl hd">YOUR PORTRAIT</h2><span class="grow"></span><span class="gad"></span>
+    </div>
+    <div class="win-body stack sheet-body">
+      <canvas id="portraitCanvas" class="portrait-canvas" width="64" height="64"></canvas>
+      <label class="field">Zoom <input id="portraitZoom" type="range" min="1" max="3" step="0.05" value="1.4"></label>
+      <label class="field">Position <input id="portraitShift" type="range" min="-1" max="1" step="0.05" value="-0.15"></label>
+      <div class="row2" role="group" aria-label="Look">
+        <button type="button" class="btn" data-look="retro" aria-pressed="true">RETRO</button>
+        <button type="button" class="btn" data-look="smooth" aria-pressed="false">SMOOTH</button>
+      </div>
+      <div class="row2">
+        <button type="button" class="btn" data-close-portrait>CANCEL</button>
+        <button id="portraitSave" type="button" class="btn pri">SAVE PORTRAIT</button>
+      </div>
     </div>
   </section>
 </div>

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 020-account-avatar
+      author: xmas
+      changes:
+        - addColumn:
+            tableName: account
+            columns:
+              - column:
+                  name: avatar
+                  type: VARCHAR(24000)
+              - column:
+                  name: avatar_updated_at
+                  type: TIMESTAMP WITH TIME ZONE

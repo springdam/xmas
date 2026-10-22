@@ -399,6 +399,9 @@ components:
           type: boolean
         admin:
           type: boolean
+        avatarUrl:
+          type: string
+          description: The player's pixel portrait (versioned URL), absent if they have none.
         palaceValue:
           type: integer
           format: int64

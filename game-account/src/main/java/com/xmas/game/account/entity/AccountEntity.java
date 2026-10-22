@@ -31,4 +31,12 @@ public class AccountEntity {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    /** The player's pixel portrait: a small PNG, base64-encoded; null if they never took one. */
+    @Column(name = "avatar", length = 24000)
+    private String avatar;
+
+    /** When the portrait last changed; versions its URL so browsers can cache it. */
+    @Column(name = "avatar_updated_at")
+    private Instant avatarUpdatedAt;
 }

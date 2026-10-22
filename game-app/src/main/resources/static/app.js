@@ -320,7 +320,120 @@ function enterLobby() {
   else openMenu();
 }
 
+// ---------------------------------------------------------------------
+// Portraits: a selfie, framed and pixelated to 64x64 in the browser
+// ---------------------------------------------------------------------
+
+const AVATAR_SIZE = 64;
+const portrait = { image: null, look: "retro" };
+
+/** A player's portrait as an <img>, or null when they have none. */
+function avatarEl(p, cls = "avatar") {
+  if (!p?.avatarUrl) return null;
+  const img = el("img", cls);
+  img.src = state.baseUrl + p.avatarUrl;
+  img.alt = "";
+  img.loading = "lazy";
+  return img;
+}
+
+/** Your own portrait in the menu (cache-busted, so a new one shows at once). */
+function showMyAvatar() {
+  const img = $("myAvatar");
+  img.onload = () => { img.hidden = false; $("myAvatarNone").hidden = true; };
+  img.onerror = () => { img.hidden = true; $("myAvatarNone").hidden = false; };
+  if (state.accountId) img.src = `${state.baseUrl}/account/${state.accountId}/avatar?v=${Date.now()}`;
+}
+
+function loadPortraitFile(file) {
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    portrait.image = img;
+    $("portraitSheet").hidden = false;
+    drawPortrait();
+  };
+  img.onerror = () => toast("That photo could not be read.", "error");
+  img.src = URL.createObjectURL(file);
+}
+
+const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+
+/** Crops a square around the face, shrinks it to 64x64 and (retro look) posterizes it with dithering. */
+function drawPortrait() {
+  const img = portrait.image;
+  if (!img) return;
+  const zoom = Number($("portraitZoom").value);
+  const shift = Number($("portraitShift").value);
+  const side = Math.min(img.naturalWidth, img.naturalHeight) / zoom;
+  const sx = (img.naturalWidth - side) / 2;
+  const sy = Math.max(0, Math.min(img.naturalHeight - side, (img.naturalHeight - side) / 2 + shift * (img.naturalHeight - side) / 2));
+
+  // Shrink in two steps for a cleaner average, then work on the 64x64 pixels.
+  const mid = document.createElement("canvas");
+  mid.width = mid.height = AVATAR_SIZE * 2;
+  const mctx = mid.getContext("2d");
+  mctx.imageSmoothingQuality = "high";
+  mctx.drawImage(img, sx, sy, side, side, 0, 0, mid.width, mid.height);
+  const canvas = $("portraitCanvas");
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingQuality = "high";
+  ctx.clearRect(0, 0, AVATAR_SIZE, AVATAR_SIZE);
+  ctx.drawImage(mid, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+  if (portrait.look !== "retro") return;
+
+  const data = ctx.getImageData(0, 0, AVATAR_SIZE, AVATAR_SIZE);
+  const px = data.data;
+  const levels = 6, step = 255 / (levels - 1);
+  for (let y = 0; y < AVATAR_SIZE; y++) {
+    for (let x = 0; x < AVATAR_SIZE; x++) {
+      const i = (y * AVATAR_SIZE + x) * 4;
+      const grey = (px[i] + px[i + 1] + px[i + 2]) / 3;
+      const nudge = (BAYER[y % 4][x % 4] / 16 - 0.5) * step;
+      for (let c = 0; c < 3; c++) {
+        let v = px[i + c];
+        v = grey + (v - grey) * 1.25;              // a touch more colour
+        v = (v - 128) * 1.1 + 128;                 // and contrast
+        v = Math.round((v + nudge) / step) * step;
+        px[i + c] = Math.max(0, Math.min(255, v));
+      }
+    }
+  }
+  ctx.putImageData(data, 0, 0);
+}
+
+async function savePortrait() {
+  const image = $("portraitCanvas").toDataURL("image/png").split(",")[1];
+  await busy([$("portraitSave")], async () => {
+    try {
+      await api("PUT", "/account/avatar", { image });
+      $("portraitSheet").hidden = true;
+      showMyAvatar();
+      toast("Portrait saved.");
+    } catch (e) { toastError(e); }
+  });
+}
+
+function initPortrait() {
+  for (const id of ["selfieInput", "photoInput"]) {
+    $(id).addEventListener("change", (e) => { loadPortraitFile(e.target.files[0]); e.target.value = ""; });
+  }
+  for (const id of ["portraitZoom", "portraitShift"]) $(id).addEventListener("input", drawPortrait);
+  for (const btn of document.querySelectorAll("[data-look]")) {
+    btn.addEventListener("click", () => {
+      portrait.look = btn.dataset.look;
+      for (const b of document.querySelectorAll("[data-look]")) b.setAttribute("aria-pressed", String(b === btn));
+      drawPortrait();
+    });
+  }
+  for (const node of document.querySelectorAll("[data-close-portrait]")) {
+    node.addEventListener("click", () => { $("portraitSheet").hidden = true; });
+  }
+  $("portraitSave").addEventListener("click", savePortrait);
+}
+
 function openMenu() {
+  showMyAvatar();
   lobbyPoller.stop();
   gameListSig = null;
   $("lobbyMenu").hidden = false;
@@ -395,6 +508,8 @@ function renderRoster(roster) {
   const sorted = [...roster].sort((a, b) => Number(b.admin) - Number(a.admin));
   $("roster").replaceChildren(...sorted.map((p) => {
     const li = el("li");
+    const face = avatarEl(p);
+    if (face) li.append(face);
     li.append(el("span", "name", p.username));
     if (p.nation) li.append(el("span", "nation", formatNation(p.nation)));
     if (p.admin) li.append(el("span", "tag accent", "ADMIN"));
@@ -1756,6 +1871,8 @@ function nationHead(p) {
   flag.setAttribute("aria-hidden", "true");
   const who = el("span", "who");
   who.append(el("span", "hd", formatNation(p.nation)), el("span", "user", p.username));
+  const face = avatarEl(p);
+  if (face) head.append(face);
   head.append(flag, who);
 
   if (mine) head.append(el("span", "tag", "YOU"));
@@ -1823,6 +1940,8 @@ function boardRows(nations) {
       const flag = el("span", "flag");
       flag.dataset.nation = p.nation || "";
       flag.setAttribute("aria-hidden", "true");
+      const face = avatarEl(p);
+      if (face) li.append(face);
       li.append(flag, el("span", "name", `${formatNation(p.nation)} · ${p.username}`),
         el("span", "value", fmtCash(p.palaceValue ?? 0)));
       if (p.eliminated) li.title = "Fallen";
@@ -1831,7 +1950,7 @@ function boardRows(nations) {
 }
 
 function renderLeaderboard(nations) {
-  const sig = JSON.stringify(nations.map((p) => [p.id, p.palaceValue, p.eliminated]));
+  const sig = JSON.stringify(nations.map((p) => [p.id, p.palaceValue, p.eliminated, p.avatarUrl]));
   if (sig === boardSig) return;
   boardSig = sig;
   $("leaderboard").replaceChildren(...boardRows(nations));
@@ -1858,6 +1977,8 @@ async function showFinale(info, roster) {
     $(nameId).textContent = name;
   }
   $("winnerPalace").innerHTML = palaceArt(palace || {});
+  $("winnerAvatar").hidden = !winner.avatarUrl;
+  if (winner.avatarUrl) $("winnerAvatar").src = state.baseUrl + winner.avatarUrl;
   $("winnerLine").textContent = winner.id === state.playerId
     ? "Your colonists are on their way to Mars. You win!"
     : `${formatNation(winner.nation)} reached Mars first and wins the game.`;
@@ -1966,7 +2087,7 @@ function renderWorld() {
 
   // Rebuild only when something visible changed; cash-dependent button states update in place.
   const signature = JSON.stringify([
-    nations.map((p) => [p.id, p.popularity, p.eliminated, relationWith(p.id), p.palaceValue]),
+    nations.map((p) => [p.id, p.popularity, p.eliminated, relationWith(p.id), p.palaceValue, p.avatarUrl]),
     world.openId, state.actions.length,
     world.openId && latestIntel(world.openId)?.id,
   ]);
@@ -1989,6 +2110,7 @@ function resetWorld() {
 
 function initGame() {
   initSheet();
+  initPortrait();
   initFinale();
   for (const node of document.querySelectorAll("[data-close-picker]")) {
     node.addEventListener("click", () => { $("stylePicker").hidden = true; });

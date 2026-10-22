@@ -59,8 +59,67 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /account/avatar:
+    put:
+      tags:
+        - account
+      operationId: setAvatar
+      summary: Upload your pixel portrait (a small PNG made in the browser)
+      parameters:
+        - name: X-Session-Token
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvatarRequest'
+      responses:
+        '204':
+          description: Saved
+        '400':
+          description: Not a small PNG
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /account/{accountId}/avatar:
+    get:
+      tags:
+        - account
+      operationId: getAvatar
+      summary: A player's pixel portrait (public, so image tags can load it)
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The portrait
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: No portrait
 components:
   schemas:
+    AvatarRequest:
+      type: object
+      required:
+        - image
+      properties:
+        image:
+          type: string
+          maxLength: 24000
+          description: The portrait as a base64-encoded PNG (no data-URL prefix).
     RegisterRequest:
       type: object
       required:
