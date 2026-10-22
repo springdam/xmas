@@ -8,12 +8,16 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.xmas.game.engine.palace.PalaceService;
 
 @Component
 @RequiredArgsConstructor
 public class JpaResearchGateway implements ResearchGateway {
 
+    private static final int MASTERY_LEVEL = 3;
+
     private final PlayerResearchRepository repository;
+    private final PalaceService palaceService;
 
     @Override
     @Transactional(readOnly = true)
@@ -35,5 +39,8 @@ public class JpaResearchGateway implements ResearchGateway {
                         .build());
         entity.setLevel(entity.getLevel() + 1);
         repository.save(entity);
+        if (entity.getLevel() == MASTERY_LEVEL) {
+            palaceService.award(playerId, "mastering " + research.name().replace("RESEARCH_", "").replace('_', ' '));
+        }
     }
 }

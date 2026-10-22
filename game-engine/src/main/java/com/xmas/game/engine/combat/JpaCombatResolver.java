@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.xmas.game.engine.palace.PalaceService;
 
 @Slf4j
 @Component
@@ -50,6 +51,7 @@ public class JpaCombatResolver implements CombatResolver {
     private final PlayerEconomyRepository economyRepository;
     private final BuildingDamageService buildingDamageService;
     private final EconomyProperties economyProperties;
+    private final PalaceService palaceService;
 
     @Override
     @Transactional
@@ -92,6 +94,8 @@ public class JpaCombatResolver implements CombatResolver {
                     * researchModifierService.popularityDamageMultiplier(defenderPlayerId));
             defender.setPopularity(Popularity.clamp(defender.getPopularity() - penalty));
             defender.setWarStrain(defender.getWarStrain() + 1);
+            palaceService.recordAttackVictory(attackerPlayerId);
+            palaceService.onBattleLost(defenderPlayerId, outcome.getDefenderLossFraction(), attacker.getNation());
             playerRepository.save(defender);
         }
 

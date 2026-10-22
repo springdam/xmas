@@ -10,6 +10,8 @@ game:
     boost-recovery-ticks: 4
   actions:
     definitions:
+      vandalize-palace:
+        duration-millis: 5000
       build-factory:
         duration-millis: 0
       build-robot-factory:

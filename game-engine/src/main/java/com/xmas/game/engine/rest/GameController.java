@@ -1,10 +1,13 @@
 package com.xmas.game.engine.rest;
 
 import com.xmas.game.common.account.AccountDirectory;
+import com.xmas.game.common.error.ForbiddenException;
 import com.xmas.game.common.security.SessionIdentity;
 import com.xmas.game.engine.api.GameApi;
 import com.xmas.game.engine.api.model.GameListing;
 import com.xmas.game.engine.api.model.GameResponse;
+import com.xmas.game.engine.api.model.PalaceResponse;
+import com.xmas.game.engine.api.model.UpgradePalaceRequest;
 import com.xmas.game.engine.api.model.PlayerResponse;
 import com.xmas.game.engine.api.model.PlayerStateResponse;
 import com.xmas.game.engine.config.EconomyProperties;
@@ -14,7 +17,9 @@ import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
 import com.xmas.game.engine.military.UpkeepService;
 import com.xmas.game.engine.entity.PlayerEntity;
+import com.xmas.game.engine.domain.PalacePart;
 import com.xmas.game.engine.mapper.GameMapper;
+import com.xmas.game.engine.palace.PalaceService;
 import com.xmas.game.engine.service.GameService;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +40,7 @@ public class GameController implements GameApi {
     private final EconomyProperties economyProperties;
     private final UpkeepService upkeepService;
     private final PopularityBoostService popularityBoostService;
+    private final PalaceService palaceService;
 
     @Override
     public ResponseEntity<GameResponse> createGame() {
@@ -74,7 +80,8 @@ public class GameController implements GameApi {
         Map<UUID, String> usernames = accountDirectory.usernames(
                 players.stream().map(PlayerEntity::getAccountId).toList());
         return ResponseEntity.ok(players.stream()
-                .map(player -> GameMapper.toGamePlayerSummary(player, usernames.get(player.getAccountId())))
+                .map(player -> GameMapper.toGamePlayerSummary(player, usernames.get(player.getAccountId()))
+                        .palaceScore(palaceService.score(player.getId())))
                 .toList());
     }
 
@@ -108,8 +115,12 @@ public class GameController implements GameApi {
         PlayerEntity player = gameService.getPlayer(playerId);
         UUID viewerId = sessionIdentity.requirePlayer(xSessionToken, player.getGameId());
         boolean fullView = viewerId.equals(playerId) || gameService.hasSatelliteIntel(viewerId);
+        // Palaces are public: everyone sees everyone's, but only you see your unspent tokens.
+        PalaceResponse palace = GameMapper.toPalaceResponse(palaceService.palace(playerId),
+                viewerId.equals(playerId), palaceService.tierCosts());
         if (!fullView) {
-            return ResponseEntity.ok(GameMapper.toLimitedPlayerState(player, gameService.getRelations(playerId)));
+            return ResponseEntity.ok(GameMapper.toLimitedPlayerState(player, gameService.getRelations(playerId))
+                    .palace(palace));
         }
         PlayerEconomyEntity economy = gameService.getEconomy(playerId);
         PlayerMilitaryEntity military = gameService.getMilitary(playerId);
@@ -126,6 +137,7 @@ public class GameController implements GameApi {
                 gameService.getProtection(playerId),
                 gameService.getResearch(playerId),
                 gameService.getRelations(playerId));
+        state.palace(palace);
         if (viewerId.equals(playerId)) {
             // Your own parade outlook; rivals (even with satellites) don't see it.
             state.getPlayer()
@@ -133,5 +145,18 @@ public class GameController implements GameApi {
                     .paradeReadyAtTick(popularityBoostService.paradeReadyAtTick(player));
         }
         return ResponseEntity.ok(state);
+    }
+
+    @Override
+    public ResponseEntity<PalaceResponse> upgradePalace(UUID playerId, String xSessionToken,
+                                                        UpgradePalaceRequest request) {
+        PlayerEntity player = gameService.getPlayer(playerId);
+        if (!sessionIdentity.requirePlayer(xSessionToken, player.getGameId()).equals(playerId)) {
+            throw new ForbiddenException("You may only improve your own palace");
+        }
+        boolean cash = request.getPayWith() == UpgradePalaceRequest.PayWithEnum.CASH;
+        return ResponseEntity.ok(GameMapper.toPalaceResponse(
+                palaceService.upgrade(playerId, PalacePart.valueOf(request.getPart().name()), cash),
+                true, palaceService.tierCosts()));
     }
 }

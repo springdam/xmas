@@ -180,6 +180,17 @@
 
     <div id="tab-nation" class="tabpanel">
       <div id="nationSections" class="stack10"></div>
+      <section class="win" aria-labelledby="palaceTitle">
+        <div class="tbar"><span class="gad"></span><h3 id="palaceTitle" class="ttl hd">PALACE</h3><span class="grow"></span><span class="gad"></span></div>
+        <div class="win-body stack6">
+          <div id="palaceArt" class="palace-art"></div>
+          <p id="palaceHonour" class="palace-honour" hidden></p>
+          <details id="palaceImprove" class="more-actions">
+            <summary class="hd">IMPROVE THE PALACE</summary>
+            <div id="palaceParts" class="palace-parts"></div>
+          </details>
+        </div>
+      </section>
       <section class="win" aria-labelledby="researchTitle">
         <div class="tbar"><span class="gad"></span><h3 id="researchTitle" class="ttl hd">RESEARCH</h3><span class="grow"></span><span class="gad"></span></div>
         <div id="researchList" class="win-body chips"></div>
@@ -284,6 +295,7 @@
 </div>
 
 <div id="toasts"></div>
+<script src="palace.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

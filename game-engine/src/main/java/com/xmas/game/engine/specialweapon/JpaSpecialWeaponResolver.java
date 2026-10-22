@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.xmas.game.engine.palace.PalaceService;
 
 @Slf4j
 @Component
@@ -44,6 +45,7 @@ public class JpaSpecialWeaponResolver implements SpecialWeaponResolver {
     private final ResearchModifierService researchModifierService;
     private final NewsService newsService;
     private final BuildingDamageService buildingDamageService;
+    private final PalaceService palaceService;
 
     @Override
     @Transactional
@@ -76,6 +78,9 @@ public class JpaSpecialWeaponResolver implements SpecialWeaponResolver {
         economyRepository.save(targetEconomy);
         militaryRepository.save(targetMilitary);
         applyStrikePopularity(actor.getGameId(), actorId, targetId);
+        if (landed > 0) {
+            palaceService.onNuked(targetId, landed, actor.getNation());
+        }
 
         int intercepted = effectiveWarheads - landed;
         newsService.record(actor.getGameId(), NewsType.ATTACK, NewsVisibility.PUBLIC, actorId, targetId,

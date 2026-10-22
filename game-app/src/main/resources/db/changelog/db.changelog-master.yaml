@@ -29,3 +29,5 @@ databaseChangeLog:
       file: db/changelog/changes/014-player-last-parade.yaml
   - include:
       file: db/changelog/changes/015-research-level.yaml
+  - include:
+      file: db/changelog/changes/016-player-palace.yaml

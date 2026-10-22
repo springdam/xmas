@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.xmas.game.engine.palace.PalaceService;
 
 /**
  * Applies a successful leader-kill attempt. A doppelganger absorbs the hit (one
@@ -30,6 +31,7 @@ public class LeaderKillService {
     private final PlayerProtectionRepository protectionRepository;
     private final GameRepository gameRepository;
     private final NewsService newsService;
+    private final PalaceService palaceService;
 
     @Transactional
     public boolean attemptKill(PlayerEntity actor, PlayerEntity target, NewsType newsType, String method) {
@@ -37,6 +39,7 @@ public class LeaderKillService {
         if (protection.getDoublegangers() > 0) {
             protection.setDoublegangers(protection.getDoublegangers() - 1);
             protectionRepository.save(protection);
+            palaceService.award(target.getId(), "surviving an attempt on your life");
             record(actor, target, newsType,
                     "A body double died in %s's place, foiling an attempted %s by %s.".formatted(
                             target.getNation(), method, actor.getNation()));

@@ -669,6 +669,67 @@ function setValue(node, text) {
   }
 }
 
+// ---------------------------------------------------------------------
+// Palace: a trophy throne room (no game effect); earned at milestones or bought
+// ---------------------------------------------------------------------
+
+const CROWN_SVG = '<svg viewBox="0 0 8 8" aria-hidden="true"><path d="M0 2h1v4H0zM7 2h1v4H7zM3 1h2v2H3zM1 4h1v2H1zM6 4h1v2H6zM2 5h4v1H2zM1 6h6v2H1z"/></svg>';
+let palaceSig = "";
+
+function renderPalace(me) {
+  const palace = me.palace;
+  if (!palace) return;
+  $("palaceTitle").textContent = `PALACE ${palace.score}/24`;
+  const tokens = palace.tokens ?? 0;
+  const cash = me.player.cash;
+  const sig = JSON.stringify([palace, PALACE_PARTS.map(([key]) => cash >= nextPalaceCost(palace, key))]);
+  if (sig === palaceSig) return;
+  palaceSig = sig;
+
+  $("palaceArt").innerHTML = palaceSvg(palace);
+  $("palaceHonour").hidden = tokens === 0;
+  $("palaceHonour").textContent = `Your people honour you: ${tokens} improvement${tokens === 1 ? "" : "s"} to choose.`;
+  if (tokens > 0) $("palaceImprove").open = true;
+
+  $("palaceParts").replaceChildren(...PALACE_PARTS.map(([key, label]) => {
+    const tier = palace[key] ?? 0;
+    const row = el("div", "palace-part");
+    const what = el("span", "what");
+    what.append(el("span", "hd", label),
+      el("span", "dim", tier >= 4 ? "Golden: as grand as it gets" : `${PALACE_TIER_NAMES[tier]} → ${PALACE_TIER_NAMES[tier + 1]}`));
+    row.append(what);
+    if (tier < 4) {
+      const buttons = el("span", "buttons");
+      if (tokens > 0) buttons.append(palaceButton(key, "TOKEN", "USE HONOUR", "pri"));
+      const cost = nextPalaceCost(palace, key);
+      const buy = palaceButton(key, "CASH", `BUY ${fmtCash(cost)}`, "");
+      buy.disabled = cash < cost;
+      buttons.append(buy);
+      row.append(buttons);
+    }
+    return row;
+  }));
+}
+
+function nextPalaceCost(palace, key) {
+  const tier = palace[key] ?? 0;
+  return tier >= 4 ? Infinity : (palace.tierCosts?.[tier] ?? Infinity);
+}
+
+function palaceButton(part, payWith, text, cls) {
+  const btn = el("button", `btn ${cls}`.trim(), text);
+  btn.type = "button";
+  btn.addEventListener("click", () => busy([btn], async () => {
+    try {
+      const palace = await api("POST", `/players/${state.playerId}/palace/upgrade`, { part: part.toUpperCase(), payWith });
+      const tier = palace[part];
+      toast(`${titleCase(part)}: now ${PALACE_TIER_NAMES[tier].toLowerCase()}.`);
+      gamePoller.now();
+    } catch (e) { toastError(e); }
+  }));
+  return btn;
+}
+
 function renderNation(me) {
   const p = me.player;
   const nation = formatNation(p.nation);
@@ -712,6 +773,8 @@ function renderNation(me) {
       setValue($(`stat-${section.key}-${field}`), text);
     }
   }
+
+  renderPalace(me);
 
   // Research
   const done = me.research || [];
@@ -869,7 +932,7 @@ const WARNINGS = {
 /** Spy operations: they need agents, and a failure can cost spies. */
 const COVERT = new Set([
   "PERFORM_CYBER_ATTACK", "PERFORM_SABOTAGE", "PERFORM_HEIST", "STEAL_TECHNOLOGY",
-  "GATHER_INTELLIGENCE", "ASSASSINATE_LEADER",
+  "GATHER_INTELLIGENCE", "ASSASSINATE_LEADER", "VANDALIZE_PALACE",
 ]);
 const SPY_RISK = "If it fails, some of your spies may be caught, and the target may learn who sent them. "
   + "Your spies run one operation per nation at a time.";
@@ -1358,6 +1421,7 @@ const involvesMe = (ev) => ev.actorPlayerId === state.playerId || ev.targetPlaye
 function newsTag(ev) {
   if (INTEL_RE.test(ev.headline)) return ["INTEL", "good"];
   if (/nuclear|warhead/i.test(ev.headline)) return ["NUKE", "bad"];
+  if (/palace/i.test(ev.headline)) return ["PALACE", "accent"];
   return NEWS_TAGS[ev.type] || [ev.type, ""];
 }
 
@@ -1614,6 +1678,13 @@ function nationHead(p) {
   head.append(flag, who);
 
   if (mine) head.append(el("span", "tag", "YOU"));
+  if (p.palaceScore != null && !p.eliminated) {
+    const score = el("span", "palace-score");
+    score.title = `Palace ${p.palaceScore}/24`;
+    score.innerHTML = CROWN_SVG;
+    score.append(String(p.palaceScore));
+    head.append(score);
+  }
   if (p.eliminated) {
     head.append(el("span", "tag bad", "FALLEN"));
     return head;
@@ -1655,6 +1726,19 @@ function satelliteBlock(theirs) {
   techLine.append(el("span", "k dim", "Tech: "), tech.length ? tech.join(", ") : "none");
   box.append(el("span", "sub", "TECHNOLOGY"), techLine);
   return box;
+}
+
+/** Their palace (public to everyone), once their state has loaded. */
+function palaceThumb(p) {
+  const wrap = el("div", "palace-thumb");
+  const palace = world.detail.get(p.id)?.state?.palace;
+  if (!palace) return wrap;
+  const title = el("div", "intel-title");
+  title.append(el("span", "tag accent", "PALACE"), el("span", "hd", `${palace.score}/24`));
+  const art = el("div");
+  art.innerHTML = palaceSvg(palace);
+  wrap.append(title, art);
+  return wrap;
 }
 
 function intelSection(p) {
@@ -1699,7 +1783,7 @@ function nationBody(p) {
   const moreGrid = el("div", "quick");
   for (const def of rest) moreGrid.append(quickButton(def, p.id));
   more.append(moreGrid);
-  body.append(quick, more, intelSection(p));
+  body.append(quick, more, palaceThumb(p), intelSection(p));
   return body;
 }
 
@@ -1715,7 +1799,7 @@ function renderWorld() {
 
   // Rebuild only when something visible changed; cash-dependent button states update in place.
   const signature = JSON.stringify([
-    nations.map((p) => [p.id, p.popularity, p.eliminated, relationWith(p.id)]),
+    nations.map((p) => [p.id, p.popularity, p.eliminated, relationWith(p.id), p.palaceScore]),
     world.openId, state.actions.length,
     world.openId && latestIntel(world.openId)?.id,
   ]);

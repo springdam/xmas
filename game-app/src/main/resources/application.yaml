@@ -236,6 +236,12 @@ game:
         targeted: true
         public-visibility: true
         description: "A military strike to kill a rival's leader (only when their popularity is below the vulnerability threshold)."
+      vandalize-palace:
+        cost-cash: 10000
+        duration-millis: 45000
+        targeted: true
+        public-visibility: false
+        description: "Send your spies to deface a rival's palace. Pure humiliation: costs them palace tiers, nothing else."
       hire-doubleganger:
         cost-cash: 15000
         duration-millis: 0

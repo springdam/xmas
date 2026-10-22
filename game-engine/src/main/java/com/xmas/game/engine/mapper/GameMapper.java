@@ -7,6 +7,7 @@ import com.xmas.game.engine.api.model.GameResponse;
 import com.xmas.game.engine.api.model.GameStatus;
 import com.xmas.game.engine.api.model.EspionageResponse;
 import com.xmas.game.engine.api.model.MilitaryResponse;
+import com.xmas.game.engine.api.model.PalaceResponse;
 import com.xmas.game.engine.api.model.Nation;
 import com.xmas.game.engine.api.model.PlayerResponse;
 import com.xmas.game.engine.api.model.PlayerStateResponse;
@@ -19,6 +20,7 @@ import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerEspionageEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
+import com.xmas.game.engine.entity.PlayerPalaceEntity;
 import com.xmas.game.engine.entity.PlayerProtectionEntity;
 import com.xmas.game.engine.entity.PlayerRelationEntity;
 import com.xmas.game.engine.entity.PlayerResearchEntity;
@@ -125,6 +127,19 @@ public final class GameMapper {
         return new RelationResponse()
                 .otherPlayerId(other)
                 .status(RelationStatus.fromValue(relation.getStatus().name()));
+    }
+
+    public static PalaceResponse toPalaceResponse(PlayerPalaceEntity palace, boolean own, List<Long> tierCosts) {
+        return new PalaceResponse()
+                .walls(palace.getWalls())
+                .floor(palace.getFloor())
+                .throne(palace.getThrone())
+                .pillars(palace.getPillars())
+                .windows(palace.getWindows())
+                .treasures(palace.getTreasures())
+                .score(palace.score())
+                .tokens(own ? palace.getTokens() : null)
+                .tierCosts(tierCosts);
     }
 
     public static PlayerStateResponse toLimitedPlayerState(PlayerEntity player, List<PlayerRelationEntity> relations) {

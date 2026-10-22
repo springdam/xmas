@@ -19,7 +19,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         ResearchProperties.class,
         PopularityProperties.class,
         SpecialForcesProperties.class,
-        UpkeepProperties.class
+        UpkeepProperties.class,
+        PalaceProperties.class
 })
 public class EngineConfiguration {
 }

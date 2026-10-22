@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.xmas.game.engine.palace.PalaceService;
 
 @Slf4j
 @Service
@@ -50,6 +51,7 @@ public class GameTickService {
     private final NewsService newsService;
     private final PlayerMilitaryRepository militaryRepository;
     private final UpkeepService upkeepService;
+    private final PalaceService palaceService;
 
     @Transactional
     public void tick() {
@@ -81,6 +83,7 @@ public class GameTickService {
                 overthrow(game, player);
                 continue;
             }
+            palaceService.onTick(game, player);
             if (player.getPopularityBoostCount() > 0
                     && game.getCurrentTick() % popularityProperties.getBoostRecoveryTicks() == 0) {
                 player.setPopularityBoostCount(player.getPopularityBoostCount() - 1);

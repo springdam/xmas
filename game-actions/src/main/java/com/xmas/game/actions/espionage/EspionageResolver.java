@@ -20,4 +20,6 @@ public interface EspionageResolver {
     void gatherIntelligence(UUID actorPlayerId, UUID targetPlayerId);
 
     void assassinateLeader(UUID actorPlayerId, UUID targetPlayerId);
+
+    void vandalizePalace(UUID actorPlayerId, UUID targetPlayerId);
 }

@@ -168,6 +168,35 @@ paths:
                 $ref: '#/components/schemas/PlayerStateResponse'
         '404':
           $ref: '#/components/responses/BadRequest'
+  /players/{playerId}/palace/upgrade:
+    post:
+      tags:
+        - game
+      operationId: upgradePalace
+      summary: Raise one part of your palace a tier, paid with an earned token or with cash
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/SessionToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpgradePalaceRequest'
+      responses:
+        '200':
+          description: The improved palace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PalaceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
 components:
   parameters:
     GameId:
@@ -337,6 +366,10 @@ components:
           type: boolean
         admin:
           type: boolean
+        palaceScore:
+          type: integer
+          format: int32
+          description: Sum of the nation's palace tiers (0..24).
     EconomyResponse:
       type: object
       required:
@@ -461,6 +494,73 @@ components:
           format: uuid
         status:
           $ref: '#/components/schemas/RelationStatus'
+    PalacePart:
+      type: string
+      enum:
+        - WALLS
+        - FLOOR
+        - THRONE
+        - PILLARS
+        - WINDOWS
+        - TREASURES
+    PalaceResponse:
+      type: object
+      description: A nation's throne room. Tiers run 0 (bare) to 4 (gold); no effect on play.
+      required:
+        - walls
+        - floor
+        - throne
+        - pillars
+        - windows
+        - treasures
+        - score
+        - tierCosts
+      properties:
+        walls:
+          type: integer
+          format: int32
+        floor:
+          type: integer
+          format: int32
+        throne:
+          type: integer
+          format: int32
+        pillars:
+          type: integer
+          format: int32
+        windows:
+          type: integer
+          format: int32
+        treasures:
+          type: integer
+          format: int32
+        score:
+          type: integer
+          format: int32
+          description: Sum of all tiers (0..24).
+        tokens:
+          type: integer
+          format: int32
+          description: Earned upgrades not spent yet (only on your own palace).
+        tierCosts:
+          type: array
+          description: Cash price of each tier (index 0 = tier 1).
+          items:
+            type: integer
+            format: int64
+    UpgradePalaceRequest:
+      type: object
+      required:
+        - part
+        - payWith
+      properties:
+        part:
+          $ref: '#/components/schemas/PalacePart'
+        payWith:
+          type: string
+          enum:
+            - TOKEN
+            - CASH
     PlayerStateResponse:
       type: object
       required:
@@ -469,6 +569,8 @@ components:
       properties:
         player:
           $ref: '#/components/schemas/PlayerResponse'
+        palace:
+          $ref: '#/components/schemas/PalaceResponse'
         economy:
           $ref: '#/components/schemas/EconomyResponse'
         military:

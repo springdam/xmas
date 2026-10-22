@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 016-create-player-palace
+      author: xmas
+      changes:
+        - createTable:
+            tableName: player_palace
+            columns:
+              - column: { name: player_id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: walls, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: floor, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: throne, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: pillars, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: windows, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: treasures, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: tokens, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: attack_victories, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: popular_since_tick, type: BIGINT }

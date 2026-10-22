@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.xmas.game.engine.palace.PalaceService;
 
 @Slf4j
 @Component
@@ -33,6 +34,7 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
     private final PopularityProperties properties;
     private final NewsService newsService;
     private final PopularityBoostService boosts;
+    private final PalaceService palaceService;
 
     @Override
     @Transactional(readOnly = true)
@@ -59,7 +61,13 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
     public void declarePeace(UUID actorId, UUID targetId) {
         PlayerEntity actor = player(actorId);
         PlayerEntity target = player(targetId);
+        boolean endedLongWar = relationRepository.findByPlayerLowAndPlayerHigh(low(actorId, targetId), high(actorId, targetId))
+                .filter(r -> r.getStatus() == RelationStatus.WAR && palaceService.longWar(r.getUpdatedAt()))
+                .isPresent();
         setRelation(actorId, targetId, RelationStatus.PEACE);
+        if (endedLongWar) {
+            palaceService.award(actorId, "ending the war with %s".formatted(target.getNation()));
+        }
         actor.setPopularity(Popularity.clamp(actor.getPopularity() + properties.getDeclarePeaceBonus()));
         playerRepository.save(actor);
         record(actor, target, NewsVisibility.PUBLIC,

@@ -28,6 +28,7 @@ import com.xmas.game.engine.repository.PlayerMilitaryRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.research.ResearchModifierService;
 import com.xmas.game.newsfeed.service.NewsService;
+import com.xmas.game.engine.palace.PalaceService;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -79,7 +80,8 @@ class JpaCombatResolverTest {
                 new CombatCalculator(new CombatProperties(), random), modifiers, protectionService,
                 leaderKillService, new PopularityProperties(), new SpecialForcesProperties(),
                 mock(NewsService.class), economyRepository,
-                new BuildingDamageService(new EconomyProperties(), () -> buildingRoll), new EconomyProperties());
+                new BuildingDamageService(new EconomyProperties(), () -> buildingRoll), new EconomyProperties(),
+                mock(PalaceService.class));
     }
 
     @Test

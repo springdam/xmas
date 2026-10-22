@@ -24,6 +24,7 @@ import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.repository.PlayerSpecialWeaponsRepository;
 import com.xmas.game.newsfeed.domain.NewsVisibility;
 import com.xmas.game.newsfeed.service.NewsService;
+import com.xmas.game.engine.palace.PalaceService;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -70,7 +71,7 @@ class JpaSpecialWeaponResolverTest {
         JpaSpecialWeaponResolver resolver = new JpaSpecialWeaponResolver(
                 playerRepository, specialRepo, militaryRepo, economyRepo, gameRepo,
                 random, new SpecialWeaponProperties(), new PopularityProperties(), researchModifierService, newsService,
-                new BuildingDamageService(new EconomyProperties(), () -> 0.5));
+                new BuildingDamageService(new EconomyProperties(), () -> 0.5), mock(PalaceService.class));
 
         resolver.launch(attackerId, defenderId, 2);
 

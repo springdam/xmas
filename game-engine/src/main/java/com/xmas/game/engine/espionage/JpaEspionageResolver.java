@@ -37,6 +37,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.xmas.game.engine.palace.PalaceService;
 
 @Slf4j
 @Component
@@ -60,6 +61,7 @@ public class JpaEspionageResolver implements EspionageResolver {
     private final NewsService newsService;
     private final BuildingDamageService buildingDamageService;
     private final IncomeService incomeService;
+    private final PalaceService palaceService;
 
     @Override
     @Transactional
@@ -101,8 +103,23 @@ public class JpaEspionageResolver implements EspionageResolver {
         militaryRepository.save(military);
         target.setPopularity(Popularity.clamp(target.getPopularity() - victimPenalty(targetId, popularityProperties.getSabotageVictimPenalty())));
         playerRepository.save(target);
+        palaceService.onSabotaged(targetId);
         record(actor, target, "%s sabotaged %s's forces, destroying %d infantry and %s.".formatted(
                 actor.getNation(), target.getNation(), infantryLost, count(tanksLost, "tank", "tanks")));
+    }
+
+    @Override
+    @Transactional
+    public void vandalizePalace(UUID actorId, UUID targetId) {
+        PlayerEntity actor = player(actorId);
+        PlayerEntity target = player(targetId);
+        Attempt attempt = attempt(actorId, targetId, 0.0, 0.0);
+        if (!attempt.isSuccess()) {
+            recordFailure(actor, target, "palace vandalism", attempt.getSpiesCaught());
+            return;
+        }
+        palaceService.onVandalized(targetId);
+        record(actor, target, "%s's agents vandalized %s's palace.".formatted(actor.getNation(), target.getNation()));
     }
 
     @Override

@@ -12,6 +12,7 @@ import com.xmas.game.engine.repository.PlayerProtectionRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.newsfeed.domain.NewsType;
 import com.xmas.game.newsfeed.service.NewsService;
+import com.xmas.game.engine.palace.PalaceService;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +35,8 @@ class LeaderKillServiceTest {
         protectionRepository = mock(PlayerProtectionRepository.class);
         GameRepository gameRepository = mock(GameRepository.class);
         NewsService newsService = mock(NewsService.class);
-        service = new LeaderKillService(playerRepository, protectionRepository, gameRepository, newsService);
+        service = new LeaderKillService(playerRepository, protectionRepository, gameRepository, newsService,
+                mock(PalaceService.class));
         attacker = PlayerEntity.builder().id(attackerId).gameId(UUID.randomUUID()).nation(Nation.USA).build();
         target = PlayerEntity.builder().id(targetId).gameId(UUID.randomUUID()).nation(Nation.RUSSIA)
                 .eliminated(false).build();

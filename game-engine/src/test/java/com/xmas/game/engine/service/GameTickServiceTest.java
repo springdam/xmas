@@ -35,6 +35,7 @@ import com.xmas.game.engine.repository.PlayerRelationRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.research.ResearchModifierService;
 import com.xmas.game.newsfeed.service.NewsService;
+import com.xmas.game.engine.palace.PalaceService;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -80,7 +81,7 @@ class GameTickServiceTest {
         tickService = new GameTickService(gameRepository, playerRepository, economyRepository,
                 pendingActionRepository, incomeService, handlerRegistry,
                 definitionCatalog, researchModifierService, new PopularityProperties(), random, newsService,
-                militaryRepository, new UpkeepService(new UpkeepProperties()));
+                militaryRepository, new UpkeepService(new UpkeepProperties()), mock(PalaceService.class));
     }
 
     @Test

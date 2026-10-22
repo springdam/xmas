@@ -36,6 +36,7 @@ import com.xmas.game.engine.research.ResearchModifierService;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.newsfeed.domain.NewsVisibility;
 import com.xmas.game.newsfeed.service.NewsService;
+import com.xmas.game.engine.palace.PalaceService;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -96,7 +97,7 @@ class JpaEspionageResolverTest {
                 // building rolls of 0.15 against cyber strength 0.2 x fragility:
                 // farms 0.05, factories 0.12 survive; banks 0.16, robot factories 0.2 fall
                 new BuildingDamageService(new EconomyProperties(), () -> 0.15),
-                incomeService);
+                incomeService, mock(PalaceService.class));
     }
 
     @Test

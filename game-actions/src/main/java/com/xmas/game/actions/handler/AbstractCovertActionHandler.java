@@ -21,7 +21,8 @@ public abstract class AbstractCovertActionHandler extends AbstractTargetedAction
     /** Spy operations: the whole spy force goes on each, so only one runs against a nation at a time. */
     public static final Set<ActionType> SPY_OPERATIONS = EnumSet.of(
             ActionType.PERFORM_CYBER_ATTACK, ActionType.PERFORM_SABOTAGE, ActionType.PERFORM_HEIST,
-            ActionType.STEAL_TECHNOLOGY, ActionType.GATHER_INTELLIGENCE, ActionType.ASSASSINATE_LEADER);
+            ActionType.STEAL_TECHNOLOGY, ActionType.GATHER_INTELLIGENCE, ActionType.ASSASSINATE_LEADER,
+            ActionType.VANDALIZE_PALACE);
 
     @Override
     protected Set<ActionType> exclusiveWith() {

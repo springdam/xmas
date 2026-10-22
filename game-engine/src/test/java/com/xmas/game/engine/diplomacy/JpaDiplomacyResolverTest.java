@@ -20,6 +20,7 @@ import com.xmas.game.engine.repository.PlayerRelationRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.research.ResearchModifierService;
 import com.xmas.game.newsfeed.service.NewsService;
+import com.xmas.game.engine.palace.PalaceService;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,7 +59,7 @@ class JpaDiplomacyResolverTest {
 
         PopularityProperties properties = new PopularityProperties();
         resolver = new JpaDiplomacyResolver(playerRepository, relationRepository, gameRepository,
-                properties, mock(NewsService.class), new PopularityBoostService(properties, modifiers));
+                properties, mock(NewsService.class), new PopularityBoostService(properties, modifiers), mock(PalaceService.class));
     }
 
     @Test
