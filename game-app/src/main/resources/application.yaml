@@ -59,20 +59,8 @@ game:
     parade-praise-decay: 0.6
     election-freeze-ticks: 60
   nations:
-    start:
-      usa:        { starting-cash: 500000, farms: 12, factories: 10, robot-factories: 3, banks: 6, land: 44 }
-      china:      { starting-cash: 450000, farms: 18, factories: 12, robot-factories: 2, banks: 4, land: 45 }
-      russia:     { starting-cash: 350000, farms: 10, factories: 8,  robot-factories: 2, banks: 3, land: 42 }
-      uk:         { starting-cash: 375000, farms: 6,  factories: 7,  robot-factories: 2, banks: 6, land: 38 }
-      france:     { starting-cash: 350000, farms: 8,  factories: 7,  robot-factories: 2, banks: 5, land: 38 }
-      india:      { starting-cash: 250000, farms: 16, factories: 6,  robot-factories: 1, banks: 3, land: 42 }
-      israel:     { starting-cash: 300000, farms: 3,  factories: 5,  robot-factories: 3, banks: 4, land: 35 }
-      iran:       { starting-cash: 225000,  farms: 9,  factories: 5,  robot-factories: 1, banks: 2, land: 38 }
-      pakistan:   { starting-cash: 175000,  farms: 8,  factories: 4,  robot-factories: 1, banks: 2, land: 36 }
-      north-korea: { starting-cash: 125000,  farms: 6,  factories: 4,  robot-factories: 1, banks: 1, land: 35 }
-      south-africa: { starting-cash: 200000, farms: 7,  factories: 4,  robot-factories: 1, banks: 2, land: 38 }
-      denmark:    { starting-cash: 225000,  farms: 5,  factories: 4,  robot-factories: 2, banks: 3, land: 35 }
-      saudi-arabia: { starting-cash: 550000, farms: 4, factories: 5, robot-factories: 1, banks: 5, land: 40 }
+    # Every nation starts with the same assets; the nation is only a flag and a name.
+    start: { starting-cash: 350000, farms: 8, factories: 7, robot-factories: 2, banks: 4, land: 40 }
   actions:
     definitions:
       build-farm:

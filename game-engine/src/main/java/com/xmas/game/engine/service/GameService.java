@@ -146,7 +146,7 @@ public class GameService {
         for (int i = 0; i < players.size(); i++) {
             PlayerEntity player = players.get(i);
             Nation nation = nations.get(i);
-            NationProperties.Start start = startFor(nation);
+            NationProperties.Start start = nationProperties.getStart();
             player.setNation(nation);
             player.setCash(start.getStartingCash());
             player.setPopularity(popularityProperties.getStartingPopularity());
@@ -272,14 +272,6 @@ public class GameService {
                 .playerId(playerId).nukes(0).espionageSatellites(0).build());
         protectionRepository.save(PlayerProtectionEntity.builder()
                 .playerId(playerId).doublegangers(0).bunkers(0).bodyguards(0).ninjaBodyguards(0).build());
-    }
-
-    private NationProperties.Start startFor(Nation nation) {
-        NationProperties.Start start = nationProperties.getStart().get(nation);
-        if (start == null) {
-            throw new BadRequestException("No starting configuration for nation " + nation);
-        }
-        return start;
     }
 
     private GameEntity requireGame(UUID gameId) {

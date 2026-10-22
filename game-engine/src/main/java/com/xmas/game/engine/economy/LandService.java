@@ -36,8 +36,7 @@ public class LandService {
     public int capacity(UUID playerId) {
         return playerRepository.findById(playerId)
                 .filter(player -> player.getNation() != null)
-                .map(player -> nationProperties.getStart().get(player.getNation()))
-                .map(NationProperties.Start::getLand)
+                .map(player -> nationProperties.getStart().getLand())
                 .orElse(0);
     }
 
