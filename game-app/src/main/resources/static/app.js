@@ -1814,10 +1814,10 @@ const fmtShortCash = (n) => (n >= 1e6 ? `$${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}
 
 let boardSig = "";
 
-/** Leaderboard rows: every nation ranked by palace value; fallen nations greyed out. */
+/** Leaderboard rows: the living ranked by palace value, then the fallen (greyed out), also by value. */
 function boardRows(nations) {
   return [...nations]
-    .sort((a, b) => (b.palaceValue ?? 0) - (a.palaceValue ?? 0))
+    .sort((a, b) => Number(a.eliminated) - Number(b.eliminated) || (b.palaceValue ?? 0) - (a.palaceValue ?? 0))
     .map((p) => {
       const li = el("li", `${p.id === state.playerId ? "me" : ""}${p.eliminated ? " out" : ""}`.trim());
       const flag = el("span", "flag");
