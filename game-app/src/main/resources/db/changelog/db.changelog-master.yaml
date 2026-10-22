@@ -31,3 +31,5 @@ databaseChangeLog:
       file: db/changelog/changes/015-research-level.yaml
   - include:
       file: db/changelog/changes/016-player-palace.yaml
+  - include:
+      file: db/changelog/changes/017-palace-style.yaml

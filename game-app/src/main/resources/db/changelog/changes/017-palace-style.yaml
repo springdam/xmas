@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 017-palace-style
+      author: xmas
+      changes:
+        - addColumn:
+            tableName: player_palace
+            columns:
+              - column:
+                  name: style
+                  type: VARCHAR(16)

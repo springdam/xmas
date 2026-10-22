@@ -5,6 +5,7 @@ import com.xmas.game.common.error.BadRequestException;
 import com.xmas.game.common.error.NotFoundException;
 import com.xmas.game.engine.config.PalaceProperties;
 import com.xmas.game.engine.domain.PalacePart;
+import com.xmas.game.engine.domain.PalaceStyle;
 import com.xmas.game.engine.entity.GameEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerPalaceEntity;
@@ -32,8 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PalaceService {
 
-    private static final String[] TIER_NAMES = {"bare", "wooden", "stone", "marble", "golden"};
-
     private final PlayerPalaceRepository palaceRepository;
     private final PlayerRepository playerRepository;
     private final GameRepository gameRepository;
@@ -46,6 +45,26 @@ public class PalaceService {
     public PlayerPalaceEntity palace(UUID playerId) {
         return palaceRepository.findById(playerId)
                 .orElseGet(() -> palaceRepository.save(PlayerPalaceEntity.builder().playerId(playerId).build()));
+    }
+
+    /** Picks the palace's look; only once per game. */
+    @Transactional
+    public PlayerPalaceEntity chooseStyle(UUID playerId, PalaceStyle style) {
+        PlayerEntity player = player(playerId);
+        if (player.isAdmin()) {
+            throw new BadRequestException("The admin has no palace");
+        }
+        PlayerPalaceEntity palace = palace(playerId);
+        if (palace.getStyle() != null) {
+            throw new BadRequestException("Your palace style is already chosen");
+        }
+        palace.setStyle(style);
+        return palaceRepository.save(palace);
+    }
+
+    /** Palaces whose owner hasn't chosen yet are castles. */
+    private static PalaceStyle style(PlayerPalaceEntity palace) {
+        return palace.getStyle() == null ? PalaceStyle.CASTLE : palace.getStyle();
     }
 
     /** Grants one upgrade token; only the player hears about it. */
@@ -78,8 +97,8 @@ public class PalaceService {
         if (payWithCash) {
             long cost = tierCost(next);
             if (player.getCash() < cost) {
-                throw new BadRequestException("Insufficient funds: a %s %s costs $%d".formatted(
-                        TIER_NAMES[next], part.name().toLowerCase(), cost));
+                throw new BadRequestException("Insufficient funds: %s costs $%d".formatted(
+                        part.described(style(palace).tierName(next)), cost));
             }
             player.setCash(player.getCash() - cost);
             playerRepository.save(player);
@@ -92,7 +111,8 @@ public class PalaceService {
         palace.setTier(part, next);
         palaceRepository.save(palace);
         newsService.record(player.getGameId(), NewsType.DIPLOMACY, NewsVisibility.PUBLIC, playerId, null,
-                "%s's palace now boasts %s.".formatted(player.getNation(), part.described(TIER_NAMES[next])),
+                "%s's palace now boasts %s.".formatted(player.getNation(),
+                        part.described(style(palace).tierName(next))),
                 gameTime(player));
         return palace;
     }

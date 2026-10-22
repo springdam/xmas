@@ -5,6 +5,7 @@ import com.xmas.game.common.error.ForbiddenException;
 import com.xmas.game.common.security.SessionIdentity;
 import com.xmas.game.engine.api.GameApi;
 import com.xmas.game.engine.api.model.GameListing;
+import com.xmas.game.engine.api.model.ChoosePalaceStyleRequest;
 import com.xmas.game.engine.api.model.GameResponse;
 import com.xmas.game.engine.api.model.PalaceResponse;
 import com.xmas.game.engine.api.model.UpgradePalaceRequest;
@@ -18,6 +19,7 @@ import com.xmas.game.engine.entity.PlayerMilitaryEntity;
 import com.xmas.game.engine.military.UpkeepService;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.domain.PalacePart;
+import com.xmas.game.engine.domain.PalaceStyle;
 import com.xmas.game.engine.mapper.GameMapper;
 import com.xmas.game.engine.palace.PalaceService;
 import com.xmas.game.engine.service.GameService;
@@ -157,6 +159,18 @@ public class GameController implements GameApi {
         boolean cash = request.getPayWith() == UpgradePalaceRequest.PayWithEnum.CASH;
         return ResponseEntity.ok(GameMapper.toPalaceResponse(
                 palaceService.upgrade(playerId, PalacePart.valueOf(request.getPart().name()), cash),
+                true, palaceService.tierCosts()));
+    }
+
+    @Override
+    public ResponseEntity<PalaceResponse> choosePalaceStyle(UUID playerId, String xSessionToken,
+                                                            ChoosePalaceStyleRequest request) {
+        PlayerEntity player = gameService.getPlayer(playerId);
+        if (!sessionIdentity.requirePlayer(xSessionToken, player.getGameId()).equals(playerId)) {
+            throw new ForbiddenException("You may only choose your own palace");
+        }
+        return ResponseEntity.ok(GameMapper.toPalaceResponse(
+                palaceService.chooseStyle(playerId, PalaceStyle.valueOf(request.getStyle().name())),
                 true, palaceService.tierCosts()));
     }
 }

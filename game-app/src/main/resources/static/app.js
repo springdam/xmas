@@ -676,17 +676,60 @@ function setValue(node, text) {
 const CROWN_SVG = '<svg viewBox="0 0 8 8" aria-hidden="true"><path d="M0 2h1v4H0zM7 2h1v4H7zM3 1h2v2H3zM1 4h1v2H1zM6 4h1v2H6zM2 5h4v1H2zM1 6h6v2H1z"/></svg>';
 let palaceSig = "";
 
+/** A sample of each style for the picker: a modest, mixed-tier throne room. */
+const STYLE_SAMPLE = { walls: 3, floor: 2, throne: 3, pillars: 2, windows: 3, treasures: 2 };
+let pickerShown = false;
+
+function styleOptions(onPick) {
+  return Object.entries(PALACE_STYLES).map(([style, info]) => {
+    const btn = el("button", "btn style-option");
+    btn.type = "button";
+    btn.innerHTML = palaceArt({ style, ...STYLE_SAMPLE });
+    btn.append(el("span", "hd", info.label.toUpperCase()));
+    btn.addEventListener("click", () => onPick(style, btn));
+    return btn;
+  });
+}
+
+async function choosePalaceStyle(style, btn) {
+  await busy([btn], async () => {
+    try {
+      await api("POST", `/players/${state.playerId}/palace/style`, { style });
+      $("stylePicker").hidden = true;
+      toast(`Your ${PALACE_STYLES[style].label.toLowerCase()} palace awaits.`);
+      palaceSig = "";
+      gamePoller.now();
+    } catch (e) { toastError(e); }
+  });
+}
+
+/** Once per session, as soon as a ruling player has no palace style yet. */
+function maybeShowStylePicker(me) {
+  if (pickerShown || !me.palace || me.palace.style || me.player.eliminated) return;
+  pickerShown = true;
+  $("pickerOptions").replaceChildren(...styleOptions(choosePalaceStyle));
+  $("stylePicker").hidden = false;
+}
+
 function renderPalace(me) {
   const palace = me.palace;
   if (!palace) return;
+  maybeShowStylePicker(me);
+  const choosing = !palace.style;
+  if ($("palaceChoose").hidden !== !choosing) {
+    $("palaceChoose").hidden = !choosing;
+    $("palaceScene").hidden = choosing;
+    if (choosing) $("palaceChoose").replaceChildren(...styleOptions(choosePalaceStyle));
+  }
   $("palaceTitle").textContent = `PALACE ${palace.score}/24`;
   const tokens = palace.tokens ?? 0;
   const cash = me.player.cash;
+  const names = palaceTierNames(palace);
   const sig = JSON.stringify([palace, PALACE_PARTS.map(([key]) => cash >= nextPalaceCost(palace, key))]);
   if (sig === palaceSig) return;
   palaceSig = sig;
 
-  $("palaceArt").innerHTML = palaceSvg(palace);
+  $("palaceScene").innerHTML = palaceArt(palace);
   $("palaceHonour").hidden = tokens === 0;
   $("palaceHonour").textContent = `Your people honour you: ${tokens} improvement${tokens === 1 ? "" : "s"} to choose.`;
   if (tokens > 0) $("palaceImprove").open = true;
@@ -696,7 +739,7 @@ function renderPalace(me) {
     const row = el("div", "palace-part");
     const what = el("span", "what");
     what.append(el("span", "hd", label),
-      el("span", "dim", tier >= 4 ? "Golden: as grand as it gets" : `${PALACE_TIER_NAMES[tier]} → ${PALACE_TIER_NAMES[tier + 1]}`));
+      el("span", "dim", tier >= 4 ? `${names[4]}: as grand as it gets` : `${names[tier]} → ${names[tier + 1]}`));
     row.append(what);
     if (tier < 4) {
       const buttons = el("span", "buttons");
@@ -723,7 +766,7 @@ function palaceButton(part, payWith, text, cls) {
     try {
       const palace = await api("POST", `/players/${state.playerId}/palace/upgrade`, { part: part.toUpperCase(), payWith });
       const tier = palace[part];
-      toast(`${titleCase(part)}: now ${PALACE_TIER_NAMES[tier].toLowerCase()}.`);
+      toast(`${titleCase(part)}: now ${palaceTierNames(palace)[tier].toLowerCase()}.`);
       gamePoller.now();
     } catch (e) { toastError(e); }
   }));
@@ -1736,7 +1779,7 @@ function palaceThumb(p) {
   const title = el("div", "intel-title");
   title.append(el("span", "tag accent", "PALACE"), el("span", "hd", `${palace.score}/24`));
   const art = el("div");
-  art.innerHTML = palaceSvg(palace);
+  art.innerHTML = palaceArt(palace);
   wrap.append(title, art);
   return wrap;
 }
@@ -1820,6 +1863,9 @@ function resetWorld() {
 
 function initGame() {
   initSheet();
+  for (const node of document.querySelectorAll("[data-close-picker]")) {
+    node.addEventListener("click", () => { $("stylePicker").hidden = true; });
+  }
   initNews();
   for (const btn of document.querySelectorAll("#tabbar [data-tab]")) {
     btn.addEventListener("click", () => selectTab(btn.dataset.tab));

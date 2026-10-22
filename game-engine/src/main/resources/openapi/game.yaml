@@ -168,6 +168,35 @@ paths:
                 $ref: '#/components/schemas/PlayerStateResponse'
         '404':
           $ref: '#/components/responses/BadRequest'
+  /players/{playerId}/palace/style:
+    post:
+      tags:
+        - game
+      operationId: choosePalaceStyle
+      summary: Choose your palace's look (once per game)
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/SessionToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChoosePalaceStyleRequest'
+      responses:
+        '200':
+          description: The palace in its chosen style
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PalaceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /players/{playerId}/palace/upgrade:
     post:
       tags:
@@ -503,6 +532,20 @@ components:
         - PILLARS
         - WINDOWS
         - TREASURES
+    PalaceStyle:
+      type: string
+      enum:
+        - PRESIDENTIAL
+        - CASTLE
+        - MIDDLE_EASTERN
+        - ASIAN
+    ChoosePalaceStyleRequest:
+      type: object
+      required:
+        - style
+      properties:
+        style:
+          $ref: '#/components/schemas/PalaceStyle'
     PalaceResponse:
       type: object
       description: A nation's throne room. Tiers run 0 (bare) to 4 (gold); no effect on play.
@@ -534,6 +577,8 @@ components:
         treasures:
           type: integer
           format: int32
+        style:
+          $ref: '#/components/schemas/PalaceStyle'
         score:
           type: integer
           format: int32

@@ -373,9 +373,12 @@ strong { font-weight: normal; color: var(--accent); }
 
 /* ---------- Palace ---------- */
 .palace-art svg, .palace-thumb svg {
-  display: block; width: 100%; height: auto; image-rendering: pixelated;
+  display: block; width: 100%; height: auto;
   border: 2px solid; border-color: var(--lo) var(--hi) var(--hi) var(--lo);
 }
+.style-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.style-option { display: flex; flex-direction: column; gap: 4px; padding: 4px; text-align: left; height: auto; }
+.style-option svg { display: block; width: 100%; height: auto; }
 .palace-honour { margin: 0; padding: 6px 8px; background: var(--accent); color: var(--accentInk); }
 .palace-parts { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .palace-part { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }

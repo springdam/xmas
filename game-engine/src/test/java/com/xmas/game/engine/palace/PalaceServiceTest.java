@@ -15,6 +15,7 @@ import com.xmas.game.common.domain.Nation;
 import com.xmas.game.common.error.BadRequestException;
 import com.xmas.game.engine.config.PalaceProperties;
 import com.xmas.game.engine.domain.PalacePart;
+import com.xmas.game.engine.domain.PalaceStyle;
 import com.xmas.game.engine.entity.GameEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerPalaceEntity;
@@ -162,5 +163,18 @@ class PalaceServiceTest {
         assertThat(palace.getWalls()).isEqualTo(3);
         service.onBattleLost(playerId, 0.7, Nation.CHINA);   // 0.5 < 0.7: looted
         assertThat(palace.getWalls()).isEqualTo(2);
+    }
+
+    @Test
+    void aStyleIsChosenOnceAndNamesTheTiers() {
+        service.chooseStyle(playerId, PalaceStyle.ASIAN);
+        assertThat(palace.getStyle()).isEqualTo(PalaceStyle.ASIAN);
+        assertThatThrownBy(() -> service.chooseStyle(playerId, PalaceStyle.CASTLE))
+                .isInstanceOf(BadRequestException.class).hasMessageContaining("already chosen");
+
+        palace.setThrone(1);
+        service.upgrade(playerId, PalacePart.THRONE, true);
+        verify(newsService).record(any(), any(), any(), any(), any(),
+                eq("FRANCE's palace now boasts a lacquered throne."), any());
     }
 }

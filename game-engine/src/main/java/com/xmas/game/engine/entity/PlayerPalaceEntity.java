@@ -1,8 +1,11 @@
 package com.xmas.game.engine.entity;
 
 import com.xmas.game.engine.domain.PalacePart;
+import com.xmas.game.engine.domain.PalaceStyle;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
@@ -41,6 +44,11 @@ public class PlayerPalaceEntity {
 
     @Column(name = "treasures", nullable = false)
     private int treasures;
+
+    /** The look the nation chose at the start; null until chosen. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "style")
+    private PalaceStyle style;
 
     /** Upgrades earned through milestones and not spent yet. */
     @Column(name = "tokens", nullable = false)

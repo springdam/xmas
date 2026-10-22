@@ -183,7 +183,8 @@
       <section class="win" aria-labelledby="palaceTitle">
         <div class="tbar"><span class="gad"></span><h3 id="palaceTitle" class="ttl hd">PALACE</h3><span class="grow"></span><span class="gad"></span></div>
         <div class="win-body stack6">
-          <div id="palaceArt" class="palace-art"></div>
+          <div id="palaceScene" class="palace-art"></div>
+          <div id="palaceChoose" class="style-options" hidden></div>
           <p id="palaceHonour" class="palace-honour" hidden></p>
           <details id="palaceImprove" class="more-actions">
             <summary class="hd">IMPROVE THE PALACE</summary>
@@ -254,6 +255,22 @@
 </div>
 
 <!-- Action dialog ------------------------------------------------------ -->
+<!-- Palace style picker: shown once a game starts, until the player picks ------- -->
+<div id="stylePicker" class="sheet" hidden>
+  <div class="sheet-shade dither" data-close-picker></div>
+  <section class="win sheet-win" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+    <div class="tbar">
+      <button type="button" class="gad-btn" data-close-picker aria-label="Decide later"><span class="gad"></span></button>
+      <h2 id="pickerTitle" class="ttl hd">CHOOSE YOUR PALACE</h2><span class="grow"></span><span class="gad"></span>
+    </div>
+    <div class="win-body stack sheet-body">
+      <p>Every ruler needs a throne room. Pick its style: it is yours for the whole game, and every nation can see it.</p>
+      <div id="pickerOptions" class="style-options"></div>
+      <button type="button" class="btn link" data-close-picker>Decide later</button>
+    </div>
+  </section>
+</div>
+
 <div id="sheet" class="sheet" hidden>
   <div class="sheet-shade dither" data-close></div>
   <section class="win sheet-win" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -295,7 +312,7 @@
 </div>
 
 <div id="toasts"></div>
-<script src="palace.js"></script>
+<script src="palace-art.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
