@@ -17,20 +17,23 @@ public class JpaResearchGateway implements ResearchGateway {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean hasResearch(UUID playerId, ActionType research) {
-        return repository.existsByPlayerIdAndResearchType(playerId, research);
+    public int level(UUID playerId, ActionType research) {
+        return repository.findByPlayerIdAndResearchType(playerId, research)
+                .map(PlayerResearchEntity::getLevel)
+                .orElse(0);
     }
 
     @Override
     @Transactional
-    public void addResearch(UUID playerId, ActionType research) {
-        if (repository.existsByPlayerIdAndResearchType(playerId, research)) {
-            return;
-        }
-        repository.save(PlayerResearchEntity.builder()
-                .id(UUID.randomUUID())
-                .playerId(playerId)
-                .researchType(research)
-                .build());
+    public void advanceResearch(UUID playerId, ActionType research) {
+        PlayerResearchEntity entity = repository.findByPlayerIdAndResearchType(playerId, research)
+                .orElseGet(() -> PlayerResearchEntity.builder()
+                        .id(UUID.randomUUID())
+                        .playerId(playerId)
+                        .researchType(research)
+                        .level(0)
+                        .build());
+        entity.setLevel(entity.getLevel() + 1);
+        repository.save(entity);
     }
 }

@@ -245,8 +245,8 @@ public class GameService {
     /** A viewer sees rivals' full state only with the Satellite Network research and a live satellite. */
     @Transactional(readOnly = true)
     public boolean hasSatelliteIntel(UUID viewerId) {
-        return researchRepository.existsByPlayerIdAndResearchType(
-                        viewerId, com.xmas.game.actions.domain.ActionType.RESEARCH_SATELLITE_NETWORK)
+        return researchRepository.findByPlayerIdAndResearchType(
+                        viewerId, com.xmas.game.actions.domain.ActionType.RESEARCH_SATELLITE_NETWORK).isPresent()
                 && specialWeaponsRepository.findById(viewerId)
                         .map(s -> s.getEspionageSatellites() > 0)
                         .orElse(false);

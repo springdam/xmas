@@ -149,6 +149,8 @@ public final class GameMapper {
                 .specialWeapons(toSpecialWeaponsResponse(specialWeapons))
                 .protection(toProtectionResponse(protection))
                 .research(research.stream().map(r -> r.getResearchType().name()).toList())
+                .researchLevels(research.stream().collect(java.util.stream.Collectors.toMap(
+                        r -> r.getResearchType().name(), PlayerResearchEntity::getLevel)))
                 .relations(relations.stream().map(r -> toRelationResponse(player.getId(), r)).toList());
     }
 }

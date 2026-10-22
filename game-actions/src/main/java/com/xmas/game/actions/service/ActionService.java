@@ -50,7 +50,8 @@ public class ActionService {
         handler.validate(ctx);
         handler.begin(ctx);
 
-        if (definition.getDurationMillis() <= 0) {
+        long durationMillis = handler.durationMillis(ctx);
+        if (durationMillis <= 0) {
             handler.onComplete(ctx);
             log.debug("Action {} by {} completed immediately", type, actorPlayerId);
             return ActionResult.builder()
@@ -61,7 +62,7 @@ public class ActionService {
                     .build();
         }
 
-        Instant completesAt = Instant.now().plusMillis(definition.getDurationMillis());
+        Instant completesAt = Instant.now().plusMillis(durationMillis);
         pendingActionQueue.enqueue(type, actorPlayerId, targetPlayerId, quantity, completesAt);
         log.debug("Action {} by {} scheduled until {}", type, actorPlayerId, completesAt);
         return ActionResult.builder()

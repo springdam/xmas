@@ -21,7 +21,10 @@ public final class ActionMapper {
                 .description(d.getDescription())
                 .maxTotal(d.getMaxTotal())
                 .requiredResearch(d.getRequiredResearch() == null ? null
-                        : com.xmas.game.actions.api.model.ActionType.fromValue(d.getRequiredResearch().name()));
+                        : com.xmas.game.actions.api.model.ActionType.fromValue(d.getRequiredResearch().name()))
+                .maxLevel(d.getMaxLevel())
+                .levelCosts(d.getLevelCosts())
+                .levelDurationsMillis(d.getLevelDurationsMillis());
     }
 
     public static com.xmas.game.actions.api.model.ActionResult toDto(ActionResult r) {

@@ -483,6 +483,12 @@ components:
           type: array
           items:
             type: string
+        researchLevels:
+          type: object
+          description: Level per researched tech (e.g. RESEARCH_CRYPTOGRAPHY -> 2).
+          additionalProperties:
+            type: integer
+            format: int32
         relations:
           type: array
           items:

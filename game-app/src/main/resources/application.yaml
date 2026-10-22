@@ -67,6 +67,9 @@ game:
     # Every nation starts with the same assets; the nation is only a flag and a name.
     start: { starting-cash: 350000, farms: 8, factories: 7, robot-factories: 2, banks: 4, land: 40 }
   actions:
+    # Research level n costs cost x cost-factor[n-1] and takes duration x duration-factor[n-1].
+    research-level-cost-factors: [1.0, 2.0, 3.0]
+    research-level-duration-factors: [1.0, 1.5, 2.0]
     definitions:
       build-farm:
         cost-cash: 10000
@@ -260,18 +263,21 @@ game:
         description: "Hire elite ninja bodyguards for maximum protection."
       research-advanced-farming:
         cost-cash: 80000
+        max-level: 3
         duration-millis: 300000
         targeted: false
         public-visibility: false
         description: "Permanently boost income from your economy."
       research-advanced-weaponry:
         cost-cash: 100000
+        max-level: 3
         duration-millis: 360000
         targeted: false
         public-visibility: false
         description: "Permanently boost the power of your attacks."
       research-cryptography:
         cost-cash: 90000
+        max-level: 3
         duration-millis: 300000
         targeted: false
         public-visibility: false
@@ -296,6 +302,7 @@ game:
         description: "Unlock the ability to recruit special ops."
       research-continuity-of-government:
         cost-cash: 120000
+        max-level: 3
         duration-millis: 480000
         targeted: false
         public-visibility: false
@@ -308,60 +315,70 @@ game:
         description: "Your espionage satellites reveal rivals' full state (military, arsenals, tech)."
       research-industrial-automation:
         cost-cash: 110000
+        max-level: 3
         duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Factories and robot factories generate significantly more income."
       research-central-banking:
         cost-cash: 110000
+        max-level: 3
         duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Banks generate significantly more income."
       research-war-economy:
         cost-cash: 100000
+        max-level: 3
         duration-millis: 300000
         targeted: false
         public-visibility: false
         description: "Your economy produces more income while you are at war."
       research-fortifications:
         cost-cash: 120000
+        max-level: 3
         duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Your forces are much stronger when defending against attacks."
       research-air-superiority:
         cost-cash: 150000
+        max-level: 3
         duration-millis: 480000
         targeted: false
         public-visibility: false
         description: "Stealth bombers are far more effective in decapitation strikes."
       research-mirv:
         cost-cash: 220000
+        max-level: 3
         duration-millis: 720000
         targeted: false
         public-visibility: true
         description: "Each launched warhead splits into multiple, overwhelming air defenses."
       research-counter-intelligence-doctrine:
         cost-cash: 110000
+        max-level: 3
         duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Your counter-intelligence is far more effective against enemy espionage."
       research-praetorian-guard:
         cost-cash: 120000
+        max-level: 3
         duration-millis: 420000
         targeted: false
         public-visibility: false
         description: "Your leadership protection is much stronger against assassination and decapitation."
       research-mass-media:
         cost-cash: 100000
+        max-level: 3
         duration-millis: 240000
         targeted: false
         public-visibility: false
         description: "Parades and praise keep their effect far longer before diminishing."
       research-propaganda-ministry:
         cost-cash: 110000
+        max-level: 3
         duration-millis: 300000
         targeted: false
         public-visibility: false

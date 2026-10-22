@@ -9,7 +9,13 @@ import java.util.UUID;
  */
 public interface ResearchGateway {
 
-    boolean hasResearch(UUID playerId, ActionType research);
+    /** The player's level in this tech; 0 if not researched. */
+    int level(UUID playerId, ActionType research);
 
-    void addResearch(UUID playerId, ActionType research);
+    default boolean hasResearch(UUID playerId, ActionType research) {
+        return level(playerId, research) > 0;
+    }
+
+    /** Raises the player's level in this tech by one (from 0 to 1 the first time). */
+    void advanceResearch(UUID playerId, ActionType research);
 }

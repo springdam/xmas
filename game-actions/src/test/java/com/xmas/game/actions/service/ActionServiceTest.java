@@ -127,12 +127,12 @@ class ActionServiceTest {
 
     private static final class AllResearchGateway implements com.xmas.game.actions.research.ResearchGateway {
         @Override
-        public boolean hasResearch(UUID playerId, ActionType research) {
-            return true;
+        public int level(UUID playerId, ActionType research) {
+            return 1;
         }
 
         @Override
-        public void addResearch(UUID playerId, ActionType research) {
+        public void advanceResearch(UUID playerId, ActionType research) {
         }
     }
 

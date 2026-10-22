@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 015-research-level
+      author: xmas
+      changes:
+        - addColumn:
+            tableName: player_research
+            columns:
+              - column:
+                  name: level
+                  type: INT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false

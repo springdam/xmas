@@ -159,6 +159,22 @@ components:
           description: Most of this a player may own in total (absent = no cap).
         requiredResearch:
           $ref: '#/components/schemas/ActionType'
+        maxLevel:
+          type: integer
+          format: int32
+          description: Research only - how many levels the tech has (1 = a one-off unlock).
+        levelCosts:
+          type: array
+          description: Research only - cost of each level (index 0 = level 1).
+          items:
+            type: integer
+            format: int64
+        levelDurationsMillis:
+          type: array
+          description: Research only - duration of each level (index 0 = level 1).
+          items:
+            type: integer
+            format: int64
     SubmitActionRequest:
       type: object
       required:

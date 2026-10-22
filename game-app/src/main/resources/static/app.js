@@ -715,10 +715,12 @@ function renderNation(me) {
 
   // Research
   const done = me.research || [];
-  const total = state.actions.filter((a) => a.category === "RESEARCH").length;
-  $("researchTitle").textContent = total ? `RESEARCH ${done.length}/${total}` : `RESEARCH ${done.length}`;
+  const techs = state.actions.filter((a) => a.category === "RESEARCH");
+  const levels = done.reduce((n, r) => n + techLevel(me, r), 0);
+  const total = techs.reduce((n, a) => n + (a.maxLevel || 1), 0);
+  $("researchTitle").textContent = total ? `RESEARCH ${levels}/${total}` : `RESEARCH ${levels}`;
   const chips = done.length
-    ? done.map((r) => el("span", "chip", researchName(r)))
+    ? done.map((r) => el("span", "chip", techLabel(r, techLevel(me, r))))
     : [el("span", "dim", "Nothing researched yet.")];
   $("researchList").replaceChildren(...chips);
 }
@@ -888,6 +890,24 @@ const takesQuantity = (def) =>
   def.actionType in OWNED || def.actionType === "SEND_MONEY" || def.actionType === "SPECIAL_WEAPON_ATTACK";
 const ownedCount = (me, type) => (OWNED[type] ? me[OWNED[type][0]]?.[OWNED[type][1]] ?? 0 : null);
 
+const ROMAN = ["", "I", "II", "III", "IV", "V"];
+/** Your level in a tech (0 = not researched). */
+const techLevel = (me, type) => me.researchLevels?.[type] ?? ((me.research || []).includes(type) ? 1 : 0);
+/** " II" for a leveled tech, "" for a one-off unlock. */
+const levelSuffix = (type, level) => {
+  const def = state.actions.find((a) => a.actionType === type);
+  return (def?.maxLevel || 1) > 1 ? ` ${ROMAN[level] || level}` : "";
+};
+/** "CRYPTOGRAPHY II" for leveled techs, plain name for one-off unlocks. */
+const techLabel = (type, level) => researchName(type) + levelSuffix(type, level);
+/** The action as it applies to you now: research carries its next level's cost and time. */
+function forMe(def, me) {
+  if (def.category !== "RESEARCH" || !def.levelCosts?.length) return def;
+  const level = techLevel(me, def.actionType);
+  const next = Math.min(level + 1, def.levelCosts.length);
+  return { ...def, costCash: def.levelCosts[next - 1], durationMillis: def.levelDurationsMillis[next - 1], level, nextLevel: next };
+}
+
 /** "$15,000", "Free", or "any sum" for sending money. */
 const costLabel = (def) =>
   def.actionType === "SEND_MONEY" ? "any sum" : def.costCash > 0 ? fmtCash(def.costCash) : "Free";
@@ -903,7 +923,10 @@ function blockReason(def, me, info) {
   const p = me.player;
   const research = me.research || [];
   if (p.eliminated) return "Your government has fallen";
-  if (def.category === "RESEARCH" && research.includes(def.actionType)) return "Researched";
+  def = forMe(def, me);
+  if (def.category === "RESEARCH" && techLevel(me, def.actionType) >= (def.maxLevel || 1)) {
+    return (def.maxLevel || 1) > 1 ? "Max level" : "Researched";
+  }
   if (def.category === "RESEARCH" && pendingOf(def.actionType).length) return "Research under way";
   if (def.category === "RESEARCH" && pending.some((p) => p.actionType.startsWith("RESEARCH_"))) return "Lab busy";
   if (def.requiredResearch && !research.includes(def.requiredResearch)) {
@@ -958,12 +981,13 @@ function buildActionGroups() {
       const btn = el("button", "action");
       btn.type = "button";
       const top = el("span", "top");
-      top.append(el("span", "name", actionLabel(def.actionType)), el("span", "cost", costLabel(def)));
+      const cost = el("span", "cost", costLabel(def));
+      top.append(el("span", "name", actionLabel(def.actionType)), cost);
       const meta = el("span", "meta");
       btn.append(top, meta);
       btn.addEventListener("click", () => openSheet(def.actionType, btn));
       rows.append(btn);
-      actionRows.set(def.actionType, { btn, meta });
+      actionRows.set(def.actionType, { btn, meta, cost });
     }
     details.append(summary, rows);
     return details;
@@ -974,15 +998,18 @@ function buildActionGroups() {
 function renderActions(me, info) {
   if (!state.actions.length) return;
   if (!actionRows.size) buildActionGroups();
-  for (const def of state.actions) {
-    const row = actionRows.get(def.actionType);
+  for (const base of state.actions) {
+    const row = actionRows.get(base.actionType);
     if (!row) continue;
-    const reason = blockReason(def, me, info);
-    const done = reason === "Researched";
+    const def = forMe(base, me);
+    const reason = blockReason(base, me, info);
+    const done = reason === "Researched" || reason === "Max level";
     row.btn.disabled = !!reason;
     row.btn.classList.toggle("done", done);
+    row.cost.textContent = done ? "" : costLabel(def);
     const busyCount = pendingOf(def.actionType).reduce((n, p) => n + p.quantity, 0);
-    let text = reason || `${fmtDuration(def.durationMillis)} · ${def.description || ""}`;
+    const levelNote = (def.maxLevel || 1) > 1 ? `Level ${def.level}/${def.maxLevel} · ` : "";
+    let text = `${levelNote}${reason || `${fmtDuration(def.durationMillis)} · ${def.description || ""}`}`;
     if (busyCount && !reason) text = `${busyCount} under way · ${text}`;
     row.meta.textContent = text;
   }
@@ -1024,10 +1051,12 @@ function addPending(def, body, completesAt, targetName) {
   // Builds: the count this batch will be on top of (including batches still in flight).
   const inFlight = pendingOf(def.actionType).reduce((n, p) => n + p.quantity, 0);
   const owned = ownedCount(game.me, def.actionType);
+  const baselineLevel = def.category === "RESEARCH" ? techLevel(game.me, def.actionType) : null;
   pending.push({
     actionType: def.actionType,
     quantity: takesQuantity(def) && def.actionType !== "SEND_MONEY" ? body.quantity : 1,
     targetId: body.targetPlayerId,
+    baselineLevel,
     targetName,
     completesAt: Date.parse(completesAt),
     baseline: owned == null ? null : owned + inFlight,
@@ -1051,7 +1080,7 @@ function landed(p) {
   const me = game.me;
   if (!me) return false;
   if (p.baseline != null) return ownedCount(me, p.actionType) >= p.baseline + p.quantity;
-  if (p.actionType.startsWith("RESEARCH_")) return (me.research || []).includes(p.actionType);
+  if (p.actionType.startsWith("RESEARCH_")) return techLevel(me, p.actionType) > (p.baselineLevel ?? 0);
   return false;
 }
 
@@ -1084,9 +1113,10 @@ function renderPending() {
 const sheet = { def: null, qty: 1, targetId: null, roster: [], opener: null };
 
 function openSheet(type, opener, targetId = null) {
-  const def = state.actions.find((a) => a.actionType === type);
   const me = game.me;
-  if (!def || !me) return;
+  const base = state.actions.find((a) => a.actionType === type);
+  if (!base || !me) return;
+  const def = forMe(base, me);
   Object.assign(sheet, { def, qty: type === "SEND_MONEY" ? 10000 : 1, targetId, roster: [], opener });
 
   $("sheetTitle").textContent = actionLabel(type);
@@ -1101,6 +1131,7 @@ function openSheet(type, opener, targetId = null) {
   }
   if (type === "SPECIAL_WEAPON_ATTACK") facts.push(["WARHEADS", String(me.specialWeapons?.nukes ?? 0)]);
   if (type === "HOLD_PARADE" && me.player.nextParadeGain != null) facts.push(["GAIN", `+${me.player.nextParadeGain}%`]);
+  if ((def.maxLevel || 1) > 1) facts.push(["LEVEL", `${def.level} → ${def.nextLevel} of ${def.maxLevel}`]);
   if (COVERT.has(type)) facts.push(["YOUR SPIES", String(spyCount(me))]);
   if (usesLand(def) && freeLand(me) !== Infinity) facts.push(["FREE LAND", String(freeLand(me))]);
   $("sheetFacts").replaceChildren(...facts.map(([k, v]) => {
@@ -1619,7 +1650,7 @@ function satelliteBlock(theirs) {
       box.append(row);
     }
   }
-  const tech = (theirs.research || []).map((r) => titleCase(researchName(r)));
+  const tech = (theirs.research || []).map((r) => titleCase(researchName(r)) + levelSuffix(r, techLevel(theirs, r)));
   const techLine = el("div", "full");
   techLine.append(el("span", "k dim", "Tech: "), tech.length ? tech.join(", ") : "none");
   box.append(el("span", "sub", "TECHNOLOGY"), techLine);

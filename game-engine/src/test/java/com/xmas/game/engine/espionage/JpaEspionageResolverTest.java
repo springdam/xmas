@@ -23,6 +23,7 @@ import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerEspionageEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
+import com.xmas.game.engine.entity.PlayerResearchEntity;
 import com.xmas.game.engine.protection.LeaderKillService;
 import com.xmas.game.engine.protection.ProtectionService;
 import com.xmas.game.engine.repository.GameRepository;
@@ -32,8 +33,10 @@ import com.xmas.game.engine.repository.PlayerMilitaryRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.repository.PlayerResearchRepository;
 import com.xmas.game.engine.research.ResearchModifierService;
+import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.newsfeed.domain.NewsVisibility;
 import com.xmas.game.newsfeed.service.NewsService;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -50,6 +53,8 @@ class JpaEspionageResolverTest {
     private final PlayerMilitaryRepository militaryRepository = mock(PlayerMilitaryRepository.class);
     private final NewsService newsService = mock(NewsService.class);
     private final IncomeService incomeService = mock(IncomeService.class);
+    private final PlayerResearchRepository researchRepository = mock(PlayerResearchRepository.class);
+    private final ResearchGateway researchGateway = mock(ResearchGateway.class);
     private long targetCash = 0;
     private PlayerEntity actor;
     private PlayerEntity target;
@@ -84,9 +89,9 @@ class JpaEspionageResolverTest {
         when(modifiers.popularityDamageMultiplier(any())).thenReturn(1.0);
 
         return new JpaEspionageResolver(playerRepository, espionageRepository, economyRepository,
-                militaryRepository, mock(PlayerResearchRepository.class), gameRepository,
+                militaryRepository, researchRepository, gameRepository,
                 random, new EspionageProperties(), new PopularityProperties(), modifiers,
-                mock(ResearchGateway.class), mock(ProtectionService.class), mock(LeaderKillService.class),
+                researchGateway, mock(ProtectionService.class), mock(LeaderKillService.class),
                 new SpecialForcesProperties(), newsService,
                 // building rolls of 0.15 against cyber strength 0.2 x fragility:
                 // farms 0.05, factories 0.12 survive; banks 0.16, robot factories 0.2 fall
@@ -163,5 +168,35 @@ class JpaEspionageResolverTest {
         // a fifth would be 200k; 24 ticks of 5k income caps it at 120k
         assertThat(actor.getCash()).isEqualTo(120_000);
         assertThat(target.getCash()).isEqualTo(880_000);
+    }
+
+    private PlayerResearchEntity tech(ActionType type, int level) {
+        return PlayerResearchEntity.builder().playerId(targetId).researchType(type).level(level).build();
+    }
+
+    @Test
+    void stealingTakesOneLevelOfATechTheTargetIsAheadIn() {
+        // Target: Cryptography L3 and Mass Media L1; the thief already has Mass Media L1.
+        when(researchRepository.findByPlayerId(targetId)).thenReturn(List.of(
+                tech(ActionType.RESEARCH_CRYPTOGRAPHY, 3), tech(ActionType.RESEARCH_MASS_MEDIA, 1)));
+        when(researchGateway.level(actorId, ActionType.RESEARCH_CRYPTOGRAPHY)).thenReturn(1);
+        when(researchGateway.level(actorId, ActionType.RESEARCH_MASS_MEDIA)).thenReturn(1);
+
+        resolver(0.0, 0.0).stealTechnology(actorId, targetId);   // success roll, then the pick
+
+        verify(researchGateway).advanceResearch(actorId, ActionType.RESEARCH_CRYPTOGRAPHY);
+        verify(researchGateway, never()).advanceResearch(actorId, ActionType.RESEARCH_MASS_MEDIA);
+    }
+
+    @Test
+    void nothingToStealWhenTheThiefIsNotBehind() {
+        when(researchRepository.findByPlayerId(targetId)).thenReturn(List.of(tech(ActionType.RESEARCH_CRYPTOGRAPHY, 2)));
+        when(researchGateway.level(actorId, ActionType.RESEARCH_CRYPTOGRAPHY)).thenReturn(2);
+
+        resolver(0.0).stealTechnology(actorId, targetId);
+
+        verify(researchGateway, never()).advanceResearch(any(), any());
+        verify(newsService).record(eq(gameId), any(), eq(NewsVisibility.INVOLVED_ONLY), eq(actorId), eq(targetId),
+                argThat(h -> h.contains("found no new technology")), any());
     }
 }

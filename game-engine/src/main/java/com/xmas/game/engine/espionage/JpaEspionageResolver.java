@@ -30,6 +30,7 @@ import com.xmas.game.newsfeed.domain.NewsType;
 import com.xmas.game.newsfeed.domain.NewsVisibility;
 import com.xmas.game.newsfeed.service.NewsService;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -133,20 +134,21 @@ public class JpaEspionageResolver implements EspionageResolver {
             recordFailure(actor, target, "technology theft", attempt.getSpiesCaught());
             return;
         }
-        ActionType stolen = null;
-        for (PlayerResearchEntity researched : researchRepository.findByPlayerId(targetId)) {
-            if (!researchGateway.hasResearch(actorId, researched.getResearchType())) {
-                stolen = researched.getResearchType();
-                break;
-            }
-        }
-        if (stolen == null) {
+        // One level of one tech the target is ahead in, picked at random.
+        List<ActionType> ahead = researchRepository.findByPlayerId(targetId).stream()
+                .filter(r -> r.getLevel() > researchGateway.level(actorId, r.getResearchType()))
+                .map(PlayerResearchEntity::getResearchType)
+                .sorted()
+                .toList();
+        if (ahead.isEmpty()) {
             record(actor, target, "%s infiltrated %s but found no new technology to steal.".formatted(
                     actor.getNation(), target.getNation()));
             return;
         }
-        researchGateway.addResearch(actorId, stolen);
-        record(actor, target, "%s stole %s from %s.".formatted(actor.getNation(), stolen, target.getNation()));
+        ActionType stolen = ahead.get(Math.min(ahead.size() - 1, (int) (random.nextDouble() * ahead.size())));
+        researchGateway.advanceResearch(actorId, stolen);
+        record(actor, target, "%s stole %s (level %d) from %s.".formatted(
+                actor.getNation(), stolen, researchGateway.level(actorId, stolen), target.getNation()));
     }
 
     @Override
@@ -171,7 +173,7 @@ public class JpaEspionageResolver implements EspionageResolver {
         StringBuilder techs = new StringBuilder();
         for (PlayerResearchEntity r : researchRepository.findByPlayerId(targetId)) {
             if (random.nextDouble() < clarity) {
-                techs.append(techs.isEmpty() ? "" : ", ").append(r.getResearchType());
+                techs.append(techs.isEmpty() ? "" : ", ").append(r.getResearchType()).append(" L").append(r.getLevel());
             }
         }
         return ("INTEL on %s (%.0f%% confidence) — Army: infantry %s, tanks %s, stealth bombers %s, special ops %s, "

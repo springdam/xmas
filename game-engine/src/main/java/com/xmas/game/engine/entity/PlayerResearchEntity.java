@@ -31,4 +31,8 @@ public class PlayerResearchEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "research_type", nullable = false)
     private ActionType researchType;
+
+    /** 1..maxLevel: researching (or stealing) a tech again takes it one level higher. */
+    @Column(name = "level", nullable = false)
+    private int level;
 }

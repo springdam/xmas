@@ -1,6 +1,7 @@
 package com.xmas.game.actions.service;
 
 import com.xmas.game.actions.config.ActionProperties;
+import com.xmas.game.actions.domain.ActionCategory;
 import com.xmas.game.actions.domain.ActionDefinition;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.common.error.BadRequestException;
@@ -34,8 +35,25 @@ public class ActionDefinitionCatalog {
                 .description(cfg.getDescription())
                 .maxTotal(cfg.getMaxTotal())
                 .requiredResearch(cfg.getRequiredResearch())
+                .maxLevel(type.getCategory() == ActionCategory.RESEARCH ? Math.max(1, cfg.getMaxLevel()) : 1)
+                .levelCosts(type.getCategory() == ActionCategory.RESEARCH
+                        ? perLevel(cfg.getCostCash(), cfg.getMaxLevel(), properties.getResearchLevelCostFactors())
+                        : List.of())
+                .levelDurationsMillis(type.getCategory() == ActionCategory.RESEARCH
+                        ? perLevel(cfg.getDurationMillis(), cfg.getMaxLevel(), properties.getResearchLevelDurationFactors())
+                        : List.of())
                 .build()));
         log.info("Loaded {} action definitions", definitions.size());
+    }
+
+    /** base x factor for each level; levels past the factor list reuse its last factor. */
+    private static List<Long> perLevel(long base, int maxLevel, List<Double> factors) {
+        List<Long> values = new ArrayList<>();
+        for (int level = 1; level <= Math.max(1, maxLevel); level++) {
+            double factor = factors.isEmpty() ? 1.0 : factors.get(Math.min(level, factors.size()) - 1);
+            values.add(Math.round(base * factor));
+        }
+        return values;
     }
 
     public ActionDefinition getDefinition(ActionType type) {
