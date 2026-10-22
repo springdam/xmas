@@ -140,6 +140,11 @@ public class GameTickService {
         List<PendingActionEntity> due = pendingActionRepository
                 .findByStatusAndCompletesAtLessThanEqualOrderByCompletesAt(PendingActionStatus.PENDING, Instant.now());
         for (PendingActionEntity pending : due) {
+            if (gameOver(pending.getActorPlayerId())) {
+                pending.setStatus(PendingActionStatus.CANCELLED);
+                pendingActionRepository.save(pending);
+                continue;
+            }
             try {
                 complete(pending);
                 pending.setStatus(PendingActionStatus.COMPLETED);
@@ -150,6 +155,14 @@ public class GameTickService {
             }
             pendingActionRepository.save(pending);
         }
+    }
+
+    /** Whether the actor's game has ended (someone reached Mars): their queued actions are void. */
+    private boolean gameOver(java.util.UUID playerId) {
+        return playerRepository.findById(playerId)
+                .flatMap(player -> gameRepository.findById(player.getGameId()))
+                .map(game -> game.getStatus() == GameStatus.ENDED)
+                .orElse(false);
     }
 
     private void complete(PendingActionEntity pending) {

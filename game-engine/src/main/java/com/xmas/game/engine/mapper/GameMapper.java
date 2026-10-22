@@ -41,7 +41,8 @@ public final class GameMapper {
                 .status(GameStatus.fromValue(game.getStatus().name()))
                 .currentTick(game.getCurrentTick())
                 .gameTime(game.getGameTime().atOffset(ZoneOffset.UTC))
-                .tickDurationMillis(game.getTickDurationMillis());
+                .tickDurationMillis(game.getTickDurationMillis())
+                .winnerPlayerId(game.getWinnerPlayerId());
     }
 
     public static GameListing toGameListing(GameService.Listing listing, String adminUsername) {

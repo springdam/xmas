@@ -3,6 +3,7 @@ package com.xmas.game.engine.state;
 import com.xmas.game.actions.domain.ActionCategory;
 import com.xmas.game.actions.domain.ActionType;
 import com.xmas.game.actions.state.PlayerStateGateway;
+import com.xmas.game.engine.domain.GameStatus;
 import com.xmas.game.engine.domain.PendingActionStatus;
 import com.xmas.game.engine.economy.LandService;
 import com.xmas.game.engine.entity.GameEntity;
@@ -56,6 +57,11 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
         if (player.isEliminated()) {
             throw new BadRequestException("This nation's government has collapsed and can no longer act");
         }
+        gameRepository.findById(player.getGameId())
+                .filter(game -> game.getStatus() == GameStatus.ENDED)
+                .ifPresent(game -> {
+                    throw new BadRequestException("The game is over");
+                });
     }
 
     @Override

@@ -295,6 +295,10 @@ components:
         tickDurationMillis:
           type: integer
           format: int64
+        winnerPlayerId:
+          type: string
+          format: uuid
+          description: Set when the game ends - the player who launched the Mars mission.
     GameListing:
       type: object
       required:

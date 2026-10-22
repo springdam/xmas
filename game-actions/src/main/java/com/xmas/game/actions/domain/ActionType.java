@@ -77,7 +77,8 @@ public enum ActionType {
     SPACE_SECONDARY_BOOSTERS(ActionCategory.SPACE),
     SPACE_COMMAND_MODULE(ActionCategory.SPACE),
     SPACE_LANDING_MODULE(ActionCategory.SPACE),
-    SPACE_SUPPORT_MODULE(ActionCategory.SPACE);
+    SPACE_SUPPORT_MODULE(ActionCategory.SPACE),
+    SPACE_LAUNCH(ActionCategory.SPACE);
 
     private final ActionCategory category;
 

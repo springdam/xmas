@@ -139,6 +139,7 @@ components:
         - SPACE_COMMAND_MODULE
         - SPACE_LANDING_MODULE
         - SPACE_SUPPORT_MODULE
+        - SPACE_LAUNCH
     ActionDefinition:
       type: object
       required:

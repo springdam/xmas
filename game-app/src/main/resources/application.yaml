@@ -494,6 +494,12 @@ game:
         public-visibility: false
         requires-built: SPACE_THIRD_STAGE
         description: "Build the support module: air, water and supplies for the colony."
+      space-launch:
+        cost-cash: 250000
+        duration-millis: 0
+        targeted: false
+        public-visibility: true
+        description: "Fuel up and launch the finished ship to Mars. The first nation to launch wins the game."
 
 server:
   port: 8080

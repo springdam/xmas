@@ -387,6 +387,46 @@ strong { font-weight: normal; color: var(--accent); }
 .palace-part .what .hd { display: block; font-size: 11px; }
 .palace-part .btn { min-height: 36px; padding: 0 10px; }
 .palace-thumb { display: flex; flex-direction: column; gap: 4px; }
+.roster.board li.out { opacity: 0.45; filter: grayscale(1); }
+
+/* ---------- Finale: launch, winner, final standings ---------- */
+.finale {
+  position: fixed; inset: 0; z-index: 70; overflow-y: auto;
+  background: var(--bg); padding: 16px;
+}
+.finale-step { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.finale-title { margin: 4px 0 0; text-align: center; font-size: 20px; }
+.launch-wrap { position: relative; }
+.launch-scene svg { display: block; width: 100%; height: auto; border: 2px solid; border-color: var(--lo) var(--hi) var(--hi) var(--lo); }
+.countdown {
+  position: absolute; inset: 0; margin: 0; display: grid; place-items: center;
+  font-size: 48px; color: #ffffff; text-shadow: 3px 3px 0 #000; pointer-events: none;
+}
+.winner-name { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0; font-size: 18px; }
+.overall-winner {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px;
+  background: var(--accent); color: var(--accentInk); border: 2px solid; border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+}
+.overall-winner .dim { color: inherit; opacity: 0.8; }
+
+/* Ship art: flames and smoke only show during a launch. */
+.ship-flame, .ship-smoke { opacity: 0; }
+.launching .ship { animation: ship-rise 5.5s cubic-bezier(0.55, 0, 0.9, 0.6) 3.4s forwards; }
+.launching .ship-flame { animation: flame-on 0.3s 2.9s forwards, flame-flicker 0.14s steps(2) 3.2s infinite; transform-box: fill-box; transform-origin: 50% 0; }
+.launching .ship-smoke { animation: smoke-puff 4.5s ease-out 3s forwards; transform-box: fill-box; transform-origin: center; }
+.launching svg { animation: launch-shake 0.08s linear 3s 30; }
+@keyframes ship-rise {
+  0% { transform: translateY(0); } 8% { transform: translateY(-1px); } 100% { transform: translateY(-260px); }
+}
+@keyframes flame-on { to { opacity: 1; } }
+@keyframes flame-flicker { 50% { transform: scaleY(1.25); } }
+@keyframes smoke-puff {
+  0% { opacity: 0; transform: scale(0.3); } 20% { opacity: 0.9; } 100% { opacity: 0.35; transform: scale(2.6); }
+}
+@keyframes launch-shake { 50% { transform: translate(1px, -1px); } }
+@media (prefers-reduced-motion: reduce) {
+  .launching .ship, .launching svg { animation: none !important; }
+}
 .space-preview svg { display: block; width: 100%; height: auto; border: 2px solid; border-color: var(--lo) var(--hi) var(--hi) var(--lo); }
 .roster.board { margin: 0; padding: 4px 10px 6px; }
 .roster.board li.me .name { color: var(--accent); }

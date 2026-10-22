@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 019-game-winner
+      author: xmas
+      changes:
+        - addColumn:
+            tableName: game
+            columns:
+              - column:
+                  name: winner_player_id
+                  type: UUID

@@ -563,6 +563,7 @@ async function pollGame() {
   if (feed) receiveNews(feed);
   if (!adminView) receiveRoster(roster);
   renderBanners(info, me.player, adminView);
+  if (info.status === "ENDED" && info.winnerPlayerId) showFinale(info, roster);
 }
 
 function renderPlayer(me, info) {
@@ -833,6 +834,7 @@ function renderNation(me) {
 
 function renderBanners(info, p, adminView) {
   const banners = [];
+  if (info.status === "ENDED") banners.push(["info", "THE GAME IS OVER: SOMEONE REACHED MARS. TAP FOR THE RESULTS."]);
   if (info.status === "PAUSED") banners.push(["info", "GAME PAUSED BY THE ADMIN"]);
   if (!adminView && p.eliminated) {
     banners.push(["bad", "YOUR GOVERNMENT HAS FALLEN. YOU CAN NO LONGER ACT."]);
@@ -843,6 +845,10 @@ function renderBanners(info, p, adminView) {
   $("banners").replaceChildren(...banners.map(([kind, text]) => {
     const b = el("div", `banner ${kind}`, text);
     b.setAttribute("role", "status");
+    if (info.status === "ENDED" && kind === "info" && text.startsWith("THE GAME IS OVER")) {
+      b.style.cursor = "pointer";
+      b.addEventListener("click", () => openFinale("board"));
+    }
     return b;
   }));
 }
@@ -983,7 +989,7 @@ const SPY_RISK = "If it fails, some of your spies may be caught, and the target 
 const spyCount = (me) => me.espionage?.spies ?? 0;
 
 const actionLabel = (type) =>
-  LABELS[type] || (type.startsWith("RESEARCH_") ? researchName(type)
+  LABELS[type] || (type === "SPACE_LAUNCH" ? "LAUNCH TO MARS" : type.startsWith("RESEARCH_") ? researchName(type)
     : type.replace(/^SPACE_/, "").replaceAll("_", " "));
 const titleCase = (s) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 const isDemolish = (def) => def.actionType.startsWith("DEMOLISH_");
@@ -1043,7 +1049,10 @@ function blockReason(def, me, info) {
   if (def.maxTotal != null && ownedCount(me, def.actionType) >= def.maxTotal) return `Maximum of ${def.maxTotal} reached`;
   if (def.actionType === "SPECIAL_WEAPON_ATTACK" && !(me.specialWeapons?.nukes > 0)) return "No warheads built";
   if (def.actionType === "DECLARE_PEACE" && !(me.relations || []).some((r) => r.status === "WAR")) return "Not at war";
-  if (def.category === "SPACE") {
+  if (def.actionType === "SPACE_LAUNCH") {
+    const parts = me.spaceProgram || [];
+    if (!SPACE_PARTS.every((part) => parts.includes(part))) return "Needs the whole ship";
+  } else if (def.category === "SPACE") {
     const built = me.spaceProgram || [];
     if (built.includes(def.actionType)) return "Built";
     if (pendingOf(def.actionType).length) return "Under construction";
@@ -1805,22 +1814,85 @@ const fmtShortCash = (n) => (n >= 1e6 ? `$${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}
 
 let boardSig = "";
 
-/** Nations ranked by palace value; fallen nations keep their place at the bottom. */
+/** Leaderboard rows: every nation ranked by palace value; fallen nations greyed out. */
+function boardRows(nations) {
+  return [...nations]
+    .sort((a, b) => (b.palaceValue ?? 0) - (a.palaceValue ?? 0))
+    .map((p) => {
+      const li = el("li", `${p.id === state.playerId ? "me" : ""}${p.eliminated ? " out" : ""}`.trim());
+      const flag = el("span", "flag");
+      flag.dataset.nation = p.nation || "";
+      flag.setAttribute("aria-hidden", "true");
+      li.append(flag, el("span", "name", `${formatNation(p.nation)} · ${p.username}`),
+        el("span", "value", fmtCash(p.palaceValue ?? 0)));
+      if (p.eliminated) li.title = "Fallen";
+      return li;
+    });
+}
+
 function renderLeaderboard(nations) {
-  const ranked = [...nations].sort((a, b) =>
-    Number(a.eliminated) - Number(b.eliminated) || (b.palaceValue ?? 0) - (a.palaceValue ?? 0));
-  const sig = JSON.stringify(ranked.map((p) => [p.id, p.palaceValue, p.eliminated]));
+  const sig = JSON.stringify(nations.map((p) => [p.id, p.palaceValue, p.eliminated]));
   if (sig === boardSig) return;
   boardSig = sig;
-  $("leaderboard").replaceChildren(...ranked.map((p) => {
-    const li = el("li", `${p.id === state.playerId ? "me" : ""}${p.eliminated ? " out" : ""}`.trim());
-    const flag = el("span", "flag");
-    flag.dataset.nation = p.nation || "";
-    flag.setAttribute("aria-hidden", "true");
-    li.append(flag, el("span", "name", `${formatNation(p.nation)} · ${p.username}`),
-      el("span", "value", p.eliminated ? "FALLEN" : fmtCash(p.palaceValue ?? 0)));
-    return li;
-  }));
+  $("leaderboard").replaceChildren(...boardRows(nations));
+}
+
+// ---------------------------------------------------------------------
+// Finale: the winner launched to Mars. Launch, winner, final standings.
+// ---------------------------------------------------------------------
+
+let finaleFor = null;      // game id the finale was set up for
+const finaleTimers = [];
+
+async function showFinale(info, roster) {
+  if (finaleFor === info.id) return;
+  finaleFor = info.id;
+  const nations = roster.filter((p) => !p.admin);
+  const winner = roster.find((p) => p.id === info.winnerPlayerId) || {};
+  let palace = null;
+  try { palace = (await api("GET", `/players/${info.winnerPlayerId}`)).palace; } catch { /* drawn bare */ }
+
+  const name = `${formatNation(winner.nation)} · ${winner.username || "?"}`;
+  for (const [flagId, nameId] of [["winnerFlag", "winnerName"], ["overallFlag", "overallName"]]) {
+    $(flagId).dataset.nation = winner.nation || "";
+    $(nameId).textContent = name;
+  }
+  $("winnerPalace").innerHTML = palaceArt(palace || {});
+  $("winnerLine").textContent = winner.id === state.playerId
+    ? "Your colonists are on their way to Mars. You win!"
+    : `${formatNation(winner.nation)} reached Mars first and wins the game.`;
+  $("launchCaption").textContent = `${formatNation(winner.nation)} launches its colony ship.`;
+  $("finalBoard").replaceChildren(...boardRows(nations));
+  openFinale("launch");
+}
+
+function openFinale(step) {
+  $("finale").hidden = false;
+  for (const node of document.querySelectorAll(".finale-step")) node.hidden = node.dataset.step !== step;
+  if (step === "launch") playLaunch();
+  $("finale").scrollTop = 0;
+}
+
+/** Countdown, ignition, liftoff: the winner's finished ship leaves for Mars. */
+function playLaunch() {
+  finaleTimers.splice(0).forEach(clearTimeout);
+  const scene = $("launchScene");
+  scene.classList.remove("launching");
+  scene.innerHTML = spaceshipArt(SPACE_PARTS);
+  void scene.offsetWidth;                         // restart the CSS animations
+  scene.classList.add("launching");
+  const say = (text, at) => finaleTimers.push(setTimeout(() => { $("countdown").textContent = text; }, at));
+  say("3", 0); say("2", 1000); say("1", 2000); say("LIFTOFF!", 3000); say("", 5200);
+}
+
+function initFinale() {
+  for (const btn of document.querySelectorAll("[data-finale]")) {
+    btn.addEventListener("click", () => {
+      const go = btn.dataset.finale;
+      if (go === "close") { finaleTimers.splice(0).forEach(clearTimeout); $("finale").hidden = true; return; }
+      openFinale(go === "replay" ? "launch" : go);
+    });
+  }
 }
 
 /** Their palace (public to everyone), once their state has loaded. */
@@ -1917,6 +1989,7 @@ function resetWorld() {
 
 function initGame() {
   initSheet();
+  initFinale();
   for (const node of document.querySelectorAll("[data-close-picker]")) {
     node.addEventListener("click", () => { $("stylePicker").hidden = true; });
   }

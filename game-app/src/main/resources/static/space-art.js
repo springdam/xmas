@@ -77,6 +77,18 @@ const spaceshipArt = (() => {
     tower.push(rect(182, 14, 24, 5, red), circle(194, 11, 2, "#ff4040", { detail: true }));
     part("SPACE_LAUNCH_TOWER", tower);
 
+    // Everything from here to the capsule lifts off together (class "ship"); flames and smoke
+    // only show while a launch plays (class "launching" on a parent, see styles.css).
+    body.push('<g class="ship">');
+    const flame = (cx, w, len) => shape("path", {
+      class: "ship-flame", fill: lin(["#fff6c0", "#ffb020", "#ff5a10", "rgba(255,60,0,0)"], 0, 1),
+      // Positioned in the path itself: the flicker animation owns the transform.
+      d: `M${cx - w / 2} 136Q${cx} ${136 + len * 1.2} ${cx + w / 2} 136Z`,
+    });
+    for (const cx of [118, 128, 138]) flame(cx, 7, 26);
+    for (const cx of [103.5, 152.5]) flame(cx, 9, 22);
+    for (const cx of [89, 167]) flame(cx, 7, 16);
+
     // ---- secondary boosters (outer pair) -----------------------------------------------
     const booster = (x, w, top, bottom) => [
       rect(x, top, w, bottom - top, white, { stroke: "#5a606c", sw: 0.5 }),
@@ -127,6 +139,11 @@ const spaceshipArt = (() => {
       path("M128 8V1", "none", { stroke: "#c8303a", sw: 1.2 }),
       circle(128, 16, 1.6, "#6fb2e0", { detail: true }),
     ]);
+
+    body.push("</g>");
+    for (const [x, r] of [[96, 10], [112, 13], [128, 15], [144, 13], [160, 10], [80, 8], [176, 8]]) {
+      shape("circle", { class: "ship-smoke", cx: x, cy: GROUND - 2, r, fill: "#d8dce4" });
+    }
 
     if (SPACE_PARTS.every((p) => has.has(p))) {                                                    // ready: venting steam
       for (const [x, r] of [[110, 7], [146, 8], [100, 5], [156, 6]]) shape("circle", { cx: x, cy: GROUND - 4, r, fill: "#e8ecf2", opacity: 0.5 });

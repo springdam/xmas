@@ -12,4 +12,10 @@ public interface SpaceGateway {
     boolean hasPart(UUID playerId, ActionType part);
 
     void addPart(UUID playerId, ActionType part);
+
+    /** Whether every part of the ship is built. */
+    boolean shipComplete(UUID playerId);
+
+    /** Launches the ship: the player wins and the game ends. */
+    void launch(UUID playerId);
 }

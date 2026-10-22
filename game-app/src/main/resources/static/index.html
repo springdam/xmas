@@ -265,6 +265,46 @@
 </div>
 
 <!-- Action dialog ------------------------------------------------------ -->
+<!-- Finale: someone reached Mars. Launch, winner, final leaderboard ------------- -->
+<div id="finale" class="finale" hidden>
+  <section class="finale-step" data-step="launch">
+    <h2 class="hd finale-title">LAUNCH TO MARS</h2>
+    <div class="launch-wrap">
+      <div id="launchScene" class="launch-scene"></div>
+      <p id="countdown" class="countdown hd" aria-live="polite"></p>
+    </div>
+    <p id="launchCaption" class="center"></p>
+    <div class="row2">
+      <button type="button" class="btn" data-finale="replay">REPLAY</button>
+      <button type="button" class="btn pri" data-finale="winner">CONTINUE</button>
+    </div>
+  </section>
+  <section class="finale-step" data-step="winner" hidden>
+    <h2 class="hd finale-title">VICTORY</h2>
+    <div id="winnerPalace" class="palace-art"></div>
+    <p class="winner-name"><span id="winnerFlag" class="flag" aria-hidden="true"></span><span id="winnerName" class="hd"></span></p>
+    <p id="winnerLine" class="center"></p>
+    <div class="row2">
+      <button type="button" class="btn" data-finale="launch">BACK</button>
+      <button type="button" class="btn pri" data-finale="board">CONTINUE</button>
+    </div>
+  </section>
+  <section class="finale-step" data-step="board" hidden>
+    <h2 class="hd finale-title">FINAL STANDINGS</h2>
+    <div class="overall-winner">
+      <span class="hd label">OVERALL WINNER</span>
+      <p class="winner-name"><span id="overallFlag" class="flag" aria-hidden="true"></span><span id="overallName" class="hd"></span></p>
+      <span class="dim small">First to reach Mars</span>
+    </div>
+    <span class="hd label">PALACE LEADERBOARD</span>
+    <ol id="finalBoard" class="roster board"></ol>
+    <div class="row2">
+      <button type="button" class="btn" data-finale="replay">REPLAY LAUNCH</button>
+      <button type="button" class="btn pri" data-finale="close">CLOSE</button>
+    </div>
+  </section>
+</div>
+
 <!-- Palace style picker: shown once a game starts, until the player picks ------- -->
 <div id="stylePicker" class="sheet" hidden>
   <div class="sheet-shade dither" data-close-picker></div>

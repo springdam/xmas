@@ -1,6 +1,10 @@
 package com.xmas.game.engine.space;
 
+import com.xmas.game.actions.domain.ActionCategory;
 import com.xmas.game.actions.domain.ActionType;
+import com.xmas.game.common.error.BadRequestException;
+import com.xmas.game.common.error.NotFoundException;
+import com.xmas.game.engine.domain.GameStatus;
 import com.xmas.game.actions.space.SpaceGateway;
 import com.xmas.game.engine.entity.GameEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
@@ -12,6 +16,7 @@ import com.xmas.game.newsfeed.domain.NewsType;
 import com.xmas.game.newsfeed.domain.NewsVisibility;
 import com.xmas.game.newsfeed.service.NewsService;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +48,33 @@ public class JpaSpaceGateway implements SpaceGateway {
                 "Your engineers completed the %s for the Mars mission.".formatted(
                         part.name().replace("SPACE_", "").replace('_', ' ').toLowerCase()),
                 gameTime(player)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean shipComplete(UUID playerId) {
+        List<ActionType> built = parts(playerId);
+        return Arrays.stream(ActionType.values())
+                .filter(type -> type.getCategory() == ActionCategory.SPACE && type != ActionType.SPACE_LAUNCH)
+                .allMatch(built::contains);
+    }
+
+    @Override
+    @Transactional
+    public void launch(UUID playerId) {
+        PlayerEntity player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new NotFoundException("Player not found: " + playerId));
+        GameEntity game = gameRepository.findById(player.getGameId())
+                .orElseThrow(() -> new NotFoundException("Game not found: " + player.getGameId()));
+        if (game.getStatus() != GameStatus.RUNNING) {
+            throw new BadRequestException("The game is not running");
+        }
+        game.setStatus(GameStatus.ENDED);
+        game.setWinnerPlayerId(playerId);
+        gameRepository.save(game);
+        newsService.record(game.getId(), NewsType.DIPLOMACY, NewsVisibility.PUBLIC, playerId, null,
+                "%s launched its colony ship to Mars and wins the game!".formatted(player.getNation()),
+                game.getGameTime());
     }
 
     /** The parts a player has built, for their own eyes only. */

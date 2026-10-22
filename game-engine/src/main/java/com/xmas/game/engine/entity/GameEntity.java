@@ -41,4 +41,8 @@ public class GameEntity {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    /** The player who launched the Mars mission and won; null while the game is undecided. */
+    @Column(name = "winner_player_id")
+    private UUID winnerPlayerId;
 }
