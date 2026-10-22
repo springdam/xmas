@@ -6,15 +6,19 @@ import com.xmas.game.combat.domain.CombatOutcome;
 import com.xmas.game.combat.domain.UnitType;
 import com.xmas.game.combat.service.CombatCalculator;
 import com.xmas.game.common.error.NotFoundException;
+import com.xmas.game.engine.config.EconomyProperties;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.config.SpecialForcesProperties;
 import com.xmas.game.engine.domain.Popularity;
+import com.xmas.game.engine.economy.BuildingDamageService;
 import com.xmas.game.engine.entity.GameEntity;
+import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
 import com.xmas.game.engine.protection.LeaderKillService;
 import com.xmas.game.engine.protection.ProtectionService;
 import com.xmas.game.engine.repository.GameRepository;
+import com.xmas.game.engine.repository.PlayerEconomyRepository;
 import com.xmas.game.engine.repository.PlayerMilitaryRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
 import com.xmas.game.engine.research.ResearchModifierService;
@@ -43,6 +47,9 @@ public class JpaCombatResolver implements CombatResolver {
     private final PopularityProperties popularityProperties;
     private final SpecialForcesProperties specialForcesProperties;
     private final NewsService newsService;
+    private final PlayerEconomyRepository economyRepository;
+    private final BuildingDamageService buildingDamageService;
+    private final EconomyProperties economyProperties;
 
     @Override
     @Transactional
@@ -72,7 +79,13 @@ public class JpaCombatResolver implements CombatResolver {
         applyLosses(defenderMil, outcome, false);
         militaryRepository.save(attackerMil);
         militaryRepository.save(defenderMil);
+        BuildingDamageService.Losses buildingsLost = null;
         if (outcome.isAttackerVictory()) {
+            // A beaten defender's economy takes damage in proportion to how badly they lost.
+            PlayerEconomyEntity economy = economy(defenderPlayerId);
+            buildingsLost = buildingDamageService.strike(economy,
+                    outcome.getDefenderLossFraction() * economyProperties.getBattleDamageScale());
+            economyRepository.save(economy);
             // Repeated defeats hurt less: the public is already braced for bad news.
             int penalty = (int) Math.round(popularityProperties.getAttackVictimPenalty()
                     * Math.pow(popularityProperties.getAttackPenaltyDecay(), defender.getWarStrain())
@@ -83,7 +96,8 @@ public class JpaCombatResolver implements CombatResolver {
         }
 
         newsService.record(attacker.getGameId(), NewsType.ATTACK, NewsVisibility.PUBLIC,
-                attackerPlayerId, defenderPlayerId, headline(attacker, defender, outcome), gameTime(attacker));
+                attackerPlayerId, defenderPlayerId, headline(attacker, defender, outcome, buildingsLost),
+                gameTime(attacker));
         log.info("Attack {} -> {} resolved (attackerVictory={})",
                 attackerPlayerId, defenderPlayerId, outcome.isAttackerVictory());
     }
@@ -136,7 +150,10 @@ public class JpaCombatResolver implements CombatResolver {
         return attackerSide ? outcome.attackerLost(type) : outcome.defenderLost(type);
     }
 
-    private String headline(PlayerEntity attacker, PlayerEntity defender, CombatOutcome outcome) {
+    private String headline(PlayerEntity attacker, PlayerEntity defender, CombatOutcome outcome,
+                            BuildingDamageService.Losses buildingsLost) {
+        String ruins = buildingsLost == null || !buildingsLost.any() ? ""
+                : " Destroyed in %s: %s.".formatted(defender.getNation(), BuildingDamageService.describe(buildingsLost));
         return "%s attacked %s%s. Defender lost %d inf / %d tanks / %d bombers / %d ops; attacker lost %d inf / %d tanks / %d bombers / %d ops."
                 .formatted(
                         attacker.getNation(), defender.getNation(),
@@ -144,7 +161,8 @@ public class JpaCombatResolver implements CombatResolver {
                         outcome.defenderLost(UnitType.INFANTRY), outcome.defenderLost(UnitType.TANK),
                         outcome.defenderLost(UnitType.STEALTH_BOMBER), outcome.defenderLost(UnitType.SPECIAL_OPS),
                         outcome.attackerLost(UnitType.INFANTRY), outcome.attackerLost(UnitType.TANK),
-                        outcome.attackerLost(UnitType.STEALTH_BOMBER), outcome.attackerLost(UnitType.SPECIAL_OPS));
+                        outcome.attackerLost(UnitType.STEALTH_BOMBER), outcome.attackerLost(UnitType.SPECIAL_OPS))
+                + ruins;
     }
 
     private CombatForce force(PlayerMilitaryEntity mil) {
@@ -165,6 +183,11 @@ public class JpaCombatResolver implements CombatResolver {
     private PlayerEntity player(UUID playerId) {
         return playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found: " + playerId));
+    }
+
+    private PlayerEconomyEntity economy(UUID playerId) {
+        return economyRepository.findById(playerId)
+                .orElseThrow(() -> new NotFoundException("Player economy not found: " + playerId));
     }
 
     private PlayerMilitaryEntity military(UUID playerId) {

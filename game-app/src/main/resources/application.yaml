@@ -34,6 +34,9 @@ game:
     bank-yield: 310
     industry-per-farm: 3
     unfed-industry-factor: 0.5
+    # A beaten defender loses buildings: strength = share of their forces destroyed x this.
+    # Each building falls with chance strength x fragility (robot 1.0, bank 0.8, factory 0.6, farm 0.05).
+    battle-damage-scale: 0.3
   upkeep:
     infantry: 5
     tank: 20

@@ -14,7 +14,7 @@ class BuildingDamageServiceTest {
 
     @Test
     void sturdyBuildingsSurviveWhereFragileOnesFall() {
-        // strength 0.5: farms 0.125, factories 0.3, banks 0.4, robot factories 0.5; every roll is 0.35
+        // strength 0.5: farms 0.025, factories 0.3, banks 0.4, robot factories 0.5; every roll is 0.35
         PlayerEconomyEntity economy = economy();
         BuildingDamageService.Losses losses =
                 new BuildingDamageService(new EconomyProperties(), () -> 0.35).strike(economy, 0.5);
@@ -30,10 +30,10 @@ class BuildingDamageServiceTest {
     @Test
     void chanceIsCappedAtCertainDestruction() {
         PlayerEconomyEntity economy = economy();
-        new BuildingDamageService(new EconomyProperties(), () -> 0.99).strike(economy, 5.0);
+        new BuildingDamageService(new EconomyProperties(), () -> 0.99).strike(economy, 25.0);
 
-        assertThat(economy.getRobotFactories()).isZero();   // 5 x 1.0 capped at 1
-        assertThat(economy.getFarms()).isZero();            // 5 x 0.25 capped at 1
+        assertThat(economy.getRobotFactories()).isZero();   // 25 x 1.0 capped at 1
+        assertThat(economy.getFarms()).isZero();            // 25 x 0.05 capped at 1
     }
 
     @Test

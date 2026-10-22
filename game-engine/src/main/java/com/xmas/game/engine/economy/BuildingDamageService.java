@@ -28,6 +28,10 @@ public class BuildingDamageService {
         int factories;
         int robotFactories;
         int banks;
+
+        public boolean any() {
+            return farms + factories + robotFactories + banks > 0;
+        }
     }
 
     /** Rolls every building of the economy against the strike and removes the destroyed ones. */

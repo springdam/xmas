@@ -49,6 +49,7 @@ public class CombatCalculator {
                 .attackerVictory(victoryRoll < attackerShare)
                 .attackerLosses(losses(attacker, attackerLossFraction))
                 .defenderLosses(losses(defender, defenderLossFraction))
+                .defenderLossFraction(defenderLossFraction)
                 .build();
     }
 

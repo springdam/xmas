@@ -31,8 +31,14 @@ public class EconomyProperties {
      * How easily each building is destroyed when struck (cyber attack, nuke): a building is
      * lost with chance strikeStrength * fragility. Less productive buildings are sturdier.
      */
-    private double farmFragility = 0.25;
+    private double farmFragility = 0.05;
     private double factoryFragility = 0.6;
     private double bankFragility = 0.8;
     private double robotFactoryFragility = 1.0;
+
+    /**
+     * A defender who loses a battle has their buildings struck with strength
+     * (share of their forces destroyed) x this, so heavier defeats wreck more of the economy.
+     */
+    private double battleDamageScale = 0.3;
 }
