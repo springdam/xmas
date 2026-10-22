@@ -21,6 +21,10 @@ public class PopularityProperties {
     private int praiseBonus = 4;
     /** Each successive parade/praise on a player is multiplied by decay^boostCount until they hold an election. */
     private double paradePraiseDecay = 0.6;
+    /** Ticks between two parades by the same nation. */
+    private long paradeCooldownTicks = 36;
+    /** Every this many ticks a player's boost count drops by one, so parades and praise slowly regain strength. */
+    private long boostRecoveryTicks = 120;
     /** How many ticks a player is frozen (military actions only) after holding an election. */
     private long electionFreezeTicks = 60;
 

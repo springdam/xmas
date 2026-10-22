@@ -60,6 +60,8 @@ game:
     parade-bonus: 8
     praise-bonus: 4
     parade-praise-decay: 0.6
+    parade-cooldown-ticks: 36       # 3 minutes between parades
+    boost-recovery-ticks: 120       # parades/praise regain one step of strength every 10 minutes
     election-freeze-ticks: 60
   nations:
     # Every nation starts with the same assets; the nation is only a flag and a name.

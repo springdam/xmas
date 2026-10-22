@@ -54,6 +54,10 @@ public class PlayerEntity {
     @Column(name = "frozen_until_tick", nullable = false)
     private long frozenUntilTick;
 
+    /** Tick of the player's last parade, or null if they never held one (parades have a cooldown). */
+    @Column(name = "last_parade_tick")
+    private Long lastParadeTick;
+
     /** Recent battles lost; each makes the next defeat hurt popularity less. Recovers over time. */
     @Column(name = "war_strain", nullable = false)
     private int warStrain;

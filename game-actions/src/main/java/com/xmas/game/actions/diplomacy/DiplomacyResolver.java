@@ -18,6 +18,9 @@ public interface DiplomacyResolver {
 
     void sendMoney(UUID actorPlayerId, UUID targetPlayerId, long amount);
 
+    /** Throws unless the actor may hold a parade now (cooldown over, and it would still raise popularity). */
+    void assertCanHoldParade(UUID actorPlayerId);
+
     void holdParade(UUID actorPlayerId);
 
     void praiseLeader(UUID actorPlayerId, UUID targetPlayerId);

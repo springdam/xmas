@@ -26,6 +26,7 @@ public class HoldParadeHandler implements ActionHandler {
         if (state.getCash(ctx.getActorPlayerId()) < ctx.getDefinition().getCostCash()) {
             throw new BadRequestException("Insufficient funds to hold a parade");
         }
+        diplomacyResolver.assertCanHoldParade(ctx.getActorPlayerId());
     }
 
     @Override

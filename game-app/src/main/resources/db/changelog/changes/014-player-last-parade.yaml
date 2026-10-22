@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 014-player-last-parade
+      author: xmas
+      changes:
+        - addColumn:
+            tableName: player
+            columns:
+              - column:
+                  name: last_parade_tick
+                  type: BIGINT

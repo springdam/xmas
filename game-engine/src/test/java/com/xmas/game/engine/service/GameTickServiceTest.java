@@ -222,6 +222,29 @@ class GameTickServiceTest {
     }
 
     @Test
+    void tick_paradeStrengthRecoversEveryTenMinutes() {
+        UUID gameId = UUID.randomUUID();
+        GameEntity game = GameEntity.builder()
+                .id(gameId).status(GameStatus.RUNNING).currentTick(118)
+                .gameTime(Instant.parse("2026-01-01T00:00:00Z")).tickDurationMillis(5000).createdAt(Instant.now())
+                .build();
+        PlayerEntity player = PlayerEntity.builder()
+                .id(UUID.randomUUID()).gameId(gameId).accountId(UUID.randomUUID())
+                .cash(0).popularity(50).popularityBoostCount(3).joinedAt(Instant.now())
+                .build();
+        when(gameRepository.findByStatus(GameStatus.RUNNING)).thenReturn(List.of(game));
+        when(playerRepository.findByGameId(gameId)).thenReturn(List.of(player));
+        when(pendingActionRepository
+                .findByStatusAndCompletesAtLessThanEqualOrderByCompletesAt(eq(PendingActionStatus.PENDING), any()))
+                .thenReturn(List.of());
+
+        tickService.tick(); // tick 119
+        assertThat(player.getPopularityBoostCount()).isEqualTo(3);
+        tickService.tick(); // tick 120: one step back every 120 ticks
+        assertThat(player.getPopularityBoostCount()).isEqualTo(2);
+    }
+
+    @Test
     void tick_warStrainRecoversOnlyOnRecoveryTicks() {
         UUID gameId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();

@@ -8,6 +8,7 @@ import com.xmas.game.engine.api.model.GameResponse;
 import com.xmas.game.engine.api.model.PlayerResponse;
 import com.xmas.game.engine.api.model.PlayerStateResponse;
 import com.xmas.game.engine.config.EconomyProperties;
+import com.xmas.game.engine.diplomacy.PopularityBoostService;
 import com.xmas.game.engine.economy.LandService;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
@@ -33,6 +34,7 @@ public class GameController implements GameApi {
     private final LandService landService;
     private final EconomyProperties economyProperties;
     private final UpkeepService upkeepService;
+    private final PopularityBoostService popularityBoostService;
 
     @Override
     public ResponseEntity<GameResponse> createGame() {
@@ -111,7 +113,7 @@ public class GameController implements GameApi {
         }
         PlayerEconomyEntity economy = gameService.getEconomy(playerId);
         PlayerMilitaryEntity military = gameService.getMilitary(playerId);
-        return ResponseEntity.ok(GameMapper.toPlayerState(
+        PlayerStateResponse state = GameMapper.toPlayerState(
                 player,
                 economy,
                 landService.capacity(playerId),
@@ -123,6 +125,13 @@ public class GameController implements GameApi {
                 gameService.getSpecialWeapons(playerId),
                 gameService.getProtection(playerId),
                 gameService.getResearch(playerId),
-                gameService.getRelations(playerId)));
+                gameService.getRelations(playerId));
+        if (viewerId.equals(playerId)) {
+            // Your own parade outlook; rivals (even with satellites) don't see it.
+            state.getPlayer()
+                    .nextParadeGain(popularityBoostService.nextParadeGain(player))
+                    .paradeReadyAtTick(popularityBoostService.paradeReadyAtTick(player));
+        }
+        return ResponseEntity.ok(state);
     }
 }

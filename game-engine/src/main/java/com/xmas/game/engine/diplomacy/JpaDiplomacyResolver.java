@@ -1,6 +1,7 @@
 package com.xmas.game.engine.diplomacy;
 
 import com.xmas.game.actions.diplomacy.DiplomacyResolver;
+import com.xmas.game.common.error.BadRequestException;
 import com.xmas.game.common.error.NotFoundException;
 import com.xmas.game.engine.config.PopularityProperties;
 import com.xmas.game.engine.domain.Popularity;
@@ -11,7 +12,6 @@ import com.xmas.game.engine.entity.PlayerRelationEntity;
 import com.xmas.game.engine.repository.GameRepository;
 import com.xmas.game.engine.repository.PlayerRelationRepository;
 import com.xmas.game.engine.repository.PlayerRepository;
-import com.xmas.game.engine.research.ResearchModifierService;
 import com.xmas.game.newsfeed.domain.NewsType;
 import com.xmas.game.newsfeed.domain.NewsVisibility;
 import com.xmas.game.newsfeed.service.NewsService;
@@ -31,8 +31,8 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
     private final PlayerRelationRepository relationRepository;
     private final GameRepository gameRepository;
     private final PopularityProperties properties;
-    private final ResearchModifierService researchModifierService;
     private final NewsService newsService;
+    private final PopularityBoostService boosts;
 
     @Override
     @Transactional(readOnly = true)
@@ -74,7 +74,7 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
         target.setCash(target.getCash() + amount);
         // Only a real gift wins favour at home, and it wears off like parades do.
         if (amount >= properties.getSendMoneyBonusMinAmount()) {
-            int gain = diminished(properties.getSendMoneyBonus(), actor.getPopularityBoostCount(), decay(actorId));
+            int gain = boosts.gain(properties.getSendMoneyBonus(), actor.getPopularityBoostCount(), actorId);
             actor.setPopularity(Popularity.clamp(actor.getPopularity() + gain));
             actor.setPopularityBoostCount(actor.getPopularityBoostCount() + 1);
         }
@@ -88,9 +88,10 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
     @Transactional
     public void holdParade(UUID actorId) {
         PlayerEntity actor = player(actorId);
-        int gain = diminished(properties.getParadeBonus(), actor.getPopularityBoostCount(), decay(actorId));
+        int gain = boosts.nextParadeGain(actor);
         actor.setPopularity(Popularity.clamp(actor.getPopularity() + gain));
         actor.setPopularityBoostCount(actor.getPopularityBoostCount() + 1);
+        actor.setLastParadeTick(currentTick(actor));
         playerRepository.save(actor);
         newsService.record(actor.getGameId(), NewsType.DIPLOMACY, NewsVisibility.PUBLIC, actorId, null,
                 "%s held a grand military parade, rallying popular support (+%d).".formatted(actor.getNation(), gain),
@@ -102,7 +103,7 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
     public void praiseLeader(UUID actorId, UUID targetId) {
         PlayerEntity actor = player(actorId);
         PlayerEntity target = player(targetId);
-        int gain = diminished(properties.getPraiseBonus(), target.getPopularityBoostCount(), decay(actorId));
+        int gain = boosts.gain(properties.getPraiseBonus(), target.getPopularityBoostCount(), actorId);
         target.setPopularity(Popularity.clamp(target.getPopularity() + gain));
         target.setPopularityBoostCount(target.getPopularityBoostCount() + 1);
         playerRepository.save(target);
@@ -114,23 +115,36 @@ public class JpaDiplomacyResolver implements DiplomacyResolver {
     @Transactional
     public void holdElection(UUID actorId) {
         PlayerEntity actor = player(actorId);
-        long currentTick = gameRepository.findById(actor.getGameId())
-                .map(GameEntity::getCurrentTick)
-                .orElse(0L);
         actor.setPopularityBoostCount(0);
-        actor.setFrozenUntilTick(currentTick + properties.getElectionFreezeTicks());
+        actor.setFrozenUntilTick(currentTick(actor) + properties.getElectionFreezeTicks());
         playerRepository.save(actor);
         newsService.record(actor.getGameId(), NewsType.DIPLOMACY, NewsVisibility.PUBLIC, actorId, null,
                 "%s held a national election, renewing the leader's mandate.".formatted(actor.getNation()),
                 gameTime(actor));
     }
 
-    private int diminished(int baseBonus, int boostCount, double decay) {
-        return (int) Math.round(baseBonus * Math.pow(decay, boostCount));
+    @Override
+    @Transactional(readOnly = true)
+    public void assertCanHoldParade(UUID actorId) {
+        PlayerEntity actor = player(actorId);
+        GameEntity game = gameRepository.findById(actor.getGameId())
+                .orElseThrow(() -> new NotFoundException("Game not found: " + actor.getGameId()));
+        long ticksLeft = boosts.paradeReadyAtTick(actor) - game.getCurrentTick();
+        if (ticksLeft > 0) {
+            long seconds = ticksLeft * game.getTickDurationMillis() / 1000;
+            throw new BadRequestException(
+                    "The next parade is possible in %dm %02ds".formatted(seconds / 60, seconds % 60));
+        }
+        if (boosts.nextParadeGain(actor) <= 0) {
+            throw new BadRequestException(
+                    "The crowds are tired of parades: wait for them to recover, or hold an election");
+        }
     }
 
-    private double decay(UUID actorId) {
-        return researchModifierService.paradePraiseDecay(actorId, properties.getParadePraiseDecay());
+    private long currentTick(PlayerEntity player) {
+        return gameRepository.findById(player.getGameId())
+                .map(GameEntity::getCurrentTick)
+                .orElse(0L);
     }
 
     private void setRelation(UUID a, UUID b, RelationStatus status) {

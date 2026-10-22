@@ -6,6 +6,8 @@ game:
   popularity:
     election-freeze-ticks: 2
     war-strain-recovery-ticks: 2
+    parade-cooldown-ticks: 2
+    boost-recovery-ticks: 4
   actions:
     definitions:
       build-factory:

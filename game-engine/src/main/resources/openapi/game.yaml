@@ -306,6 +306,14 @@ components:
         frozenUntilTick:
           type: integer
           format: int64
+        nextParadeGain:
+          type: integer
+          format: int32
+          description: Popularity the player's next parade would add (only on your own state).
+        paradeReadyAtTick:
+          type: integer
+          format: int64
+          description: First tick the player may hold a parade again (only on your own state).
     GamePlayerSummary:
       type: object
       required:

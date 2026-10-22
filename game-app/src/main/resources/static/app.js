@@ -850,6 +850,7 @@ const WARNINGS = {
   DECLARE_PEACE: "Only possible with a nation you are at war with. Making peace raises your popularity.",
   SEND_MONEY: "Gifts of $10,000 or more raise your popularity, less each time (like parades).",
   HOLD_ELECTION: "Resets your parade bonus, but freezes all non-military actions for a while.",
+  HOLD_PARADE: "Each parade adds less than the last; crowds slowly recover over time. One parade every 3 minutes.",
   DEMOLISH_FARM: "Torn down at once, with no refund. The land is free to build on. " + FOOD_RULE,
   BUILD_FACTORY: FOOD_RULE,
   BUILD_ROBOT_FACTORY: FOOD_RULE,
@@ -911,6 +912,11 @@ function blockReason(def, me, info) {
   if (def.maxTotal != null && ownedCount(me, def.actionType) >= def.maxTotal) return `Maximum of ${def.maxTotal} reached`;
   if (def.actionType === "SPECIAL_WEAPON_ATTACK" && !(me.specialWeapons?.nukes > 0)) return "No warheads built";
   if (def.actionType === "DECLARE_PEACE" && !(me.relations || []).some((r) => r.status === "WAR")) return "Not at war";
+  if (def.actionType === "HOLD_PARADE") {
+    const ticksLeft = (p.paradeReadyAtTick ?? 0) - info.currentTick;
+    if (ticksLeft > 0) return `Next parade in ${fmtDuration(ticksLeft * (info.tickDurationMillis || 5000))}`;
+    if (p.nextParadeGain === 0) return "Crowds are tired";
+  }
   if (COVERT.has(def.actionType) && spyCount(me) === 0) {
     // Special ops can carry out an assassination on their own.
     if (def.actionType !== "ASSASSINATE_LEADER") return "Needs spies";
@@ -1094,6 +1100,7 @@ function openSheet(type, opener, targetId = null) {
     facts.push(["OWNED", def.maxTotal != null ? `${n}/${def.maxTotal}` : String(n)]);
   }
   if (type === "SPECIAL_WEAPON_ATTACK") facts.push(["WARHEADS", String(me.specialWeapons?.nukes ?? 0)]);
+  if (type === "HOLD_PARADE" && me.player.nextParadeGain != null) facts.push(["GAIN", `+${me.player.nextParadeGain}%`]);
   if (COVERT.has(type)) facts.push(["YOUR SPIES", String(spyCount(me))]);
   if (usesLand(def) && freeLand(me) !== Infinity) facts.push(["FREE LAND", String(freeLand(me))]);
   $("sheetFacts").replaceChildren(...facts.map(([k, v]) => {

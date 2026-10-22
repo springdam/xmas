@@ -81,6 +81,10 @@ public class GameTickService {
                 overthrow(game, player);
                 continue;
             }
+            if (player.getPopularityBoostCount() > 0
+                    && game.getCurrentTick() % popularityProperties.getBoostRecoveryTicks() == 0) {
+                player.setPopularityBoostCount(player.getPopularityBoostCount() - 1);
+            }
             if (player.getWarStrain() > 0
                     && game.getCurrentTick() % popularityProperties.getWarStrainRecoveryTicks() == 0) {
                 player.setWarStrain(player.getWarStrain() - 1);
