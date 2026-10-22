@@ -721,7 +721,7 @@ function renderPalace(me) {
     $("palaceScene").hidden = choosing;
     if (choosing) $("palaceChoose").replaceChildren(...styleOptions(choosePalaceStyle));
   }
-  $("palaceTitle").textContent = `PALACE ${palace.score}/24`;
+  $("palaceTitle").textContent = `PALACE · WORTH ${fmtCash(palace.value ?? 0)}`;
   const tokens = palace.tokens ?? 0;
   const cash = me.player.cash;
   const names = palaceTierNames(palace);
@@ -1721,11 +1721,11 @@ function nationHead(p) {
   head.append(flag, who);
 
   if (mine) head.append(el("span", "tag", "YOU"));
-  if (p.palaceScore != null && !p.eliminated) {
+  if (p.palaceValue != null && !p.eliminated) {
     const score = el("span", "palace-score");
-    score.title = `Palace ${p.palaceScore}/24`;
+    score.title = `Palace worth ${fmtCash(p.palaceValue)}`;
     score.innerHTML = CROWN_SVG;
-    score.append(String(p.palaceScore));
+    score.append(fmtShortCash(p.palaceValue));
     head.append(score);
   }
   if (p.eliminated) {
@@ -1771,13 +1771,36 @@ function satelliteBlock(theirs) {
   return box;
 }
 
+/** "$190k", "$1.3M": compact money for tight spots. */
+const fmtShortCash = (n) => (n >= 1e6 ? `$${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}M` : n >= 1e3 ? `$${Math.round(n / 1e3)}k` : `$${n}`);
+
+let boardSig = "";
+
+/** Nations ranked by palace value; fallen nations keep their place at the bottom. */
+function renderLeaderboard(nations) {
+  const ranked = [...nations].sort((a, b) =>
+    Number(a.eliminated) - Number(b.eliminated) || (b.palaceValue ?? 0) - (a.palaceValue ?? 0));
+  const sig = JSON.stringify(ranked.map((p) => [p.id, p.palaceValue, p.eliminated]));
+  if (sig === boardSig) return;
+  boardSig = sig;
+  $("leaderboard").replaceChildren(...ranked.map((p) => {
+    const li = el("li", `${p.id === state.playerId ? "me" : ""}${p.eliminated ? " out" : ""}`.trim());
+    const flag = el("span", "flag");
+    flag.dataset.nation = p.nation || "";
+    flag.setAttribute("aria-hidden", "true");
+    li.append(flag, el("span", "name", `${formatNation(p.nation)} · ${p.username}`),
+      el("span", "value", p.eliminated ? "FALLEN" : fmtCash(p.palaceValue ?? 0)));
+    return li;
+  }));
+}
+
 /** Their palace (public to everyone), once their state has loaded. */
 function palaceThumb(p) {
   const wrap = el("div", "palace-thumb");
   const palace = world.detail.get(p.id)?.state?.palace;
   if (!palace) return wrap;
   const title = el("div", "intel-title");
-  title.append(el("span", "tag accent", "PALACE"), el("span", "hd", `${palace.score}/24`));
+  title.append(el("span", "tag accent", "PALACE"), el("span", "hd", `WORTH ${fmtCash(palace.value ?? 0)}`));
   const art = el("div");
   art.innerHTML = palaceArt(palace);
   wrap.append(title, art);
@@ -1842,7 +1865,7 @@ function renderWorld() {
 
   // Rebuild only when something visible changed; cash-dependent button states update in place.
   const signature = JSON.stringify([
-    nations.map((p) => [p.id, p.popularity, p.eliminated, relationWith(p.id), p.palaceScore]),
+    nations.map((p) => [p.id, p.popularity, p.eliminated, relationWith(p.id), p.palaceValue]),
     world.openId, state.actions.length,
     world.openId && latestIntel(world.openId)?.id,
   ]);
@@ -1852,11 +1875,13 @@ function renderWorld() {
     $("worldList").replaceChildren(...nations.flatMap((p) =>
       (world.openId === p.id ? [nationHead(p), nationBody(p)] : [nationHead(p)])));
   }
+  renderLeaderboard(nations);
   updateQuickButtons();
   if (world.openId) loadDetail(world.openId);   // throttled refresh while a card is open
 }
 
 function resetWorld() {
+  boardSig = "";
   Object.assign(world, { roster: [], openId: null, moreOpen: false, detail: new Map(), buttons: [], signature: "" });
   $("worldList").replaceChildren(el("p", "dim news-empty", "Loading nations…"));
 }

@@ -387,6 +387,9 @@ strong { font-weight: normal; color: var(--accent); }
 .palace-part .what .hd { display: block; font-size: 11px; }
 .palace-part .btn { min-height: 36px; padding: 0 10px; }
 .palace-thumb { display: flex; flex-direction: column; gap: 4px; }
+.roster.board { margin: 0; padding: 4px 10px 6px; }
+.roster.board li.me .name { color: var(--accent); }
+.roster.board .value { font-family: 'Silkscreen', ui-monospace, monospace; font-size: 12px; }
 .palace-score { display: inline-flex; align-items: center; gap: 2px; font-size: 11px; }
 .palace-score svg { width: 12px; height: 12px; fill: currentColor; shape-rendering: crispEdges; }
 .chip {

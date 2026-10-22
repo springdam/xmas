@@ -16,6 +16,7 @@ import com.xmas.game.engine.diplomacy.PopularityBoostService;
 import com.xmas.game.engine.economy.LandService;
 import com.xmas.game.engine.entity.PlayerEconomyEntity;
 import com.xmas.game.engine.entity.PlayerMilitaryEntity;
+import com.xmas.game.engine.entity.PlayerPalaceEntity;
 import com.xmas.game.engine.military.UpkeepService;
 import com.xmas.game.engine.entity.PlayerEntity;
 import com.xmas.game.engine.domain.PalacePart;
@@ -83,7 +84,7 @@ public class GameController implements GameApi {
                 players.stream().map(PlayerEntity::getAccountId).toList());
         return ResponseEntity.ok(players.stream()
                 .map(player -> GameMapper.toGamePlayerSummary(player, usernames.get(player.getAccountId()))
-                        .palaceScore(palaceService.score(player.getId())))
+                        .palaceValue(palaceService.value(player.getId())))
                 .toList());
     }
 
@@ -118,7 +119,8 @@ public class GameController implements GameApi {
         UUID viewerId = sessionIdentity.requirePlayer(xSessionToken, player.getGameId());
         boolean fullView = viewerId.equals(playerId) || gameService.hasSatelliteIntel(viewerId);
         // Palaces are public: everyone sees everyone's, but only you see your unspent tokens.
-        PalaceResponse palace = GameMapper.toPalaceResponse(palaceService.palace(playerId),
+        PlayerPalaceEntity palaceEntity = palaceService.palace(playerId);
+        PalaceResponse palace = GameMapper.toPalaceResponse(palaceEntity, palaceService.value(palaceEntity),
                 viewerId.equals(playerId), palaceService.tierCosts());
         if (!fullView) {
             return ResponseEntity.ok(GameMapper.toLimitedPlayerState(player, gameService.getRelations(playerId))
@@ -157,9 +159,9 @@ public class GameController implements GameApi {
             throw new ForbiddenException("You may only improve your own palace");
         }
         boolean cash = request.getPayWith() == UpgradePalaceRequest.PayWithEnum.CASH;
-        return ResponseEntity.ok(GameMapper.toPalaceResponse(
-                palaceService.upgrade(playerId, PalacePart.valueOf(request.getPart().name()), cash),
-                true, palaceService.tierCosts()));
+        PlayerPalaceEntity palace = palaceService.upgrade(playerId, PalacePart.valueOf(request.getPart().name()), cash);
+        return ResponseEntity.ok(GameMapper.toPalaceResponse(palace, palaceService.value(palace), true,
+                palaceService.tierCosts()));
     }
 
     @Override
@@ -169,8 +171,8 @@ public class GameController implements GameApi {
         if (!sessionIdentity.requirePlayer(xSessionToken, player.getGameId()).equals(playerId)) {
             throw new ForbiddenException("You may only choose your own palace");
         }
-        return ResponseEntity.ok(GameMapper.toPalaceResponse(
-                palaceService.chooseStyle(playerId, PalaceStyle.valueOf(request.getStyle().name())),
-                true, palaceService.tierCosts()));
+        PlayerPalaceEntity palace = palaceService.chooseStyle(playerId, PalaceStyle.valueOf(request.getStyle().name()));
+        return ResponseEntity.ok(GameMapper.toPalaceResponse(palace, palaceService.value(palace), true,
+                palaceService.tierCosts()));
     }
 }

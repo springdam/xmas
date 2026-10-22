@@ -395,10 +395,10 @@ components:
           type: boolean
         admin:
           type: boolean
-        palaceScore:
+        palaceValue:
           type: integer
-          format: int32
-          description: Sum of the nation's palace tiers (0..24).
+          format: int64
+          description: What the nation's palace is worth (price of every tier built); the leaderboard score.
     EconomyResponse:
       type: object
       required:
@@ -583,6 +583,10 @@ components:
           type: integer
           format: int32
           description: Sum of all tiers (0..24).
+        value:
+          type: integer
+          format: int64
+          description: What the palace is worth - the price of every tier built. The leaderboard score.
         tokens:
           type: integer
           format: int32

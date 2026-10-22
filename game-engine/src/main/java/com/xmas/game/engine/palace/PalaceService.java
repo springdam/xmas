@@ -171,10 +171,21 @@ public class PalaceService {
         damage(targetId, properties.getVandalismDamage(), "Vandals defaced");
     }
 
-    /** Palace score (0..24) without creating a palace that doesn't exist yet. */
+    /** What the palace is worth: the price of every tier built, part by part. The leaderboard score. */
+    public long value(PlayerPalaceEntity palace) {
+        long total = 0;
+        for (PalacePart part : PalacePart.values()) {
+            for (int tier = 1; tier <= palace.tier(part); tier++) {
+                total += tierCost(tier);
+            }
+        }
+        return total;
+    }
+
+    /** Palace value without creating a palace that doesn't exist yet. */
     @Transactional(readOnly = true)
-    public int score(UUID playerId) {
-        return palaceRepository.findById(playerId).map(PlayerPalaceEntity::score).orElse(0);
+    public long value(UUID playerId) {
+        return palaceRepository.findById(playerId).map(this::value).orElse(0L);
     }
 
     /** One attack won; every few earn a token. */

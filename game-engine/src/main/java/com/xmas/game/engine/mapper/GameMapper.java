@@ -129,7 +129,8 @@ public final class GameMapper {
                 .status(RelationStatus.fromValue(relation.getStatus().name()));
     }
 
-    public static PalaceResponse toPalaceResponse(PlayerPalaceEntity palace, boolean own, List<Long> tierCosts) {
+    public static PalaceResponse toPalaceResponse(PlayerPalaceEntity palace, long value, boolean own,
+                                                  List<Long> tierCosts) {
         return new PalaceResponse()
                 .walls(palace.getWalls())
                 .floor(palace.getFloor())
@@ -138,6 +139,7 @@ public final class GameMapper {
                 .windows(palace.getWindows())
                 .treasures(palace.getTreasures())
                 .score(palace.score())
+                .value(value)
                 .style(palace.getStyle() == null ? null
                         : com.xmas.game.engine.api.model.PalaceStyle.fromValue(palace.getStyle().name()))
                 .tokens(own ? palace.getTokens() : null)

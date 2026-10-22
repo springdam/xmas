@@ -177,4 +177,13 @@ class PalaceServiceTest {
         verify(newsService).record(any(), any(), any(), any(), any(),
                 eq("FRANCE's palace now boasts a lacquered throne."), any());
     }
+
+    @Test
+    void valueIsWhatEveryBuiltTierCost() {
+        assertThat(service.value(palace)).isZero();
+
+        palace.setThrone(2);   // 20k + 50k
+        palace.setWalls(4);    // 20k + 50k + 120k + 250k
+        assertThat(service.value(palace)).isEqualTo(70_000 + 440_000);
+    }
 }
