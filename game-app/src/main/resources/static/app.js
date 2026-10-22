@@ -1878,7 +1878,7 @@ function playLaunch() {
   finaleTimers.splice(0).forEach(clearTimeout);
   const scene = $("launchScene");
   scene.classList.remove("launching");
-  scene.innerHTML = spaceshipArt(SPACE_PARTS);
+  scene.innerHTML = spaceshipArt(SPACE_PARTS, { tall: true });
   void scene.offsetWidth;                         // restart the CSS animations
   scene.classList.add("launching");
   const say = (text, at) => finaleTimers.push(setTimeout(() => { $("countdown").textContent = text; }, at));

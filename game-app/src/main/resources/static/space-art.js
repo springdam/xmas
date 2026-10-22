@@ -1,6 +1,7 @@
 // Mars mission art: a 256x160 launch pad at night with the spaceship stacked up part by part.
 // Built parts are drawn solid; parts still to build are dashed blueprint outlines.
-// spaceshipArt(built) returns an <svg> string; built = list of SPACE_* action types.
+// spaceshipArt(built, {tall}) returns an <svg> string; built = list of SPACE_* action types.
+// tall doubles the height with more night sky above the pad (the launch screen uses it).
 
 const SPACE_PARTS = [
   "SPACE_LAUNCH_TOWER", "SPACE_ENGINES", "SPACE_FIRST_STAGE", "SPACE_SECOND_STAGE", "SPACE_THIRD_STAGE",
@@ -13,7 +14,8 @@ const spaceshipArt = (() => {
   const GROUND = 140;
   const BLUEPRINT = "#7fb8ff";
 
-  function spaceshipArt(built = []) {
+  function spaceshipArt(built = [], { tall = false } = {}) {
+    const top = tall ? -160 : 0;                 // the tall view extends the sky upward
     const id = `sa${++seq}`;
     let n = 0;
     const defs = [];
@@ -48,14 +50,17 @@ const spaceshipArt = (() => {
     const circle = (cx, cy, r, fill, extra = {}) => ({ tag: "circle", attrs: { cx, cy, r }, fill, ...extra });
 
     // ---- scene ---------------------------------------------------------------------
-    shape("rect", { x: 0, y: 0, width: 256, height: 160, fill: lin(["#070a22", "#1a1a48", "#4a2a52"], 0, 1) });
-    for (let k = 0; k < 40; k++) {
-      const x = (k * 97) % 256, y = (k * 53) % 110;
+    shape("rect", { x: 0, y: top, width: 256, height: 160 - top,
+      fill: lin(tall ? ["#02030e", "#070a22", "#1a1a48", "#4a2a52"] : ["#070a22", "#1a1a48", "#4a2a52"], 0, 1) });
+    for (let k = 0; k < (tall ? 90 : 40); k++) {
+      const x = (k * 97) % 256, y = top + ((k * 53) % (110 - top));
       shape("circle", { cx: x, cy: y, r: k % 5 ? 0.5 : 0.9, fill: "#ffffff", opacity: 0.4 + (k % 3) * 0.2 });
     }
-    shape("circle", { cx: 224, cy: 26, r: 13, fill: lin(["#f08050", "#b83a1c", "#6a1a0c"], 1, 1) });   // Mars
-    shape("circle", { cx: 219, cy: 22, r: 2.5, fill: "#8a2a12", opacity: 0.6 });
-    shape("circle", { cx: 229, cy: 31, r: 1.8, fill: "#8a2a12", opacity: 0.6 });
+    const [mx, my, mr] = tall ? [196, -112, 18] : [224, 26, 13];                                        // Mars
+    if (tall) shape("circle", { cx: mx, cy: my, r: mr + 6, fill: "#ff7a50", opacity: 0.12 });
+    shape("circle", { cx: mx, cy: my, r: mr, fill: lin(["#f08050", "#b83a1c", "#6a1a0c"], 1, 1) });
+    shape("circle", { cx: mx - mr * 0.38, cy: my - mr * 0.3, r: mr * 0.19, fill: "#8a2a12", opacity: 0.6 });
+    shape("circle", { cx: mx + mr * 0.38, cy: my + mr * 0.38, r: mr * 0.14, fill: "#8a2a12", opacity: 0.6 });
     shape("ellipse", { cx: 128, cy: GROUND + 10, rx: 160, ry: 18, fill: lin(["#3a3a46", "#1c1c24"], 0, 1) });
     shape("rect", { x: 0, y: GROUND, width: 256, height: 20, fill: lin(["#2c2c36", "#16161c"], 0, 1) });
     shape("rect", { x: 72, y: GROUND - 4, width: 112, height: 6, fill: lin(["#6a6a76", "#3a3a44"], 0, 1) });   // pad
@@ -148,7 +153,7 @@ const spaceshipArt = (() => {
     if (SPACE_PARTS.every((p) => has.has(p))) {                                                    // ready: venting steam
       for (const [x, r] of [[110, 7], [146, 8], [100, 5], [156, 6]]) shape("circle", { cx: x, cy: GROUND - 4, r, fill: "#e8ecf2", opacity: 0.5 });
     }
-    return `<svg viewBox="0 0 256 160" aria-hidden="true"><defs>${defs.join("")}</defs>${body.join("")}</svg>`;
+    return `<svg viewBox="0 ${top} 256 ${160 - top}"${tall ? ' class="tall"' : ""} aria-hidden="true"><defs>${defs.join("")}</defs>${body.join("")}</svg>`;
   }
 
   return spaceshipArt;
