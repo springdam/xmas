@@ -66,7 +66,18 @@ public enum ActionType {
     HOLD_ELECTION(ActionCategory.DIPLOMACY),
     ATTACK(ActionCategory.DIPLOMACY),
     SPECIAL_WEAPON_ATTACK(ActionCategory.DIPLOMACY),
-    DECAPITATION_STRIKE(ActionCategory.ARMY);
+    DECAPITATION_STRIKE(ActionCategory.ARMY),
+
+    SPACE_LAUNCH_TOWER(ActionCategory.SPACE),
+    SPACE_ENGINES(ActionCategory.SPACE),
+    SPACE_FIRST_STAGE(ActionCategory.SPACE),
+    SPACE_SECOND_STAGE(ActionCategory.SPACE),
+    SPACE_THIRD_STAGE(ActionCategory.SPACE),
+    SPACE_PRIMARY_BOOSTERS(ActionCategory.SPACE),
+    SPACE_SECONDARY_BOOSTERS(ActionCategory.SPACE),
+    SPACE_COMMAND_MODULE(ActionCategory.SPACE),
+    SPACE_LANDING_MODULE(ActionCategory.SPACE),
+    SPACE_SUPPORT_MODULE(ActionCategory.SPACE);
 
     private final ActionCategory category;
 

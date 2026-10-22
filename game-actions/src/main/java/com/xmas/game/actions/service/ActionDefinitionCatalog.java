@@ -35,6 +35,7 @@ public class ActionDefinitionCatalog {
                 .description(cfg.getDescription())
                 .maxTotal(cfg.getMaxTotal())
                 .requiredResearch(cfg.getRequiredResearch())
+                .requiresBuilt(cfg.getRequiresBuilt())
                 .maxLevel(type.getCategory() == ActionCategory.RESEARCH ? Math.max(1, cfg.getMaxLevel()) : 1)
                 .levelCosts(type.getCategory() == ActionCategory.RESEARCH
                         ? perLevel(cfg.getCostCash(), cfg.getMaxLevel(), properties.getResearchLevelCostFactors())

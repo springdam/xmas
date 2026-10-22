@@ -33,3 +33,5 @@ databaseChangeLog:
       file: db/changelog/changes/016-player-palace.yaml
   - include:
       file: db/changelog/changes/017-palace-style.yaml
+  - include:
+      file: db/changelog/changes/018-player-space-part.yaml

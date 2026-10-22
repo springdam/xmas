@@ -7,5 +7,6 @@ public enum ActionCategory {
     ESPIONAGE,
     RESEARCH,
     PERSONAL_PROTECTION,
-    DIPLOMACY
+    DIPLOMACY,
+    SPACE
 }

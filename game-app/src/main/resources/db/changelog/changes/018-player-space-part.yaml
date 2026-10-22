@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 018-create-player-space-part
+      author: xmas
+      changes:
+        - createTable:
+            tableName: player_space_part
+            columns:
+              - column: { name: id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: player_id, type: UUID, constraints: { nullable: false } }
+              - column: { name: part, type: VARCHAR(48), constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: player_space_part
+            columnNames: player_id, part
+            constraintName: uq_player_space_part

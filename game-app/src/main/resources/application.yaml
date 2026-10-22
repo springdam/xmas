@@ -425,6 +425,75 @@ game:
         targeted: false
         public-visibility: true
         description: "Hold an election to reset diminishing parade/praise effects. Freezes non-military actions for a while."
+      space-launch-tower:
+        cost-cash: 150000
+        duration-millis: 300000
+        targeted: false
+        public-visibility: false
+        description: "Raise a launch tower: everything else is assembled against it."
+      space-engines:
+        cost-cash: 300000
+        duration-millis: 600000
+        targeted: false
+        public-visibility: false
+        requires-built: SPACE_LAUNCH_TOWER
+        description: "Develop the rocket engines that will lift the ship off Earth."
+      space-first-stage:
+        cost-cash: 250000
+        duration-millis: 480000
+        targeted: false
+        public-visibility: false
+        requires-built: SPACE_ENGINES
+        description: "Build the first stage: the huge booster body carrying the engines."
+      space-second-stage:
+        cost-cash: 300000
+        duration-millis: 600000
+        targeted: false
+        public-visibility: false
+        requires-built: SPACE_FIRST_STAGE
+        description: "Build the second stage that takes over high in the atmosphere."
+      space-third-stage:
+        cost-cash: 350000
+        duration-millis: 720000
+        targeted: false
+        public-visibility: false
+        requires-built: SPACE_SECOND_STAGE
+        description: "Build the third stage that pushes the ship toward Mars."
+      space-primary-boosters:
+        cost-cash: 200000
+        duration-millis: 480000
+        targeted: false
+        public-visibility: false
+        requires-built: SPACE_FIRST_STAGE
+        description: "Strap primary boosters to the first stage for extra thrust."
+      space-secondary-boosters:
+        cost-cash: 250000
+        duration-millis: 600000
+        targeted: false
+        public-visibility: false
+        requires-built: SPACE_PRIMARY_BOOSTERS
+        description: "Add a second pair of boosters for a heavier payload."
+      space-command-module:
+        cost-cash: 400000
+        duration-millis: 720000
+        targeted: false
+        public-visibility: false
+        requires-built: SPACE_THIRD_STAGE
+        description: "Build the command module where the crew flies the ship."
+      space-landing-module:
+        cost-cash: 350000
+        duration-millis: 720000
+        targeted: false
+        public-visibility: false
+        requires-built: SPACE_THIRD_STAGE
+        description: "Build the lander that sets the colonists down on Mars."
+      space-support-module:
+        cost-cash: 300000
+        duration-millis: 600000
+        targeted: false
+        public-visibility: false
+        requires-built: SPACE_THIRD_STAGE
+        description: "Build the support module: air, water and supplies for the colony."
 
 server:
   port: 8080

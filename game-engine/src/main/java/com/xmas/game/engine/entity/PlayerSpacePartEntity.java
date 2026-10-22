@@ -1,0 +1,35 @@
+package com.xmas.game.engine.entity;
+
+import com.xmas.game.actions.domain.ActionType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/** A spaceship part a player has built for the Mars mission. Private to that player. */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "player_space_part")
+public class PlayerSpacePartEntity {
+
+    @Id
+    @Column(name = "id", nullable = false, updatable = false)
+    private UUID id;
+
+    @Column(name = "player_id", nullable = false)
+    private UUID playerId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "part", nullable = false)
+    private ActionType part;
+}

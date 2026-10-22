@@ -84,3 +84,23 @@ game:
         duration-millis: 0
       research-propaganda-ministry:
         duration-millis: 0
+      space-launch-tower:
+        duration-millis: 0
+      space-engines:
+        duration-millis: 0
+      space-first-stage:
+        duration-millis: 0
+      space-second-stage:
+        duration-millis: 0
+      space-third-stage:
+        duration-millis: 0
+      space-primary-boosters:
+        duration-millis: 0
+      space-secondary-boosters:
+        duration-millis: 0
+      space-command-module:
+        duration-millis: 0
+      space-landing-module:
+        duration-millis: 0
+      space-support-module:
+        duration-millis: 0

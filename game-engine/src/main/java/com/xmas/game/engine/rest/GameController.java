@@ -23,6 +23,7 @@ import com.xmas.game.engine.domain.PalacePart;
 import com.xmas.game.engine.domain.PalaceStyle;
 import com.xmas.game.engine.mapper.GameMapper;
 import com.xmas.game.engine.palace.PalaceService;
+import com.xmas.game.engine.space.JpaSpaceGateway;
 import com.xmas.game.engine.service.GameService;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class GameController implements GameApi {
     private final UpkeepService upkeepService;
     private final PopularityBoostService popularityBoostService;
     private final PalaceService palaceService;
+    private final JpaSpaceGateway spaceGateway;
 
     @Override
     public ResponseEntity<GameResponse> createGame() {
@@ -143,6 +145,8 @@ public class GameController implements GameApi {
                 gameService.getRelations(playerId));
         state.palace(palace);
         if (viewerId.equals(playerId)) {
+            // The Mars mission is secret: only on your own state, never through satellites.
+            state.spaceProgram(spaceGateway.parts(playerId).stream().map(Enum::name).toList());
             // Your own parade outlook; rivals (even with satellites) don't see it.
             state.getPlayer()
                     .nextParadeGain(popularityBoostService.nextParadeGain(player))

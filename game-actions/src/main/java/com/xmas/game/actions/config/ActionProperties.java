@@ -29,6 +29,8 @@ public class ActionProperties {
         private String description = "";
         private Integer maxTotal;
         private ActionType requiredResearch;
+        /** Space program only: the part that must be built first. */
+        private ActionType requiresBuilt;
         /** Research only: how many levels the tech has (1 = a one-off unlock). */
         private int maxLevel = 1;
     }

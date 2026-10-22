@@ -1,5 +1,6 @@
 package com.xmas.game.actions.state;
 
+import com.xmas.game.actions.domain.ActionCategory;
 import com.xmas.game.actions.domain.ActionType;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -61,7 +62,7 @@ public class InMemoryPlayerStateGateway implements PlayerStateGateway {
     }
 
     @Override
-    public Optional<ActionType> pendingResearch(UUID playerId) {
+    public Optional<ActionType> pendingIn(UUID playerId, ActionCategory category) {
         return Optional.empty();   // in-memory test gateway: no queue of its own
     }
 

@@ -46,10 +46,6 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
     private final LandService landService;
     private final PendingActionRepository pendingActionRepository;
 
-    private static final List<ActionType> RESEARCH_TYPES = Arrays.stream(ActionType.values())
-            .filter(type -> type.getCategory() == ActionCategory.RESEARCH)
-            .toList();
-
     @Override
     @Transactional(readOnly = true)
     public void assertCanAct(UUID playerId) {
@@ -184,9 +180,10 @@ public class JpaPlayerStateGateway implements PlayerStateGateway {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<ActionType> pendingResearch(UUID playerId) {
+    public Optional<ActionType> pendingIn(UUID playerId, ActionCategory category) {
+        List<ActionType> types = Arrays.stream(ActionType.values()).filter(t -> t.getCategory() == category).toList();
         return pendingActionRepository.findFirstByActorPlayerIdAndActionTypeInAndStatus(
-                        playerId, RESEARCH_TYPES, PendingActionStatus.PENDING)
+                        playerId, types, PendingActionStatus.PENDING)
                 .map(PendingActionEntity::getActionType);
     }
 

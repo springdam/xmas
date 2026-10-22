@@ -69,6 +69,7 @@ components:
         - RESEARCH
         - PERSONAL_PROTECTION
         - DIPLOMACY
+        - SPACE
     ActionType:
       type: string
       enum:
@@ -128,6 +129,16 @@ components:
         - ATTACK
         - SPECIAL_WEAPON_ATTACK
         - DECAPITATION_STRIKE
+        - SPACE_LAUNCH_TOWER
+        - SPACE_ENGINES
+        - SPACE_FIRST_STAGE
+        - SPACE_SECOND_STAGE
+        - SPACE_THIRD_STAGE
+        - SPACE_PRIMARY_BOOSTERS
+        - SPACE_SECONDARY_BOOSTERS
+        - SPACE_COMMAND_MODULE
+        - SPACE_LANDING_MODULE
+        - SPACE_SUPPORT_MODULE
     ActionDefinition:
       type: object
       required:
@@ -159,6 +170,8 @@ components:
           format: int32
           description: Most of this a player may own in total (absent = no cap).
         requiredResearch:
+          $ref: '#/components/schemas/ActionType'
+        requiresBuilt:
           $ref: '#/components/schemas/ActionType'
         maxLevel:
           type: integer

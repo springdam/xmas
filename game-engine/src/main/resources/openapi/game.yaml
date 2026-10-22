@@ -634,6 +634,11 @@ components:
           type: array
           items:
             type: string
+        spaceProgram:
+          type: array
+          description: Spaceship parts built for the Mars mission (SPACE_*). Only on your own state.
+          items:
+            type: string
         researchLevels:
           type: object
           description: Level per researched tech (e.g. RESEARCH_CRYPTOGRAPHY -> 2).

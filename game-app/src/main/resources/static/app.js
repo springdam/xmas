@@ -895,7 +895,7 @@ async function setPaused(pause) {
 const GROUPS = [
   ["ECONOMY", "ECONOMY"], ["DEMOLITION", "DEMOLITION"], ["ARMY", "ARMY"], ["SPECIAL_WEAPONS", "SPECIAL WEAPONS"],
   ["ESPIONAGE", "ESPIONAGE"], ["PERSONAL_PROTECTION", "PROTECTION"], ["RESEARCH", "RESEARCH"],
-  ["DIPLOMACY", "DIPLOMACY"],
+  ["DIPLOMACY", "DIPLOMACY"], ["SPACE", "SPACE PROGRAM"],
 ];
 const GROUPS_KEY = "xmas.groups";
 
@@ -908,6 +908,7 @@ const GROUP_ICONS = {
   ESPIONAGE: "M2 1h4v1H2zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM3 3h2v1H3zM7 3h1v1H7zM0 4h1v1H0zM3 4h2v1H3zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h4v1H2z",
   PERSONAL_PROTECTION: "M0 0h8v1H0zM0 1h1v1H0zM7 1h1v1H7zM0 2h1v1H0zM7 2h1v1H7zM0 3h1v1H0zM7 3h1v1H7zM1 4h1v1H1zM6 4h1v1H6zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z",
   RESEARCH: "M2 0h4v1H2zM3 1h2v1H3zM3 2h2v1H3zM2 3h4v1H2zM1 4h2v1H1zM4 4h3v1H4zM0 5h8v1H0zM0 6h3v1H0zM4 6h4v1H4zM1 7h6v1H1z",
+  SPACE: "M3 0h2v1H3zM2 1h4v1H2zM2 2h1v1H2zM5 2h1v1H5zM2 3h4v1H2zM2 4h4v1H2zM1 5h6v1H1zM0 6h2v1H0zM3 6h2v1H3zM6 6h2v1H6zM0 7h1v1H0zM3 7h2v1H3zM7 7h1v1H7z",
   DIPLOMACY: "M1 0h5v1H1zM0 1h7v1H0zM0 2h1v1H0zM2 2h1v1H2zM4 2h1v1H4zM6 2h1v1H6zM0 3h7v1H0zM1 4h5v1H1zM1 5h2v1H1zM1 6h1v1H1z",
 };
 
@@ -982,7 +983,8 @@ const SPY_RISK = "If it fails, some of your spies may be caught, and the target 
 const spyCount = (me) => me.espionage?.spies ?? 0;
 
 const actionLabel = (type) =>
-  LABELS[type] || (type.startsWith("RESEARCH_") ? researchName(type) : type.replaceAll("_", " "));
+  LABELS[type] || (type.startsWith("RESEARCH_") ? researchName(type)
+    : type.replace(/^SPACE_/, "").replaceAll("_", " "));
 const titleCase = (s) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 const isDemolish = (def) => def.actionType.startsWith("DEMOLISH_");
 const uiGroup = (def) =>
@@ -1041,6 +1043,13 @@ function blockReason(def, me, info) {
   if (def.maxTotal != null && ownedCount(me, def.actionType) >= def.maxTotal) return `Maximum of ${def.maxTotal} reached`;
   if (def.actionType === "SPECIAL_WEAPON_ATTACK" && !(me.specialWeapons?.nukes > 0)) return "No warheads built";
   if (def.actionType === "DECLARE_PEACE" && !(me.relations || []).some((r) => r.status === "WAR")) return "Not at war";
+  if (def.category === "SPACE") {
+    const built = me.spaceProgram || [];
+    if (built.includes(def.actionType)) return "Built";
+    if (pendingOf(def.actionType).length) return "Under construction";
+    if (def.requiresBuilt && !built.includes(def.requiresBuilt)) return `Needs ${titleCase(actionLabel(def.requiresBuilt))}`;
+    if (pending.some((p) => p.actionType.startsWith("SPACE_"))) return "Engineers busy";
+  }
   if (def.actionType === "HOLD_PARADE") {
     const ticksLeft = (p.paradeReadyAtTick ?? 0) - info.currentTick;
     if (ticksLeft > 0) return `Next parade in ${fmtDuration(ticksLeft * (info.tickDurationMillis || 5000))}`;
@@ -1083,6 +1092,7 @@ function buildActionGroups() {
     summary.innerHTML = chevron + icon(key);
     summary.append(el("span", "grow", title));
     const rows = el("div", "group-rows");
+    if (key === "SPACE") rows.append(el("div", "space-preview"));
     for (const def of defs) {
       const btn = el("button", "action");
       btn.type = "button";
@@ -1101,15 +1111,33 @@ function buildActionGroups() {
   $("actionGroups").replaceChildren(...groups);
 }
 
+let missionSig = "";
+
+/** The secret spaceship: large on the Nation tab, small atop the Space program group. */
+function renderMission(me) {
+  const built = me.spaceProgram;
+  if (!built) return;
+  const sig = JSON.stringify(built);
+  if (sig === missionSig) return;
+  missionSig = sig;
+  const total = SPACE_PARTS.length;
+  $("missionTitle").textContent = built.length === total ? "MARS MISSION · READY FOR LAUNCH" : `MARS MISSION ${built.length}/${total}`;
+  // Each placement gets its own drawing: gradient ids must be unique on the page.
+  $("missionScene").innerHTML = spaceshipArt(built);
+  const preview = document.querySelector(".space-preview");
+  if (preview) preview.innerHTML = spaceshipArt(built);
+}
+
 function renderActions(me, info) {
   if (!state.actions.length) return;
-  if (!actionRows.size) buildActionGroups();
+  if (!actionRows.size) { buildActionGroups(); missionSig = ""; }
+  renderMission(me);
   for (const base of state.actions) {
     const row = actionRows.get(base.actionType);
     if (!row) continue;
     const def = forMe(base, me);
     const reason = blockReason(base, me, info);
-    const done = reason === "Researched" || reason === "Max level";
+    const done = reason === "Researched" || reason === "Max level" || reason === "Built";
     row.btn.disabled = !!reason;
     row.btn.classList.toggle("done", done);
     row.cost.textContent = done ? "" : costLabel(def);
@@ -1187,6 +1215,7 @@ function landed(p) {
   if (!me) return false;
   if (p.baseline != null) return ownedCount(me, p.actionType) >= p.baseline + p.quantity;
   if (p.actionType.startsWith("RESEARCH_")) return techLevel(me, p.actionType) > (p.baselineLevel ?? 0);
+  if (p.actionType.startsWith("SPACE_")) return (me.spaceProgram || []).includes(p.actionType);
   return false;
 }
 

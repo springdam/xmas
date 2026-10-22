@@ -19,6 +19,8 @@ public class ActionDefinition {
     private final Integer maxTotal;
     /** Optional research the actor must have completed before this action is allowed; null means none. */
     private final ActionType requiredResearch;
+    /** Space program only: the part that must be built first; null means none. */
+    private final ActionType requiresBuilt;
     /** Research only: number of levels (1 = a one-off unlock). */
     private final int maxLevel;
     /** Research only: cost and duration of each level (index 0 = level 1). */
